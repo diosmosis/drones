@@ -1,0 +1,9 @@
+<directives>
+    <directive class="com.flarestar.drones.layout.directives.Button" />
+    <directive class="com.flarestar.drones.layout.directives.Click" />
+    <directive class="com.flarestar.drones.layout.directives.Column" />
+    <directive class="com.flarestar.drones.layout.directives.Container" />
+    <directive class="com.flarestar.drones.layout.directives.Img" />
+    <directive class="com.flarestar.drones.layout.directives.Row" />
+    <directive class="com.flarestar.drones.layout.directives.Controller" />
+</directives>

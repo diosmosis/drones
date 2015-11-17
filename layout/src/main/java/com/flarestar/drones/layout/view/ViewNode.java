@@ -1,0 +1,104 @@
+package com.flarestar.drones.layout.view;
+
+import com.flarestar.drones.layout.annotations.directive.IsolateScope;
+import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.layout.parser.exceptions.MultipleViewClassesException;
+import com.flarestar.drones.layout.view.scope.ScopeDefinition;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * TODO
+ */
+public class ViewNode {
+    public final String id;
+    public final String text;
+    public final Map<String, String> attributes = new HashMap<>();
+    public final Map<String, String> styles = new HashMap<>();
+    public final List<ViewNode> children = new ArrayList<>();
+    public final String tagName;
+    public final List<Directive> directives = new ArrayList<>();
+    public final ViewNode parent;
+
+    private ScopeDefinition scopeDefinition;
+    private String viewClass;
+    private String scopeVarName;
+
+    public ViewNode(String tagName, String id, String text, ViewNode parent) {
+        this.tagName = tagName;
+        this.id = id;
+        this.text = text;
+        this.parent = parent;
+        this.scopeVarName = "_" + id + "Scope";
+    }
+
+    public ScopeDefinition getScopeDefinition() throws LayoutFileException {
+        if (scopeDefinition == null) {
+            scopeDefinition = makeScopeDefinition();
+        }
+
+        return scopeDefinition;
+    }
+
+    private ScopeDefinition makeScopeDefinition() throws LayoutFileException {
+        if (hasIsolateScope()) {
+            return new ScopeDefinition(this);
+        }
+
+        ScopeDefinition shared = parent.getScopeDefinition();
+        shared.processDirectives(this);
+        return shared;
+    }
+
+    public boolean hasIsolateScope() {
+        if (parent == null) {
+            return true;
+        }
+
+        for (Directive directive : directives) {
+            IsolateScope annotation = directive.getClass().getAnnotation(IsolateScope.class);
+            if (annotation != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasScope() throws LayoutFileException {
+        return !getScopeDefinition().properties.isEmpty();
+    }
+
+    public String getViewClassName() throws LayoutFileException {
+        if (viewClass == null) {
+            viewClass = findViewClass();
+        }
+
+        return viewClass;
+    }
+
+    public String getScopeVarName() {
+        return scopeVarName;
+    }
+
+    private String findViewClass() throws MultipleViewClassesException {
+        String viewClass = null;
+
+        for (Directive directive : directives) {
+            String directiveViewClass = directive.getViewClassName();
+            if (directiveViewClass == null) {
+                continue;
+            }
+
+            if (viewClass != null) {
+                throw new MultipleViewClassesException(id, viewClass, directiveViewClass);
+            }
+
+            viewClass = directiveViewClass;
+        }
+
+        return viewClass;
+    }
+}

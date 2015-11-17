@@ -1,0 +1,44 @@
+package {{ package }};
+
+import com.flarestar.drones.base.DroneInterface;
+import com.flarestar.drones.base.Screen;
+import com.flarestar.drones.views.BoxModelNode;
+import com.flarestar.drones.views.Scope;
+import android.view.View;
+
+public class {{ className }} implements DroneInterface {
+
+    {% for scope in scopeDefinitions %}
+    public static class {{ scope.getScopeClassName() }} extends Scope {
+        {% for property in scope.properties %}
+        public {{ property.type }} {{ property.name }};
+        {% endfor %}
+    }
+    {% endfor %}
+
+    public void setUpDrone(Screen screen) {
+        if (!(screen instanceof {{ screenClassName }})) {
+            return;
+        }
+
+        final {{ screenClassName }} realScreen = ({{ screenClassName }}) screen;
+
+        // create view scopes
+        {% for view in screenViewsReversed %}
+        {% if view.hasScope() %}final {{ view.getScopeDefinition().getScopeClassName() }} {{ view.getScopeVarName() }} = {% if view.hasIsolateScope() %}new {{ view.getScopeDefinition().getScopeClassName() }}(){% else %}{{ view.getScopeDefinition().getOwner().getScopeVarName() }}{% endif %};
+        {% if view.getScopeDefinition().hasProperty('_parent') %}{{ view.getScopeVarName() }}._parent = {{ view.getScopeDefinition().getParentScopeOwner().getScopeVarName() }};{% endif %}{% endif %}
+        {% endfor %}
+
+        // create views
+        {% for view in screenViews %}
+        realScreen.{{ view.id }} = new {{ view.getViewClassName() }}(realScreen);
+        realScreen.{{ view.id }}.setVisibility(View.VISIBLE);{% if view.text != null and not view.text.isEmpty() %}
+        realScreen.{{ view.id }}.setText("{{ view.text|escape('js') }}");
+        {% endif %}{% for directive in view.directives %}{{ directive.getOnViewCreatedCode(view) }}{% endfor %}
+        {{ styleProcessor.process(view) }}
+        {% for child in view.children %}realScreen.{{ view.id }}.addView(realScreen.{{ child.id }});
+        {% endfor %}{% endfor %}
+
+        realScreen.setContentView(realScreen.{{ rootView }});
+    }
+}
