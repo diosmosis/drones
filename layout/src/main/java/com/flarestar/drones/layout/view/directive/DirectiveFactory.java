@@ -20,13 +20,14 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.*;
 
 public class DirectiveFactory {
 
-    private final static Set<Directive> allDirectives = new HashSet<>();
-    private final static Map<String, DirectiveMatcher> directiveMatchers = new HashMap<>();
+    private final static Set<Class<?>> allDirectives = new HashSet<>();
+    private final static Map<Class<?>, DirectiveMatcher> directiveMatchers = new HashMap<>();
 
     private final static TagMatcher tagDirectiveMatcher = new TagMatcher();
     private final static AttributeMatcher attributeDirectiveMatcher = new AttributeMatcher();
@@ -61,40 +62,39 @@ public class DirectiveFactory {
                     throw new InvalidDirectiveClassException("Directive class '" + className + "' does not extend 'com.flarestar.drones.layout.Directive'.");
                 }
 
-                Directive directive;
-                try {
-                    directive = (Directive)directiveClass.newInstance();
-                } catch (ReflectiveOperationException e) {
-                    throw new InvalidDirectiveClassException("Could not create new instance of directive.", e);
-                }
-
-                registerDirective(directive);
+                registerDirective(directiveClass);
             }
         }
     }
 
     public void detectDirectives(ViewNode node) throws LayoutFileException {
-        for (Directive directive : allDirectives) {
-            DirectiveMatcher matcher = directiveMatchers.get(directive.getDirectiveName());
-            if (!matcher.matches(node, directive)) {
+        for (Class<?> directiveClass : allDirectives) {
+            DirectiveMatcher matcher = directiveMatchers.get(directiveClass);
+            if (!matcher.matches(node, directiveClass)) {
                 continue;
             }
 
-            node.directives.add(directive);
+            Directive directive;
+            try {
+                directive = (Directive)directiveClass.getConstructor(ViewNode.class).newInstance(node);
+                node.directives.add(directive);
+            } catch (ReflectiveOperationException e) {
+                throw new InvalidDirectiveClassException("Could not create new instance of directive.", e);
+            }
         }
     }
 
-    private static void registerDirective(Directive directive) {
-        allDirectives.add(directive);
-        directiveMatchers.put(directive.getDirectiveName(), getDirectiveMatcher(directive));
+    private static void registerDirective(Class<?> directiveClass) {
+        allDirectives.add(directiveClass);
+        directiveMatchers.put(directiveClass, getDirectiveMatcher(directiveClass));
     }
 
-    private static DirectiveMatcher getDirectiveMatcher(Directive directive) {
+    private static DirectiveMatcher getDirectiveMatcher(Class<?> directiveClass) {
         com.flarestar.drones.layout.annotations.directive.DirectiveMatcher annotation =
-            directive.getClass().getAnnotation(com.flarestar.drones.layout.annotations.directive.DirectiveMatcher.class);
+            directiveClass.getAnnotation(com.flarestar.drones.layout.annotations.directive.DirectiveMatcher.class);
 
         if (annotation == null) {
-            throw new IllegalStateException("Invalid directive, directive class '" + directive.getClass().getName()
+            throw new IllegalStateException("Invalid directive, directive class '" + directiveClass.getName()
                 + "' has no @DirectiveMatcher.");
         }
 

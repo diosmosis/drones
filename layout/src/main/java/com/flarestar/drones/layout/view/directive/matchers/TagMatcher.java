@@ -10,8 +10,8 @@ package com.flarestar.drones.layout.view.directive.matchers;
 public class TagMatcher implements DirectiveMatcher {
 
     @Override
-    public boolean matches(ViewNode node, Directive directive) {
-        String directiveName = directive.getDirectiveName();
+    public boolean matches(ViewNode node, Class<?> directiveClass) {
+        String directiveName = Directive.getDirectiveName(directiveClass);
         return node.tagName.equals(directiveName);
     }
 }

@@ -85,9 +85,7 @@ public class BoxModelStyles implements Style {
         }
 
         {
-            result.append("BoxModelNode.LayoutParams layoutParams_");
-            result.append(node.id);
-            result.append(" = new BoxModelNode.LayoutParams();\n");
+            result.append("BoxModelNode.LayoutParams layoutParams = new BoxModelNode.LayoutParams();\n");
         }
 
         addBoxModelProperty(node, result, "boxWidth", width);
@@ -103,13 +101,7 @@ public class BoxModelStyles implements Style {
         addBoxModelProperty(node, result, "paddingLeft", paddingLeft);
         addBoxModelProperty(node, result, "paddingRight", paddingRight);
 
-        {
-            result.append("realScreen.");
-            result.append(node.id);
-            result.append(".setLayoutParams(layoutParams_");
-            result.append(node.id);
-            result.append(");\n");
-        }
+        result.append("result.setLayoutParams(layoutParams);\n");
     }
 
     private void addBoxModelProperty(ViewNode node, StringBuilder result, String name, String value) throws InvalidStyleValue {
@@ -119,9 +111,7 @@ public class BoxModelStyles implements Style {
 
         Size size = new Size(value);
 
-        result.append("layoutParams_");
-        result.append(node.id);
-        result.append('.');
+        result.append("layoutParams.");
         result.append(name);
         result.append(" = new BoxModelNode.Size(");
         result.append(size.amount);

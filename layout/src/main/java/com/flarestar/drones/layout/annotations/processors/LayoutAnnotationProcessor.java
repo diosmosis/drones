@@ -12,7 +12,11 @@ import java.io.*;
 import java.util.*;
 
 import com.flarestar.drones.base.Screen;
+import com.flarestar.drones.layout.android.Manifest;
+import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeFound;
+import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeParsed;
 import com.flarestar.drones.layout.annotations.Layout;
+import com.flarestar.drones.layout.compilerutilities.TypeInferer;
 import com.flarestar.drones.layout.parser.LayoutProcessor;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.ViewNode;
@@ -43,6 +47,8 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
         }
 
         screenType = screenTypeElement.asType();
+
+        TypeInferer.createInstance(processingEnv);
     }
 
     @Override
@@ -78,7 +84,14 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
+    // TODO: need to introduce DI before doing more additions
     private void generateLayoutBuilderFor(TypeElement element) {
+        String screenClassName = element.getQualifiedName().toString();
+        String layoutBuilderClassName = screenClassName + "LayoutBuilderDrone";
+        String screenPackage = screenClassName.substring(0, screenClassName.lastIndexOf('.'));
+
+        TypeInferer.getInstance().setBasePackage(screenPackage);
+
         Layout annotation = element.getAnnotation(Layout.class);
         String layoutFilePath = annotation.value();
         String stylesheetFilePath = annotation.stylesheet();
@@ -110,9 +123,6 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException("Failed to read resources/" + annotation.value() + " layout file.", e);
         }
 
-        String screenClassName = element.getQualifiedName().toString();
-        String layoutBuilderClassName = screenClassName + "LayoutBuilderDrone";
-
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Generating '" + layoutBuilderClassName + "'.");
 
         JavaFileObject newObject;
@@ -122,8 +132,16 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
             throw new RuntimeException("Failed to generate LayoutBuilder for '" + screenClassName + "'.", e);
         }
 
+        Manifest manifest = null;
+        try {
+            manifest = Manifest.findManifestFile(layoutFileObject.toUri().getPath());
+        } catch (ManifestCannotBeFound | ManifestCannotBeParsed ex) {
+            throw new RuntimeException(ex.getMessage(), ex);
+        }
+
         try (OutputStream output = newObject.openOutputStream()) {
-            layoutBuilderWriter.writeLayoutBuilder(screenClassName, layoutBuilderClassName, tree, output);
+            layoutBuilderWriter.writeLayoutBuilder(screenClassName, layoutBuilderClassName,
+                manifest.getApplicationPackage(), tree, output);
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate LayoutBuilder for '"+ screenClassName + "'.", e);
         }

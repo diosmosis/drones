@@ -1,12 +1,13 @@
 package com.flarestar.drones.layout.view;
 
-import com.flarestar.drones.layout.annotations.directive.DirectiveView;
-import com.flarestar.drones.layout.annotations.directive.IsolateScope;
-import com.flarestar.drones.layout.annotations.directive.ScopeProperties;
+import com.flarestar.drones.layout.annotations.directive.*;
 import com.flarestar.drones.layout.parser.exceptions.InvalidPropertyDescriptor;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.layout.view.directive.exceptions.InvalidDirectiveClassException;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,20 +16,10 @@ import java.util.List;
  */
 public abstract class Directive {
 
-    public void onViewCreated(ViewNode node, StringBuilder result) throws LayoutFileException {
-        // empty
-    }
+    protected final ViewNode node;
 
-    public abstract String getDirectiveName();
-
-    @Override
-    public int hashCode() {
-        return getDirectiveName().hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return obj instanceof Directive && getDirectiveName() == ((Directive)obj).getDirectiveName();
+    public Directive(ViewNode node) {
+        this.node = node;
     }
 
     public String getViewClassName() {
@@ -36,13 +27,13 @@ public abstract class Directive {
         return annotation == null ? null : annotation.view().getName();
     }
 
-    public String getOnViewCreatedCode(ViewNode node) throws LayoutFileException {
-        StringBuilder builder = new StringBuilder();
-        onViewCreated(node, builder);
-        return builder.toString();
+    public String getHookCode(String hookName)
+            throws LayoutFileException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method hookMethod = getClass().getMethod(hookName);
+        return (String)hookMethod.invoke(this);
     }
 
-    public List<ScopeDefinition.Property> getScopeProperties(ViewNode node) throws LayoutFileException {
+    public List<ScopeDefinition.Property> getScopeProperties() throws LayoutFileException {
         List<ScopeDefinition.Property> result = new ArrayList<>();
 
         ScopeProperties annotation = getClass().getAnnotation(ScopeProperties.class);
@@ -56,5 +47,43 @@ public abstract class Directive {
         }
 
         return result;
+    }
+
+    public boolean isDynamic() {
+        DynamicDirective annotation = getClass().getAnnotation(DynamicDirective.class);
+        return annotation != null;
+    }
+
+    public String afterViewCreated() throws LayoutFileException {
+        return "";
+    }
+
+    public String beforeScopeCreated() throws LayoutFileException {
+        return "";
+    }
+
+    public String beforeViewCreated() throws LayoutFileException {
+        return "";
+    }
+
+    public String afterViewAdded() throws LayoutFileException {
+        return "";
+    }
+
+    public String afterChildrenAdded() throws LayoutFileException {
+        return "";
+    }
+
+    public String getDirectiveName() {
+        return getDirectiveName(getClass());
+    }
+
+    public static String getDirectiveName(Class<?> directiveClass) {
+        DirectiveName annotation = directiveClass.getAnnotation(DirectiveName.class);
+        if (annotation == null) {
+            throw new InvalidDirectiveClassException("@DirectiveName is missing on '" + directiveClass.getName()
+                + "' directive.");
+        }
+        return annotation.value();
     }
 }

@@ -33,6 +33,7 @@ public class LayoutProcessor {
 
     private CSSWriterSettings cssWriterSettings;
     private DirectiveFactory directiveFactory;
+    private int lastGeneratedId = 0;
 
     public LayoutProcessor() {
         this.cssWriterSettings = new CSSWriterSettings(ECSSVersion.CSS30);
@@ -106,8 +107,8 @@ public class LayoutProcessor {
         String tagName = node.tagName();
 
         String id = node.attr("id");
-        if (id == null) {
-            throw new LayoutFileException("Node '" + tagName + "' is missing the id parameter.");
+        if (id == null || id.isEmpty()) {
+            id = generateViewId();
         }
 
         String text = node.ownText();
@@ -120,6 +121,11 @@ public class LayoutProcessor {
         processNodeChildren(node, viewNode, allNodes);
 
         return viewNode;
+    }
+
+    private String generateViewId() {
+        int nextId = ++lastGeneratedId;
+        return "view" + nextId;
     }
 
     private void processNodeAttributes(Element node, ViewNode viewNode)

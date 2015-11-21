@@ -4,7 +4,6 @@ import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.StyleProcessor;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
-import org.apache.commons.lang3.ArrayUtils;
 import org.jtwig.JtwigModelMap;
 import org.jtwig.JtwigTemplate;
 import org.jtwig.configuration.JtwigConfiguration;
@@ -13,7 +12,9 @@ import org.jtwig.exception.JtwigException;
 import org.jtwig.loader.Loader;
 import org.jtwig.loader.impl.ClasspathLoader;
 
+import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -29,30 +30,31 @@ public class LayoutBuilderWriter {
         template = new JtwigTemplate(resource, jtwigConfig);
     }
 
-    public void writeLayoutBuilder(String screenClassName, String layoutBuilderClassName, ViewNode tree,
-                                   OutputStream output) throws JtwigException, LayoutFileException {
+    public void writeLayoutBuilder(String screenClassName, String layoutBuilderClassName,
+                                   String applicationPackage, ViewNode tree, OutputStream output)
+            throws JtwigException, LayoutFileException {
         JtwigModelMap model = new JtwigModelMap();
         model.add("styleProcessor", new StyleProcessor());
+        model.add("interpolator", new Interpolator());
 
-        model.add("rootView", tree.id);
+        model.add("rootView", tree);
         model.add("package", getPackageFromClassName(layoutBuilderClassName));
+        model.add("applicationPackage", applicationPackage);
         model.add("className", getSimpleClassName(layoutBuilderClassName));
         model.add("screenClassName", screenClassName);
-
-        List<ViewNode> screenViews = new ArrayList<>();
-        collectScreenViews(screenViews, tree);
-        model.add("screenViews", screenViews);
-
-        List<ViewNode> screenViewsReversed = new ArrayList<>(screenViews);
-        Collections.reverse(screenViewsReversed);
-        model.add("screenViewsReversed", screenViewsReversed);
 
         // TODO: viewnode needs a visit method
         Set<ScopeDefinition> definitions = new HashSet<>();
         collectUniqueScopeDefinitions(definitions, tree);
         model.add("scopeDefinitions", definitions);
 
-        template.render(model, output);
+        String rendered = template.render(model);
+        rendered = rendered.replaceAll("\\n[\\s\\n]+\\n", "\n\n");
+        try {
+            output.write(rendered.getBytes(Charset.forName("UTF-8")));
+        } catch (IOException e) {
+            throw new LayoutFileException("Unable to write to output stream.", e);
+        }
     }
 
     private void collectScreenViews(List<ViewNode> screenViews, ViewNode node) {

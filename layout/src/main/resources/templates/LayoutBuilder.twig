@@ -1,44 +1,48 @@
+{% import "macros.twig" as macros %}
 package {{ package }};
 
 import com.flarestar.drones.base.DroneInterface;
 import com.flarestar.drones.base.Screen;
 import com.flarestar.drones.views.BoxModelNode;
 import com.flarestar.drones.views.Scope;
+import com.flarestar.drones.views.ViewFactory;
+import com.flarestar.drones.views.ScopedViewFactory;
 import android.view.View;
+import android.view.ViewGroup;
+import android.os.Handler;
+import {{ applicationPackage }}.R;
 
 public class {{ className }} implements DroneInterface {
 
     {% for scope in scopeDefinitions %}
     public static class {{ scope.getScopeClassName() }} extends Scope {
+        public {{ scope.getScopeClassName() }}(Handler handler) {
+            super(handler);
+        }
+
+        public {{ scope.getScopeClassName() }}(Handler handler, Scope parent) {
+            super(handler, parent);
+        }
+
         {% for property in scope.properties %}
         public {{ property.type }} {{ property.name }};
         {% endfor %}
     }
     {% endfor %}
 
-    public void setUpDrone(Screen screen) {
+    private Handler _handler;
+
+    public {{ className }}() {
+        _handler = new Handler();
+    }
+
+    public void setUpDrone(final Screen screen) {
         if (!(screen instanceof {{ screenClassName }})) {
             return;
         }
 
-        final {{ screenClassName }} realScreen = ({{ screenClassName }}) screen;
-
-        // create view scopes
-        {% for view in screenViewsReversed %}
-        {% if view.hasScope() %}final {{ view.getScopeDefinition().getScopeClassName() }} {{ view.getScopeVarName() }} = {% if view.hasIsolateScope() %}new {{ view.getScopeDefinition().getScopeClassName() }}(){% else %}{{ view.getScopeDefinition().getOwner().getScopeVarName() }}{% endif %};
-        {% if view.getScopeDefinition().hasProperty('_parent') %}{{ view.getScopeVarName() }}._parent = {{ view.getScopeDefinition().getParentScopeOwner().getScopeVarName() }};{% endif %}{% endif %}
-        {% endfor %}
-
-        // create views
-        {% for view in screenViews %}
-        realScreen.{{ view.id }} = new {{ view.getViewClassName() }}(realScreen);
-        realScreen.{{ view.id }}.setVisibility(View.VISIBLE);{% if view.text != null and not view.text.isEmpty() %}
-        realScreen.{{ view.id }}.setText("{{ view.text|escape('js') }}");
-        {% endif %}{% for directive in view.directives %}{{ directive.getOnViewCreatedCode(view) }}{% endfor %}
-        {{ styleProcessor.process(view) }}
-        {% for child in view.children %}realScreen.{{ view.id }}.addView(realScreen.{{ child.id }});
-        {% endfor %}{% endfor %}
-
-        realScreen.setContentView(realScreen.{{ rootView }});
+        screen.setContentView(makeView_{{ rootView.id }}(screen));
     }
+
+    {{ macros.make_view_function(rootView, interpolator, styleProcessor) }}
 }

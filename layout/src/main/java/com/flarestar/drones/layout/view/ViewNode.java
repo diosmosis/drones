@@ -3,6 +3,7 @@ package com.flarestar.drones.layout.view;
 import com.flarestar.drones.layout.annotations.directive.IsolateScope;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.parser.exceptions.MultipleViewClassesException;
+import com.flarestar.drones.layout.parser.exceptions.NoViewClassForNode;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
 
 import java.util.ArrayList;
@@ -25,14 +26,14 @@ public class ViewNode {
 
     private ScopeDefinition scopeDefinition;
     private String viewClass;
-    private String scopeVarName;
+    private Boolean hasDynamicDirective = null;
+    private Boolean isDynamic = null;
 
     public ViewNode(String tagName, String id, String text, ViewNode parent) {
         this.tagName = tagName;
         this.id = id;
         this.text = text;
         this.parent = parent;
-        this.scopeVarName = "_" + id + "Scope";
     }
 
     public ScopeDefinition getScopeDefinition() throws LayoutFileException {
@@ -79,11 +80,33 @@ public class ViewNode {
         return viewClass;
     }
 
-    public String getScopeVarName() {
-        return scopeVarName;
+    public boolean hasDynamicDirective() {
+        if (hasDynamicDirective == null) {
+            hasDynamicDirective = false;
+            for (Directive directive : directives) {
+                if (directive.isDynamic()) {
+                    hasDynamicDirective = true;
+                    break;
+                }
+            }
+        }
+        return hasDynamicDirective;
     }
 
-    private String findViewClass() throws MultipleViewClassesException {
+    public boolean isDynamic() {
+        if (isDynamic == null) {
+            isDynamic = false;
+            for (ViewNode child : children) {
+                if (child.hasDynamicDirective()) {
+                    isDynamic = true;
+                    break;
+                }
+            }
+        }
+        return isDynamic;
+    }
+
+    private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {
         String viewClass = null;
 
         for (Directive directive : directives) {
@@ -99,6 +122,12 @@ public class ViewNode {
             viewClass = directiveViewClass;
         }
 
+        if (viewClass == null) {
+            throw new NoViewClassForNode("Cannot find view class for node <" + tagName + " id = " + id + ">.");
+        }
+
         return viewClass;
     }
 }
+
+// TODO: all node types should have an associated directive w/ tagmatcher, so if no directive found for a tag, should throw

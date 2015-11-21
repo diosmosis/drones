@@ -1,0 +1,58 @@
+{% macro directive_hook(view, hookName) %}
+{% for directive in view.directives %}{{ directive.getHookCode(hookName) }}{% endfor %}
+{% endmacro %}
+
+{% macro make_view_function(view, interpolator, styleProcessor) %}
+{% import _self as self %}
+
+    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final Screen _screen{% if view.parent != null %}, final Scope _parentNodeScope{% endif %}) {
+        {% if view.parent != null %}final {{ view.parent.getScopeDefinition().getScopeClassName() }} scope = ({{ view.parent.getScopeDefinition().getScopeClassName() }})_parentNodeScope;{% endif %}
+
+    {% if view.hasDynamicDirective() %}
+        final ViewFactory result = new ViewFactory() {
+            public void createViews(ViewGroup parent) {
+    {% endif %}
+
+        {{ self.directive_hook(view, "beforeScopeCreated") }}
+
+        View result = new ScopedViewFactory() {
+            @Override
+            public View make() {
+
+                {% if view.hasScope() %}final {{ view.getScopeDefinition().getScopeClassName() }} scope = {% if view.hasIsolateScope() %}new {{ view.getScopeDefinition().getScopeClassName() }}(_handler{% if node.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.getScopeDefinition().getScopeClassName() }})_parentNodeScope{% endif %};
+                {% if view.hasIsolateScope() %}{% for property_name, property in view.getScopeDefinition().properties %}scope.{{ property_name }} = {{ property.initialValueExpression }};
+                {% endfor %}{% endif %}{% endif %}
+
+                {{ self.directive_hook(view, "beforeViewCreated") }}
+
+                final {{ view.getViewClassName() }} result = new {{ view.getViewClassName() }}(_screen);
+                result.setVisibility(View.VISIBLE);
+                {% if view.text != null and not view.text.isEmpty() %}result.setText({{ interpolator.interpolate(view.text) }});{% endif %}
+                {{ styleProcessor.process(view) }}
+
+                {{ self.directive_hook(view, "afterViewCreated") }}
+
+                {% for child in view.children %}
+                result.{% if view.isDynamic() %}addChildDefinition{% else %}addView{% endif %}(makeView_{{ child.id }}(_screen, scope));
+                {% endfor %}
+
+                {{ self.directive_hook(view, "afterChildrenAdded") }}
+
+                return result;
+            }
+        }.make();
+
+    {% if view.hasDynamicDirective() %}parent.addView(result);
+
+                {{ self.directive_hook(view, "afterViewAdded") }}
+            }
+        };
+    {% endif %}
+
+        return result;
+    }
+
+    {% for child in view.children %}
+    {{ self.make_view_function(child, interpolator, styleProcessor) }}
+    {% endfor %}
+{% endmacro %}

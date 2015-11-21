@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 /**
  * TODO
  */
-public abstract class BoxModelNode extends ViewGroup {
+public abstract class BoxModelNode extends DynamicViewGroup {
     protected final static int UNSPECIFIED_MEASURE_SPEC = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 
     public static class Size {

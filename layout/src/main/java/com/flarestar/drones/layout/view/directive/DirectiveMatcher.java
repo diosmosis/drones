@@ -8,5 +8,5 @@ import com.flarestar.drones.layout.view.ViewNode;
  */
 public interface DirectiveMatcher {
 
-    boolean matches(ViewNode node, Directive directive);
+    boolean matches(ViewNode node, Class<?> directiveClass);
 }

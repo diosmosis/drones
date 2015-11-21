@@ -10,7 +10,7 @@ import com.flarestar.drones.layout.view.directive.DirectiveMatcher;
 public class AttributeMatcher implements DirectiveMatcher {
 
     @Override
-    public boolean matches(ViewNode node, Directive directive) {
-        return node.attributes.containsKey(directive.getDirectiveName());
+    public boolean matches(ViewNode node, Class<?> directiveClass) {
+        return node.attributes.containsKey(Directive.getDirectiveName(directiveClass));
     }
 }

@@ -133,9 +133,17 @@ public class LinearLayout extends BoxModelNode {
             child.layout(left, top, right, bottom);
 
             if (isHorizontal) {
-                currentChildLeft = right + getComputedBoxModelSize(layoutParams.paddingRight) + getComputedBoxModelSize(layoutParams.marginRight);
+                currentChildLeft = right;
+
+                if (layoutParams != null) {
+                    currentChildLeft += getComputedBoxModelSize(layoutParams.paddingRight) + getComputedBoxModelSize(layoutParams.marginRight);
+                }
             } else {
-                currentChildTop = bottom + getComputedBoxModelSize(layoutParams.paddingBottom) + getComputedBoxModelSize(layoutParams.marginBottom);
+                currentChildTop = bottom;
+
+                if (layoutParams != null) {
+                    currentChildTop += getComputedBoxModelSize(layoutParams.paddingBottom) + getComputedBoxModelSize(layoutParams.marginBottom);
+                }
             }
         }
     }
