@@ -2,12 +2,11 @@ package com.flarestar.drones.layout.directives;
 
 import com.flarestar.drones.layout.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.layout.annotations.directive.DirectiveName;
-import com.flarestar.drones.layout.parser.exceptions.InvalidPropertyDescriptor;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.directive.matchers.AttributeMatcher;
-import com.flarestar.drones.layout.view.scope.ScopeDefinition;
+import com.flarestar.drones.layout.view.scope.Property;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -29,15 +28,15 @@ public class Controller extends Directive {
     private final static Pattern controllerAttributeRegex = Pattern.compile("(\\w+)\\s+as\\s+(\\w+)");
 
     @Override
-    public List<ScopeDefinition.Property> getScopeProperties() throws LayoutFileException {
-        List<ScopeDefinition.Property> result = super.getScopeProperties();
+    public List<Property> getScopeProperties() throws LayoutFileException {
+        List<Property> result = super.getScopeProperties();
 
         Matcher match = parseAttribute();
 
         String controllerClass = match.group(1);
         String controllerScopeProperty = match.group(2);
 
-        result.add(new ScopeDefinition.Property(controllerScopeProperty, controllerClass,
+        result.add(new Property(controllerScopeProperty, controllerClass,
             "new " + controllerClass + "(_screen)", this));
         return result;
     }

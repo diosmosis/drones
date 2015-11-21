@@ -79,9 +79,6 @@ public class TypeInferer {
             DeclaredType declaredType = (DeclaredType)iterableType;
 
             for (TypeMirror baseType : getAllSuperTypes(declaredType)) {
-                // TODO: baseType may not be iterable so here we're getting the first generics argument.
-                // maybe an issue eventually, it's not guaranteed the first generics argument for interfaces that
-                // extend Iterable will be the value type.
                 if (baseType.toString().startsWith(Iterable.class.getName())) {
                     return ((DeclaredType)baseType).getTypeArguments().get(0);
                 }

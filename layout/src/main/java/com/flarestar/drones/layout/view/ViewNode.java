@@ -4,6 +4,7 @@ import com.flarestar.drones.layout.annotations.directive.IsolateScope;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.layout.parser.exceptions.NoViewClassForNode;
+import com.flarestar.drones.layout.view.scope.Property;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
 
 import java.util.ArrayList;
@@ -38,20 +39,15 @@ public class ViewNode {
 
     public ScopeDefinition getScopeDefinition() throws LayoutFileException {
         if (scopeDefinition == null) {
-            scopeDefinition = makeScopeDefinition();
+            ScopeDefinition computed = new ScopeDefinition(this, hasIsolateScope());
+            if (parent == null || !computed.isPassthroughScope()) {
+                scopeDefinition = computed;
+            } else {
+                scopeDefinition = parent.getScopeDefinition();
+            }
         }
 
         return scopeDefinition;
-    }
-
-    private ScopeDefinition makeScopeDefinition() throws LayoutFileException {
-        if (hasIsolateScope()) {
-            return new ScopeDefinition(this);
-        }
-
-        ScopeDefinition shared = parent.getScopeDefinition();
-        shared.processDirectives(this);
-        return shared;
     }
 
     public boolean hasIsolateScope() {
@@ -69,7 +65,7 @@ public class ViewNode {
     }
 
     public boolean hasScope() throws LayoutFileException {
-        return !getScopeDefinition().properties.isEmpty();
+        return getScopeDefinition().getOwner() == this;
     }
 
     public String getViewClassName() throws LayoutFileException {

@@ -67,7 +67,9 @@ public class LayoutBuilderWriter {
 
     private void collectUniqueScopeDefinitions(Set<ScopeDefinition> definitions, ViewNode node)
             throws LayoutFileException {
-        definitions.add(node.getScopeDefinition());
+        if (node.hasScope()) {
+            definitions.add(node.getScopeDefinition());
+        }
 
         for (ViewNode child : node.children) {
             collectUniqueScopeDefinitions(definitions, child);

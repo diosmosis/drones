@@ -1,10 +1,9 @@
 package com.flarestar.drones.layout.view;
 
 import com.flarestar.drones.layout.annotations.directive.*;
-import com.flarestar.drones.layout.parser.exceptions.InvalidPropertyDescriptor;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.directive.exceptions.InvalidDirectiveClassException;
-import com.flarestar.drones.layout.view.scope.ScopeDefinition;
+import com.flarestar.drones.layout.view.scope.Property;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,8 +32,8 @@ public abstract class Directive {
         return (String)hookMethod.invoke(this);
     }
 
-    public List<ScopeDefinition.Property> getScopeProperties() throws LayoutFileException {
-        List<ScopeDefinition.Property> result = new ArrayList<>();
+    public List<Property> getScopeProperties() throws LayoutFileException {
+        List<Property> result = new ArrayList<>();
 
         ScopeProperties annotation = getClass().getAnnotation(ScopeProperties.class);
         if (annotation == null) {
@@ -42,7 +41,7 @@ public abstract class Directive {
         }
 
         for (String propertyDescriptor : annotation.value()) {
-            ScopeDefinition.Property property = ScopeDefinition.Property.makeFromDescriptor(propertyDescriptor, this);
+            Property property = Property.makeFromDescriptor(propertyDescriptor, this);
             result.add(property);
         }
 

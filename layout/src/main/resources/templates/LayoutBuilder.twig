@@ -16,17 +16,27 @@ public class {{ className }} implements DroneInterface {
 
     {% for scope in scopeDefinitions %}
     public static class {{ scope.getScopeClassName() }} extends Scope {
-        public {{ scope.getScopeClassName() }}(Handler handler) {
-            super(handler);
-        }
-
-        public {{ scope.getScopeClassName() }}(Handler handler, Scope parent) {
-            super(handler, parent);
-        }
-
         {% for property in scope.properties %}
         public {{ property.type }} {{ property.name }};
         {% endfor %}
+
+        {% if scope.getParentScope() == null %}
+        public {{ scope.getScopeClassName() }}(Handler handler) {
+            super(handler);
+        }
+        {% else %}
+        public {{ scope.getScopeClassName() }}(Handler handler, {{ scope.getParentScope().getScopeClassName() }} parent) {
+            super(handler, parent);
+
+            {% for property in scope.properties %}
+            {% if property.isInherited %}
+            this.{{ property.name }} = parent.{{ property.name }};
+            {% elseif property.initialValueExpression != null %}
+            this.{{ property.name }} = {{ property.initialValueExpression }};
+            {% endif %}
+            {% endfor %}
+        }
+        {% endif %}
     }
     {% endfor %}
 
