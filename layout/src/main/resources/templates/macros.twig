@@ -6,7 +6,9 @@
 {% import _self as self %}
 
     private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final Screen _screen{% if view.parent != null %}, final Scope _parentNodeScope{% endif %}) {
-        {% if view.parent != null %}final {{ view.parent.getScopeDefinition().getScopeClassName() }} scope = ({{ view.parent.getScopeDefinition().getScopeClassName() }})_parentNodeScope;{% endif %}
+        {% if view.parent != null %}final {{ view.parent.getScopeDefinition().getScopeClassName() }} scope = ({{ view.parent.getScopeDefinition().getScopeClassName() }})_parentNodeScope;
+        {% for property in view.getScopeDefinition().properties %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
+        {% endfor %}{% endif %}
 
     {% if view.hasDynamicDirective() %}
         final ViewFactory result = new ViewFactory() {
@@ -20,7 +22,8 @@
             public View make() {
 
                 {% if view.hasScope() %}final {{ view.getScopeDefinition().getScopeClassName() }} scope = {% if view.hasIsolateScope() %}new {{ view.getScopeDefinition().getScopeClassName() }}(_handler{% if node.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.getScopeDefinition().getScopeClassName() }})_parentNodeScope{% endif %};
-                {% endif %}
+                {% for property in view.getScopeDefinition().properties %}{% if not property.isInherited %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
+                {% endif %}{% endfor %}{% endif %}
 
                 {{ self.directive_hook(view, "beforeViewCreated") }}
 

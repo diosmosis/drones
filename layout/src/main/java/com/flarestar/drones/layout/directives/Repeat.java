@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// TODO: ng-repeat should add the item + other vars (like $index/$first/$last) to the scope so they are available to angular expressions
 @DirectiveName("ng-repeat")
 @DirectiveMatcher(AttributeMatcher.class)
 @DynamicDirective
