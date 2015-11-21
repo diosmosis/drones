@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * TODO
  */
-public class Scope {
+public class Scope<P extends Scope> {
 
     public static class DigestTtlExceededException extends RuntimeException {
         public DigestTtlExceededException(String message) {
@@ -34,14 +34,14 @@ public class Scope {
          * @param scope
          * @return
          */
-        Object run(Scope scope);
+        Object run(Scope<?> scope);
     }
 
     private class QueuedRunnable implements java.lang.Runnable {
-        public final Scope scope;
+        public final Scope<?> scope;
         public final Runnable runnable;
 
-        public QueuedRunnable(Scope scope, Runnable runnable) {
+        public QueuedRunnable(Scope<?> scope, Runnable runnable) {
             this.scope = scope;
             this.runnable = runnable;
         }
@@ -60,7 +60,7 @@ public class Scope {
     private LinkedList<java.lang.Runnable> _postDigestQueue = new LinkedList<>();
     private String _phase;
 
-    public final Scope _parent;
+    public final P _parent;
     public final Handler _handler;
 
     public Scope(Handler handler) {
@@ -68,7 +68,7 @@ public class Scope {
         _handler = handler;
     }
 
-    public Scope(Handler handler, Scope parent) {
+    public Scope(Handler handler, P parent) {
         _parent = parent;
         _handler = handler;
     }

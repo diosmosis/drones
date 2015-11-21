@@ -15,7 +15,7 @@ import {{ applicationPackage }}.R;
 public class {{ className }} implements DroneInterface {
 
     {% for scope in scopeDefinitions %}
-    public static class {{ scope.getScopeClassName() }} extends Scope {
+    public static class {{ scope.getScopeClassName() }} extends Scope<{% if scope.getParentScope() != null %}{{ scope.getParentScope().getScopeClassName() }}{% else %}Scope{% endif %}> {
         {% for property in scope.properties %}
         public {{ property.type }} {{ property.name }};
         {% endfor %}

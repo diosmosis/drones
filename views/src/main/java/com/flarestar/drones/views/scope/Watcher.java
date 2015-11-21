@@ -35,7 +35,7 @@ public abstract class Watcher {
      * @param scope
      * @return
      */
-    public abstract Object getWatchValue(Scope scope);
+    public abstract Object getWatchValue(Scope<?> scope);
 
     /**
      * TODO
@@ -43,7 +43,7 @@ public abstract class Watcher {
      * @param newValue
      * @param oldValue
      */
-    public abstract void onValueChanged(Object newValue, Object oldValue, Scope scope);
+    public abstract void onValueChanged(Object newValue, Object oldValue, Scope<?> scope);
 
     /**
      * TODO

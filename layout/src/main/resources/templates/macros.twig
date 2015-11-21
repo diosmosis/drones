@@ -7,6 +7,7 @@
 
     private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final Screen _screen{% if view.parent != null %}, final Scope _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.getScopeDefinition().getScopeClassName() }} scope = ({{ view.parent.getScopeDefinition().getScopeClassName() }})_parentNodeScope;
+        {% if view.parent.getScopeDefinition().getParentScope() != null %}final {{ view.parent.getScopeDefinition().getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.getScopeDefinition().properties %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
         {% endfor %}{% endif %}
 
@@ -22,6 +23,7 @@
             public View make() {
 
                 {% if view.hasScope() %}final {{ view.getScopeDefinition().getScopeClassName() }} scope = {% if view.hasIsolateScope() %}new {{ view.getScopeDefinition().getScopeClassName() }}(_handler{% if node.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.getScopeDefinition().getScopeClassName() }})_parentNodeScope{% endif %};
+                {% if view.getScopeDefinition().getParentScope() != null %}final {{ view.getScopeDefinition().getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
                 {% for property in view.getScopeDefinition().properties %}{% if not property.isInherited %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
                 {% endif %}{% endfor %}{% endif %}
 

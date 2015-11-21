@@ -4,12 +4,12 @@ import com.flarestar.drones.views.Scope;
 
 public abstract class GroupWatcher extends Watcher {
     @Override
-    final public Object getWatchValue(Scope scope) {
+    final public Object getWatchValue(Scope<?> scope) {
         return getWatchValues(scope);
     }
 
     @Override
-    final public void onValueChanged(Object newValue, Object oldValue, Scope scope) {
+    final public void onValueChanged(Object newValue, Object oldValue, Scope<?> scope) {
         onValuesChanged((Object[])newValue, (Object[])oldValue, scope);
     }
 
@@ -31,6 +31,6 @@ public abstract class GroupWatcher extends Watcher {
         return true;
     }
 
-    protected abstract Object[] getWatchValues(Scope scope);
-    protected abstract void onValuesChanged(Object[] newValues, Object[] oldValues, Scope scope);
+    protected abstract Object[] getWatchValues(Scope<?> scope);
+    protected abstract void onValuesChanged(Object[] newValues, Object[] oldValues, Scope<?> scope);
 }
