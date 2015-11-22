@@ -48,6 +48,10 @@ public abstract class ScopedViewGroup extends ViewGroup {
         setOnHierarchyChangeListener(listener);
     }
 
+    public Scope<?> getScope() {
+        return scope;
+    }
+
     public void setScope(Scope<?> scope) {
         if (this.scope != null) {
             throw new IllegalStateException("Unexpected state: scope is already set for this ScopedViewGroup.");

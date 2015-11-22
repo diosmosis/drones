@@ -71,7 +71,7 @@ public class Scope<P extends Scope> {
     // TODO: should not allow classes other than Scope to set, while still allowing property-like access in generated code
     public P _parent;
     public final Handler _handler;
-    private final View _owner;
+    public final View _owner;
 
     public Scope(Handler handler, View owner) {
         this(handler, owner, null, new LinkedList<QueuedRunnable>(), new LinkedList<java.lang.Runnable>());
@@ -195,7 +195,7 @@ public class Scope<P extends Scope> {
             if (!watcher.areValuesEqual(newValue, lastValue)) {
                 lastDirtyWatcher = watcher;
 
-                watcher.setLastValue(lastValue);
+                watcher.setLastValue(newValue);
                 watcher.onValueChanged(newValue, lastValue == Watcher.INITIAL_VALUE ? newValue : lastValue, this);
             } else if (lastDirtyWatcher == watcher) {
                 // if this watcher is the last dirty watcher for the last iteration, then we've gone through

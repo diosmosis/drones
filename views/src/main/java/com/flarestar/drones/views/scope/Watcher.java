@@ -14,12 +14,12 @@ public abstract class Watcher {
     /**
      * TODO
      */
-    private Object lastValue = INITIAL_VALUE;
+    protected Object lastValue = INITIAL_VALUE;
 
     /**
      * TODO
      */
-    private boolean useValueComparison = false;
+    protected boolean useValueComparison = false;
 
     public Watcher() {
         // empty

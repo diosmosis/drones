@@ -37,7 +37,7 @@ public class Controller extends Directive {
         String controllerScopeProperty = match.group(2);
 
         result.add(new Property(controllerScopeProperty, controllerClass,
-            "new " + controllerClass + "(_screen)", this));
+            "new " + controllerClass + "(owner.getContext())", this));
         return result;
     }
 

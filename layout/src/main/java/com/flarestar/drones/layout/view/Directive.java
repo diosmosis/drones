@@ -73,6 +73,10 @@ public abstract class Directive {
         return "";
     }
 
+    public String beforeReturnResult() throws LayoutFileException {
+        return "";
+    }
+
     public String getDirectiveName() {
         return getDirectiveName(getClass());
     }

@@ -60,4 +60,29 @@ public class Repeat extends Directive {
     public String afterViewAdded() throws LayoutFileException {
         return "}\n";
     }
+
+    @Override
+    public String beforeReturnResult() throws LayoutFileException {
+        StringBuilder result = new StringBuilder();
+        result.append("scope.watch(new com.flarestar.drones.views.scope.CollectionWatcher() {\n");
+        result.append("    @Override\n");
+        result.append("    public Object getWatchValue(Scope<?> _scope) {\n");
+
+        {
+            result.append("        return ");
+            result.append(iterableExpression);
+            result.append(";\n");
+        }
+
+        result.append("    }\n");
+        result.append("\n");
+        result.append("    @Override\n");
+        result.append("    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {\n");
+        // TODO: we should only do this ONCE per tree. and need to take into context child views. do createChildren calls for them
+        // get invalidated when a parent has to be changed? not sure....
+        result.append("        _parentView.createChildren();\n");
+        result.append("    }\n");
+        result.append("});\n");
+        return result.toString();
+    }
 }

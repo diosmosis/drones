@@ -5,7 +5,7 @@
 {% macro make_view_function(view, interpolator, styleProcessor) %}
 {% import _self as self %}
 
-    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final Screen _screen{% if view.parent != null %}, final Scope _parentNodeScope{% endif %}) {
+    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final Screen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final Scope _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.getScopeDefinition().getScopeClassName() }} scope = ({{ view.parent.getScopeDefinition().getScopeClassName() }})_parentNodeScope;
         {% if view.parent.getScopeDefinition().getParentScope() != null %}final {{ view.parent.getScopeDefinition().getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.getScopeDefinition().properties %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
@@ -13,7 +13,7 @@
 
     {% if view.hasDynamicDirective() %}
         final ViewFactory result = new ViewFactory() {
-            public void createViews(ViewGroup parent) {
+            public void createViews(final ViewGroup parent) {
     {% endif %}
 
         {{ self.directive_hook(view, "beforeScopeCreated") }}
@@ -43,7 +43,7 @@
                 {{ self.directive_hook(view, "afterViewCreated") }}
 
                 {% for child in view.children %}
-                result.{% if view.isDynamic() %}addChildDefinition{% else %}addView{% endif %}(makeView_{{ child.id }}(_screen, scope));
+                result.{% if view.isDynamic() %}addChildDefinition{% else %}addView{% endif %}(makeView_{{ child.id }}(_screen, result, scope));
                 {% endfor %}
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
@@ -58,6 +58,8 @@
             }
         };
     {% endif %}
+
+        {{ self.directive_hook(view, "beforeReturnResult") }}
 
         return result;
     }

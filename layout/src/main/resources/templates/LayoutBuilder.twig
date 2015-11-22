@@ -8,6 +8,7 @@ import com.flarestar.drones.views.Scope;
 import com.flarestar.drones.views.ViewFactory;
 import com.flarestar.drones.views.ScopedViewFactory;
 import com.flarestar.drones.views.ScopedViewGroup;
+import com.flarestar.drones.views.DynamicViewGroup;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
@@ -24,10 +25,10 @@ public class {{ className }} implements DroneInterface {
         {% if scope.getParentScope() == null %}
         public {{ scope.getScopeClassName() }}(Handler handler, View owner) {
             super(handler, owner);
-        }
         {% else %}
         public {{ scope.getScopeClassName() }}(Handler handler, View owner, {{ scope.getParentScope().getScopeClassName() }} parent) {
             super(handler, owner, parent);
+        {% endif %}
 
             {% for property in scope.properties %}
             {% if property.initialValueExpression != null %}
@@ -35,7 +36,6 @@ public class {{ className }} implements DroneInterface {
             {% endif %}
             {% endfor %}
         }
-        {% endif %}
     }
     {% endfor %}
 
@@ -50,7 +50,9 @@ public class {{ className }} implements DroneInterface {
             return;
         }
 
-        screen.setContentView(makeView_{{ rootView.id }}(screen));
+        ScopedViewGroup rootView = (ScopedViewGroup)makeView_{{ rootView.id }}(screen);
+        rootView.getScope().apply();
+        screen.setContentView(rootView);
     }
 
     {{ macros.make_view_function(rootView, interpolator, styleProcessor) }}
