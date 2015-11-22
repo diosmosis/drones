@@ -52,12 +52,6 @@ public class ScopeDefinition {
     }
 
     public void setScopeProperties(ViewNode node) throws LayoutFileException {
-        if (parentScope != null && !isIsolateScope) {
-            for (Property property : parentScope.properties.values()) {
-                properties.put(property.name, property.makeInherited());
-            }
-        }
-
         processDirectives(node); // TODO: not necessary to have two methods here
     }
 
@@ -85,10 +79,8 @@ public class ScopeDefinition {
         for (Property property : directiveProperties) {
             if (properties.containsKey(property.name)) {
                 Property originalProperty = properties.get(property.name);
-                if (!originalProperty.isInherited) {
-                    throw new ScopePropertyAlreadyDefined(property.name, originalProperty.source.getDirectiveName(),
-                        directive.getDirectiveName());
-                }
+                throw new ScopePropertyAlreadyDefined(property.name, originalProperty.source.getDirectiveName(),
+                    directive.getDirectiveName());
             }
 
             properties.put(property.name, property);
@@ -142,13 +134,7 @@ public class ScopeDefinition {
             if (isIsolateScope) {
                 isPassthroughScope = false;
             } else {
-                int ownPropertyCount = 0;
-                for (Property property : properties.values()) {
-                    if (!property.isInherited) {
-                        ++ownPropertyCount;
-                    }
-                }
-                isPassthroughScope = ownPropertyCount == 0;
+                isPassthroughScope = properties.size() == 0;
             }
         }
 

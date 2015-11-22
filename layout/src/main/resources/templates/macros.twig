@@ -22,15 +22,21 @@
             @Override
             public View make() {
 
-                {% if view.hasScope() %}final {{ view.getScopeDefinition().getScopeClassName() }} scope = {% if view.hasIsolateScope() %}new {{ view.getScopeDefinition().getScopeClassName() }}(_handler{% if node.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.getScopeDefinition().getScopeClassName() }})_parentNodeScope{% endif %};
+                final {{ view.getViewClassName() }} result = new {{ view.getViewClassName() }}(_screen);
+
+                {% if view.hasScope() %}final {{ view.getScopeDefinition().getScopeClassName() }} scope = {% if view.hasIsolateScope() %}new {{ view.getScopeDefinition().getScopeClassName() }}(_handler, result{% if node.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.getScopeDefinition().getScopeClassName() }})_parentNodeScope{% endif %};
                 {% if view.getScopeDefinition().getParentScope() != null %}final {{ view.getScopeDefinition().getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
                 {% for property in view.getScopeDefinition().properties %}{% if not property.isInherited %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
                 {% endif %}{% endfor %}{% endif %}
 
                 {{ self.directive_hook(view, "beforeViewCreated") }}
 
-                final {{ view.getViewClassName() }} result = new {{ view.getViewClassName() }}(_screen);
                 result.setVisibility(View.VISIBLE);
+                {% if view.hasScope() %}
+                if (result instanceof ScopedViewGroup) {
+                    ((ScopedViewGroup)result).setScope(scope);
+                }
+                {% endif %}
                 {% if view.text != null and not view.text.isEmpty() %}result.setText({{ interpolator.interpolate(view.text) }});{% endif %}
                 {{ styleProcessor.process(view) }}
 

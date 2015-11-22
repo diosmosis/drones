@@ -7,6 +7,7 @@ import com.flarestar.drones.views.BoxModelNode;
 import com.flarestar.drones.views.Scope;
 import com.flarestar.drones.views.ViewFactory;
 import com.flarestar.drones.views.ScopedViewFactory;
+import com.flarestar.drones.views.ScopedViewGroup;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
@@ -21,17 +22,15 @@ public class {{ className }} implements DroneInterface {
         {% endfor %}
 
         {% if scope.getParentScope() == null %}
-        public {{ scope.getScopeClassName() }}(Handler handler) {
-            super(handler);
+        public {{ scope.getScopeClassName() }}(Handler handler, View owner) {
+            super(handler, owner);
         }
         {% else %}
-        public {{ scope.getScopeClassName() }}(Handler handler, {{ scope.getParentScope().getScopeClassName() }} parent) {
-            super(handler, parent);
+        public {{ scope.getScopeClassName() }}(Handler handler, View owner, {{ scope.getParentScope().getScopeClassName() }} parent) {
+            super(handler, owner, parent);
 
             {% for property in scope.properties %}
-            {% if property.isInherited %}
-            this.{{ property.name }} = parent.{{ property.name }};
-            {% elseif property.initialValueExpression != null %}
+            {% if property.initialValueExpression != null %}
             this.{{ property.name }} = {{ property.initialValueExpression }};
             {% endif %}
             {% endfor %}

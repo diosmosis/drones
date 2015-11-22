@@ -3,7 +3,6 @@ package com.flarestar.drones.views;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewParent;
 
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ import java.util.List;
 /**
  * TODO
  */
-public abstract class DynamicViewGroup extends ViewGroup {
+public abstract class DynamicViewGroup extends ScopedViewGroup {
 
     /**
      * TODO
@@ -48,6 +47,7 @@ public abstract class DynamicViewGroup extends ViewGroup {
         }
     }
 
+    // TODO: automated tests should detect if memory leaks exist
     public void createChildren() {
         childrenDirty = false;
 

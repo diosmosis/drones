@@ -1,14 +1,19 @@
 package com.flarestar.drones.views;
 
 import android.os.Handler;
+import android.view.View;
 import com.flarestar.drones.views.scope.Watcher;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * TODO
+ *
+ * TODO: should note some things about storing scopes, specifically, should never reference
+ *       a Scope directly. all references to scopes should be handled by drones.
  */
 public class Scope<P extends Scope> {
 
@@ -37,7 +42,7 @@ public class Scope<P extends Scope> {
         Object run(Scope<?> scope);
     }
 
-    private class QueuedRunnable implements java.lang.Runnable {
+    private static class QueuedRunnable implements java.lang.Runnable {
         public final Scope<?> scope;
         public final Runnable runnable;
 
@@ -54,23 +59,47 @@ public class Scope<P extends Scope> {
 
     public final int DIGEST_TTL = 10;
 
+    // TODO: there is only one of these per hierarchy. should note this somewhere.
+    private final LinkedList<QueuedRunnable> _asyncQueue;
+    private final LinkedList<java.lang.Runnable> _postDigestQueue;
+
     // TODO: use same naming as angular ie, $$ prefix
     private List<Watcher> _watchers = new ArrayList<>();
-    private LinkedList<QueuedRunnable> _asyncQueue = new LinkedList<>();
-    private LinkedList<java.lang.Runnable> _postDigestQueue = new LinkedList<>();
+    private LinkedList<Scope<?>> _children = new LinkedList<>();
     private String _phase;
 
-    public final P _parent;
+    // TODO: should not allow classes other than Scope to set, while still allowing property-like access in generated code
+    public P _parent;
     public final Handler _handler;
+    private final View _owner;
 
-    public Scope(Handler handler) {
-        _parent = null;
-        _handler = handler;
+    public Scope(Handler handler, View owner) {
+        this(handler, owner, null, new LinkedList<QueuedRunnable>(), new LinkedList<java.lang.Runnable>());
     }
 
-    public Scope(Handler handler, P parent) {
-        _parent = parent;
+    public Scope(Handler handler, View owner, P parent) {
+        this(handler, owner, parent, ((Scope<?>)parent)._asyncQueue, ((Scope<?>)parent)._postDigestQueue);
+
+        if (_parent != null) {
+            _parent.addChild(this);
+        }
+    }
+
+    private Scope(Handler handler, View owner, P parent, LinkedList<QueuedRunnable> asyncQueue,
+                  LinkedList<java.lang.Runnable> postDigestQueue) {
         _handler = handler;
+        _owner = owner;
+        _parent = parent;
+        _asyncQueue = asyncQueue;
+        _postDigestQueue = postDigestQueue;
+    }
+
+    public Scope<?> getRoot() {
+        Scope<?> result = this;
+        while (result._parent != null) {
+            result = result._parent;
+        }
+        return result;
     }
 
     public void watch(Watcher watcher) {
@@ -114,11 +143,15 @@ public class Scope<P extends Scope> {
     public Object apply(Runnable runnable) {
         try {
             beginPhase("$apply");
-            return eval(runnable);
+            return runnable == null ? null : eval(runnable);
         } finally {
             clearPhase();
-            digest();
+            getRoot().digest();
         }
+    }
+
+    public Object apply() {
+        return apply(null);
     }
 
     public void evalAsync(Runnable runnable) {
@@ -127,7 +160,7 @@ public class Scope<P extends Scope> {
                 @Override
                 public void run() {
                     if (!_asyncQueue.isEmpty()) {
-                        digest();
+                        getRoot().digest();
                     }
                 }
             });
@@ -168,7 +201,21 @@ public class Scope<P extends Scope> {
                 // if this watcher is the last dirty watcher for the last iteration, then we've gone through
                 // every watcher (partially in the last iteration) and no watcher is dirty, so we can just
                 // stop here
-                return null;
+                lastDirtyWatcher = null;
+                break;
+            }
+        }
+
+        // TODO: have changed it a bit from angular to work in Java, which may result in some performance
+        // issues.
+        for (Scope<?> child : _children) {
+            Watcher lastDirtyChildWatcher = child.checkWatchers(null);
+            if (lastDirtyChildWatcher != null) {
+                // child scopes can watch values in a parent scope, so if one was executed then it's possible
+                // that a value in the current scope has been changed. by setting the last dirty watcher to
+                // the last dirty watcher in the child scope, we ensure the entire list of watchers will be run
+                // on the next iteration.
+                lastDirtyWatcher = lastDirtyChildWatcher;
             }
         }
 
@@ -184,6 +231,26 @@ public class Scope<P extends Scope> {
     private void consumePostDigestQueue() {
         while (!_postDigestQueue.isEmpty()) {
             _postDigestQueue.removeFirst().run();
+        }
+    }
+
+    protected void addChild(Scope<?> child) {
+        _children.add(child);
+    }
+
+    // TODO: we use this method of searching for a child before detaching in order to be able to detach in a
+    // ViewGroup.OnHierarchyChangeListener object. this ensures scopes are removed even if someone or something
+    // outside of the drones library removes a view. perhaps there's a better solution?
+    public void detachChild(View owner) {
+        Iterator<Scope<?>> it = _children.listIterator();
+        while (it.hasNext()) {
+            Scope<?> childScope = it.next();
+            if (childScope._owner == owner) {
+                childScope._parent = null;
+                childScope._watchers.clear();
+                it.remove();
+                return;
+            }
         }
     }
 }

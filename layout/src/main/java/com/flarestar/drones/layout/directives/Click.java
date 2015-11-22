@@ -34,6 +34,7 @@ public class Click extends Directive {
             result.append(";\n");
         }
 
+        result.append("            scope.apply();\n");
         result.append("        } catch (Exception e) {\n");
         result.append("            throw new RuntimeException(\"Unexpected error when invoking event handler.\", e);\n");
         result.append("        }\n");
