@@ -71,7 +71,7 @@ public class Scope<P extends Scope> {
     // TODO: should not allow classes other than Scope to set, while still allowing property-like access in generated code
     public P _parent;
     public final Handler _handler;
-    public final View _owner;
+    private View _owner;
 
     public Scope(Handler handler, View owner) {
         this(handler, owner, null, new LinkedList<QueuedRunnable>(), new LinkedList<java.lang.Runnable>());
@@ -248,6 +248,7 @@ public class Scope<P extends Scope> {
             if (childScope._owner == owner) {
                 childScope._parent = null;
                 childScope._watchers.clear();
+                childScope._owner = null;
                 it.remove();
                 return;
             }
