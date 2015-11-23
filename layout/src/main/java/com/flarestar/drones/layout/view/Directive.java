@@ -21,6 +21,10 @@ public abstract class Directive {
         this.node = node;
     }
 
+    public void postConstruct() throws LayoutFileException {
+        // empty
+    }
+
     public String getViewClassName() {
         DirectiveView annotation = getClass().getAnnotation(DirectiveView.class);
         return annotation == null ? null : annotation.view().getName();

@@ -1,5 +1,6 @@
 package com.flarestar.drones.layout.view.directive;
 
+import com.flarestar.drones.layout.DroneModule;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
@@ -7,6 +8,8 @@ import com.flarestar.drones.layout.view.directive.exceptions.InvalidDirectiveCla
 import com.flarestar.drones.layout.view.directive.matchers.AttributeMatcher;
 import com.flarestar.drones.layout.view.directive.matchers.TagMatcher;
 import com.google.common.base.Predicate;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.helger.commons.io.stream.StringInputStream;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -67,6 +70,13 @@ public class DirectiveFactory {
         }
     }
 
+    private Injector injector;
+
+    @Inject
+    public DirectiveFactory(Injector injector) {
+        this.injector = injector;
+    }
+
     public void detectDirectives(ViewNode node) throws LayoutFileException {
         for (Class<?> directiveClass : allDirectives) {
             DirectiveMatcher matcher = directiveMatchers.get(directiveClass);
@@ -77,10 +87,15 @@ public class DirectiveFactory {
             Directive directive;
             try {
                 directive = (Directive)directiveClass.getConstructor(ViewNode.class).newInstance(node);
-                node.directives.add(directive);
             } catch (ReflectiveOperationException e) {
-                throw new InvalidDirectiveClassException("Could not create new instance of directive.", e);
+                throw new InvalidDirectiveClassException("Could not create new instance of directive '"
+                    + directiveClass.getName() + "'.", e);
             }
+
+            injector.injectMembers(directive);
+            directive.postConstruct();;
+
+            node.directives.add(directive);
         }
     }
 

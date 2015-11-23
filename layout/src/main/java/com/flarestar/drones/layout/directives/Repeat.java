@@ -11,6 +11,7 @@ import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.directive.matchers.AttributeMatcher;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
+import com.google.inject.Inject;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
@@ -26,8 +27,11 @@ public class Repeat extends Directive {
 
     private final String iterationScopeVariable;
     private final String iterableExpression;
-    private final TypeMirror iterableType;
-    private final TypeMirror iterationScopeVariableType;
+    private TypeMirror iterableType;
+    private TypeMirror iterationScopeVariableType;
+
+    @Inject
+    private TypeInferer typeInferer;
 
     public Repeat(ViewNode node) throws LayoutFileException {
         super(node);
@@ -40,12 +44,12 @@ public class Repeat extends Directive {
 
         iterationScopeVariable = m.group(1);
         iterableExpression = m.group(2);
+    }
 
-        TypeInferer inferer = TypeInferer.getInstance();
-
+    public void postConstruct() throws LayoutFileException {
         try {
-            iterableType = node.getScopeDefinition().getTypeOfExpression(iterableExpression);
-            iterationScopeVariableType = inferer.getValueTypeOf(iterableType);
+            iterableType = typeInferer.getTypeOfExpression(node.getScopeDefinition(), iterableExpression);
+            iterationScopeVariableType = typeInferer.getValueTypeOf(iterableType);
         } catch (BaseExpressionException ex) {
             throw new LayoutFileException("Invalid ng-repeat expression", ex);
         }

@@ -40,8 +40,6 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
 
-        TypeInferer.createInstance(processingEnv);
-
         DroneModule module = new DroneModule(processingEnv);
         injector = Guice.createInjector(module);
         layoutBuilderGenerator = injector.getInstance(LayoutBuilderGenerator.class);

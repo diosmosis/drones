@@ -12,6 +12,7 @@ import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.writer.LayoutBuilderWriter;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -24,6 +25,7 @@ import java.io.*;
 /**
  * TODO
  */
+@Singleton
 public class LayoutBuilderGenerator {
 
     private LayoutProcessor xmlProcessor;
@@ -31,17 +33,20 @@ public class LayoutBuilderGenerator {
     private ProcessingEnvironment processingEnvironment;
     private TypeMirror screenType;
     private ProjectSniffer projectSniffer;
+    private TypeInferer typeInferer;
 
     @Inject
     public LayoutBuilderGenerator(LayoutProcessor xmlProcessor, LayoutBuilderWriter layoutBuilderWriter,
-                                  ProcessingEnvironment processingEnvironment, ProjectSniffer projectSniffer) {
+                                  ProcessingEnvironment processingEnvironment, ProjectSniffer projectSniffer,
+                                  TypeInferer typeInferer) {
         this.xmlProcessor = xmlProcessor;
         this.layoutBuilderWriter = layoutBuilderWriter;
         this.processingEnvironment = processingEnvironment;
         this.projectSniffer = projectSniffer;
+        this.typeInferer = typeInferer;
 
         try {
-            this.screenType = TypeInferer.getInstance().getTypeMirrorFor(Screen.class.getName());
+            this.screenType = typeInferer.getTypeMirrorFor(Screen.class.getName());
         } catch (IllegalStateException ex) {
             throw new RuntimeException("Cannot find the '" + Screen.class.getName() + "' type, is the base drone on the classpath?", ex);
         }
@@ -79,7 +84,7 @@ public class LayoutBuilderGenerator {
         String layoutBuilderClassName = screenClassName + "LayoutBuilderDrone";
         String screenPackage = screenClassName.substring(0, screenClassName.lastIndexOf('.'));
 
-        TypeInferer.getInstance().setBasePackage(screenPackage);
+        typeInferer.setBasePackage(screenPackage); // TODO: should not have this mutability, but not sure how to remove...
 
         Layout annotation = activityClassElement.getAnnotation(Layout.class);
         String layoutFilePath = annotation.value();
@@ -108,8 +113,8 @@ public class LayoutBuilderGenerator {
             tree = xmlProcessor.createViewTree(layoutInput, stylesheetInput);
         } catch (LayoutFileException e) {
             throw new RuntimeException("Layout file " + layoutFilePath + " is malformed: " + e.getMessage(), e);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to read resources/" + annotation.value() + " layout file.", e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read " + annotation.value() + " layout file.", e);
         }
 
         processingEnvironment.getMessager().printMessage(Diagnostic.Kind.NOTE, "Generating '" + layoutBuilderClassName + "'.");

@@ -4,6 +4,7 @@ import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.StyleProcessor;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
+import com.google.inject.Inject;
 import org.jtwig.JtwigModelMap;
 import org.jtwig.JtwigTemplate;
 import org.jtwig.configuration.JtwigConfiguration;
@@ -23,19 +24,25 @@ import java.util.*;
 public class LayoutBuilderWriter {
 
     private final JtwigTemplate template;
+    private final StyleProcessor styleProcessor;
+    private final Interpolator interpolator;
 
-    public LayoutBuilderWriter() {
+    @Inject
+    public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator) {
         Loader.Resource resource = new ClasspathLoader.ClasspathResource("templates/LayoutBuilder.twig");
         JtwigConfiguration jtwigConfig = JtwigConfigurationBuilder.newConfiguration().build();
         template = new JtwigTemplate(resource, jtwigConfig);
+
+        this.styleProcessor = styleProcessor;
+        this.interpolator = interpolator;
     }
 
     public void writeLayoutBuilder(String screenClassName, String layoutBuilderClassName,
                                    String applicationPackage, ViewNode tree, OutputStream output)
             throws JtwigException, LayoutFileException {
         JtwigModelMap model = new JtwigModelMap();
-        model.add("styleProcessor", new StyleProcessor());
-        model.add("interpolator", new Interpolator());
+        model.add("styleProcessor", styleProcessor);
+        model.add("interpolator", interpolator);
 
         model.add("rootView", tree);
         model.add("package", getPackageFromClassName(layoutBuilderClassName));

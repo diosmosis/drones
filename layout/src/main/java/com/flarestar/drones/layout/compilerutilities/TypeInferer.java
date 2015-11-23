@@ -1,7 +1,10 @@
 package com.flarestar.drones.layout.compilerutilities;
 
 import com.flarestar.drones.layout.compilerutilities.exceptions.*;
+import com.flarestar.drones.layout.view.scope.Property;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.*;
@@ -13,41 +16,22 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * TODO
  */
+@Singleton
 public class TypeInferer {
-    private static TypeInferer instance;
+    private static final Pattern EXPRESSION_START_REGEX = Pattern.compile("([a-zA-Z0-9_$]+)(.*)");
 
-    private TypeMirror iterableBaseTypeMirror;
     private ProcessingEnvironment processingEnvironment;
     private String basePackage = "";
 
+    @Inject
     public TypeInferer(ProcessingEnvironment processingEnvironment) {
         this.processingEnvironment = processingEnvironment;
-
-        TypeElement iterableBaseElement = processingEnvironment.getElementUtils().getTypeElement(Iterable.class.getName());
-        if (iterableBaseElement == null) {
-            throw new RuntimeException("Unexpected error: cannot find Iterable class as TypeElement.");
-        }
-
-        this.iterableBaseTypeMirror = iterableBaseElement.asType();
-    }
-
-    public static TypeInferer getInstance() { // TODO: shouldn't be singleton.
-        if (TypeInferer.instance == null) {
-            throw new IllegalStateException("TypeInferer singleton has not been created.");
-        }
-        return instance;
-    }
-
-    public static void createInstance(ProcessingEnvironment processingEnv) {
-        if (TypeInferer.instance != null) {
-            throw new IllegalStateException("TypeInferer singleton has already been created.");
-        }
-
-        TypeInferer.instance = new TypeInferer(processingEnv);
     }
 
     public TypeMirror getTypeMirrorFor(String type) {
@@ -164,5 +148,46 @@ public class TypeInferer {
 
     public void setBasePackage(String basePackage) {
         this.basePackage = basePackage;
+    }
+
+    public TypeMirror getTypeOfExpression(ScopeDefinition context, String expression)
+        throws InvalidTypeExpression, InvalidExpression, InvalidTypeException, CannotFindProperty, CannotFindMethod {
+
+        if (expression.startsWith("scope.")) {
+            expression = expression.substring(6);
+        }
+
+        TypeMirror type = null;
+
+        ScopeDefinition scope = context;
+        while (scope != null) {
+            Matcher m = EXPRESSION_START_REGEX.matcher(expression);
+            if (!m.matches()) {
+                throw new RuntimeException("Unexpected error, cannot parse expression start: " + expression);
+            }
+
+            String propertyName = m.group(1);
+            Property property = scope.properties.get(propertyName);
+            if (property == null) {
+                throw new InvalidTypeExpression(expression, "no property named '" + propertyName + "'");
+            }
+            expression = m.group(2);
+
+            // TODO: if someone stores a scope as a property in a scope, this won't work out.
+            if (property.type.equals("_parent")) {
+                scope = scope.getParentScope();
+            } else {
+                type = getTypeMirrorFor(property.type);
+                scope = null;
+            }
+        }
+
+        if (type == null) {
+            // TODO: We can't get a TypeMirror from a generic string, eg List<String> and we can't get
+            //       TypeMirrors for Scope types, so for now disabling using scope types as results in expressions.
+            throw new InvalidTypeExpression(expression, "scope types not allowed in this context");
+        }
+
+        return getTypeOfExpression(type, expression, context);
     }
 }

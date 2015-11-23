@@ -85,7 +85,7 @@ public class ExpressionParser {
                 case ')':
                     if (callScope == 0) {
                         String parameter = currentExpression.substring(currentParameterStart + 1, i);
-                        TypeMirror parameterType = currentScope.getTypeOfExpression(parameter);
+                        TypeMirror parameterType = inferer.getTypeOfExpression(currentScope, parameter);
                         parameters.add(parameterType);
 
                         break mainparseloop;
@@ -95,7 +95,7 @@ public class ExpressionParser {
                     break;
                 case ',':
                     String parameter = currentExpression.substring(currentParameterStart + 1, i);
-                    TypeMirror parameterType = currentScope.getTypeOfExpression(parameter);
+                    TypeMirror parameterType = inferer.getTypeOfExpression(currentScope, parameter);
                     parameters.add(parameterType);
 
                     currentParameterStart = i;

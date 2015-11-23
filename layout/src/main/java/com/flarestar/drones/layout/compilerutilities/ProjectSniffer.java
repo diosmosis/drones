@@ -4,6 +4,7 @@ import com.flarestar.drones.layout.android.Manifest;
 import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeFound;
 import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeParsed;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.FileObject;
@@ -13,6 +14,7 @@ import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 
+@Singleton
 public class ProjectSniffer {
 
     private Path projectRoot;

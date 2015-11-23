@@ -5,8 +5,11 @@ import com.asual.lesscss.LessException;
 import com.flarestar.drones.layout.parser.exceptions.InvalidLayoutAttributeValue;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.parser.exceptions.UnknownLayoutAttributeException;
+import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.directive.DirectiveFactory;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.helger.commons.charset.CCharset;
 import com.helger.css.ECSSVersion;
 import com.helger.css.decl.CSSDeclaration;
@@ -29,15 +32,17 @@ import java.util.*;
 /**
  * TODO
  */
+@Singleton
 public class LayoutProcessor {
 
     private CSSWriterSettings cssWriterSettings;
     private DirectiveFactory directiveFactory;
     private int lastGeneratedId = 0;
 
-    public LayoutProcessor() {
-        this.cssWriterSettings = new CSSWriterSettings(ECSSVersion.CSS30);
-        this.directiveFactory = new DirectiveFactory();
+    @Inject
+    public LayoutProcessor(DirectiveFactory directiveFactory, CSSWriterSettings cssWriterSettings) {
+        this.cssWriterSettings = cssWriterSettings;
+        this.directiveFactory = directiveFactory;
     }
 
     public ViewNode createViewTree(InputStream layoutInput, InputStream styleSheetInput) throws LayoutFileException {
@@ -149,7 +154,7 @@ public class LayoutProcessor {
         try {
             return Jsoup.parse(input, "UTF-8", "", Parser.xmlParser());
         } catch (IOException e) {
-            throw new RuntimeException("Unabe to read input.", e);
+            throw new RuntimeException("Unable to read input.", e);
         }
     }
 }

@@ -15,8 +15,6 @@ import java.util.regex.Pattern;
 // TODO: refactor whole code base for cleaner code
 
 public class ScopeDefinition {
-    private static final Pattern EXPRESSION_START_REGEX = Pattern.compile("([a-zA-Z0-9_$]+)(.*)");
-
     private String scopeClassName;
     private final ViewNode owner;
     private final ScopeDefinition parentScope;
@@ -85,48 +83,6 @@ public class ScopeDefinition {
 
             properties.put(property.name, property);
         }
-    }
-
-    public TypeMirror getTypeOfExpression(String expression)
-            throws InvalidTypeExpression, InvalidExpression, InvalidTypeException, CannotFindProperty, CannotFindMethod {
-        TypeInferer inferer = TypeInferer.getInstance(); // TODO: shouldn't be singleton.
-
-        if (expression.startsWith("scope.")) {
-            expression = expression.substring(6);
-        }
-
-        TypeMirror type = null;
-
-        ScopeDefinition scope = this;
-        while (scope != null) {
-            Matcher m = EXPRESSION_START_REGEX.matcher(expression);
-            if (!m.matches()) {
-                throw new RuntimeException("Unexpected error, cannot parse expression start: " + expression);
-            }
-
-            String propertyName = m.group(1);
-            Property property = scope.properties.get(propertyName);
-            if (property == null) {
-                throw new InvalidTypeExpression(expression, "no property named '" + propertyName + "'");
-            }
-            expression = m.group(2);
-
-            // TODO: if someone stores a scope as a property in a scope, this won't work out.
-            if (property.type.equals("_parent")) {
-                scope = parentScope;
-            } else {
-                type = inferer.getTypeMirrorFor(property.type);
-                scope = null;
-            }
-        }
-
-        if (type == null) {
-            // TODO: We can't get a TypeMirror from a generic string, eg List<String> and we can't get
-            //       TypeMirrors for Scope types, so for now disabling using scope types as results in expressions.
-            throw new InvalidTypeExpression(expression, "scope types not allowed in this context");
-        }
-
-        return inferer.getTypeOfExpression(type, expression, this);
     }
 
     public boolean isPassthroughScope() {
