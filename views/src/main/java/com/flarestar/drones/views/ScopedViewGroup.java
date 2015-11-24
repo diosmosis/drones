@@ -7,6 +7,20 @@ import android.view.ViewGroup;
 
 public abstract class ScopedViewGroup extends ViewGroup {
 
+    public static class LayoutParams extends ViewGroup.LayoutParams {
+        private String signature;
+
+        public LayoutParams(String signature, int width, int height) {
+            super(width, height);
+
+            this.signature = signature;
+        }
+
+        public String getSignature() {
+            return signature;
+        }
+    }
+
     protected Scope<?> scope = null;
 
     public ScopedViewGroup(Context context) {

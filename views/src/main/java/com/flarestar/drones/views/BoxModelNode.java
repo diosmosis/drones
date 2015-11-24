@@ -48,7 +48,7 @@ public abstract class BoxModelNode extends DynamicViewGroup {
         }
     }
 
-    public static class LayoutParams extends ViewGroup.LayoutParams {
+    public static class LayoutParams extends ScopedViewGroup.LayoutParams {
         public Size boxWidth = null;
         public Size boxHeight = null;
 
@@ -62,8 +62,8 @@ public abstract class BoxModelNode extends DynamicViewGroup {
         public Size paddingLeft = null;
         public Size paddingRight = null;
 
-        public LayoutParams() {
-            super(WRAP_CONTENT, WRAP_CONTENT);
+        public LayoutParams(String signature) {
+            super(signature, WRAP_CONTENT, WRAP_CONTENT);
         }
     }
 
