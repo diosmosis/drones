@@ -1,4 +1,3 @@
 *.iml
-/base/target/
-/layout/target/
-/views/target/
+/*/target/
+

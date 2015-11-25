@@ -10,6 +10,7 @@
 
     <modules>
         <module>base</module>
+        <module>base-compiler</module>
         <module>layout</module>
         <module>views</module>
     </modules>

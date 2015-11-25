@@ -5,16 +5,47 @@ import android.app.Activity;
 import android.util.Log;
 import com.flarestar.drones.base.DroneInterface;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
+
 /**
  * TODO
  */
-public abstract class BaseScreen extends Activity
-{
+public abstract class BaseScreen extends Activity {
+    private DroneInterface[] drones;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Drone drone = new Drone();
-        drone.setUpDrone(this);
+        // TODO: lots of reflection here. if dagger DI's generated classes implemented some interfaces,
+        //       I think I could replace most of it. could try and add this upstream.
+        String activityComponentClassName = getClass().getName() + "ActivityComponent";
+        Class<?> componentClass = null;
+        try {
+            componentClass = Class.forName(activityComponentClassName);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        Method buildMethod = null;
+        try {
+            buildMethod = componentClass.getMethod("build", Activity.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+
+        DroneCollection collection = null;
+        try {
+            collection = (DroneCollection)buildMethod.invoke(null, this);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+
+        drones = collection.getDrones();
+        for (DroneInterface drone : drones) {
+            drone.setUpDrone(this);
+        }
     }
 }

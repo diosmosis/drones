@@ -1,0 +1,19 @@
+package {{ package }};
+
+import dagger.Module;
+import dagger.Provides;
+import android.app.Activity;
+
+@Module
+class {{ moduleClassName }} {
+
+    private Activity activity;
+
+    {{ moduleClassName }}(Activity activity) {
+        this.activity = activity;
+    }
+
+    @Provides Activity provideActivity() {
+        return this.activity;
+    }
+}

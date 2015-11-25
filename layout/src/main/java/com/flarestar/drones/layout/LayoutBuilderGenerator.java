@@ -1,6 +1,6 @@
 package com.flarestar.drones.layout;
 
-import com.flarestar.drones.base.Screen;
+import com.flarestar.drones.base.BaseScreen;
 import com.flarestar.drones.layout.android.Manifest;
 import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeFound;
 import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeParsed;
@@ -46,9 +46,9 @@ public class LayoutBuilderGenerator {
         this.typeInferer = typeInferer;
 
         try {
-            this.screenType = typeInferer.getTypeMirrorFor(Screen.class.getName());
+            this.screenType = typeInferer.getTypeMirrorFor(BaseScreen.class.getName());
         } catch (IllegalStateException ex) {
-            throw new RuntimeException("Cannot find the '" + Screen.class.getName() + "' type, is the base drone on the classpath?", ex);
+            throw new RuntimeException("Cannot find the '" + BaseScreen.class.getName() + "' type, is the base drone on the classpath?", ex);
         }
     }
 
@@ -70,7 +70,7 @@ public class LayoutBuilderGenerator {
 
         if (!processingEnvironment.getTypeUtils().isAssignable(element.asType(), screenType)) {
             processingEnvironment.getMessager().printMessage(Diagnostic.Kind.WARNING,
-                "Element '" + element.getSimpleName() + "' must derive from Screen in order to be used "
+                "Element '" + element.getSimpleName() + "' must derive from BaseScreen in order to be used "
                     + "w/ @Layout.");
 
             return false;
@@ -119,18 +119,18 @@ public class LayoutBuilderGenerator {
 
         processingEnvironment.getMessager().printMessage(Diagnostic.Kind.NOTE, "Generating '" + layoutBuilderClassName + "'.");
 
-        JavaFileObject newObject;
-        try {
-            newObject = processingEnvironment.getFiler().createSourceFile(layoutBuilderClassName);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate LayoutBuilder for '" + screenClassName + "'.", e);
-        }
-
         Manifest manifest = null;
         try {
             manifest = projectSniffer.findManifestFile();
         } catch (ManifestCannotBeFound | ManifestCannotBeParsed ex) {
             throw new RuntimeException(ex.getMessage(), ex);
+        }
+
+        JavaFileObject newObject;
+        try {
+            newObject = processingEnvironment.getFiler().createSourceFile(layoutBuilderClassName);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to generate LayoutBuilder for '" + screenClassName + "'.", e);
         }
 
         try (OutputStream output = newObject.openOutputStream()) {

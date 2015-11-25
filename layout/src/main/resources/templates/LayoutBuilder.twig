@@ -2,7 +2,7 @@
 package {{ package }};
 
 import com.flarestar.drones.base.DroneInterface;
-import com.flarestar.drones.base.Screen;
+import com.flarestar.drones.base.BaseScreen;
 import com.flarestar.drones.views.BoxModelNode;
 import com.flarestar.drones.views.Scope;
 import com.flarestar.drones.views.ViewFactory;
@@ -12,6 +12,7 @@ import com.flarestar.drones.views.DynamicViewGroup;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
+import javax.inject.Inject;
 import {{ applicationPackage }}.R;
 
 public class {{ className }} implements DroneInterface {
@@ -41,11 +42,12 @@ public class {{ className }} implements DroneInterface {
 
     private Handler _handler;
 
+    @Inject
     public {{ className }}() {
         _handler = new Handler();
     }
 
-    public void setUpDrone(final Screen screen) {
+    public void setUpDrone(final BaseScreen screen) {
         if (!(screen instanceof {{ screenClassName }})) {
             return;
         }

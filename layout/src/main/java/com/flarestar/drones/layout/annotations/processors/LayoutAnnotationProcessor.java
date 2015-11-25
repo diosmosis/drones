@@ -3,31 +3,19 @@ package com.flarestar.drones.layout.annotations.processors;
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.*;
-import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
-import javax.tools.FileObject;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardLocation;
-import java.io.*;
 import java.util.*;
 
-import com.flarestar.drones.base.Screen;
 import com.flarestar.drones.layout.DroneModule;
 import com.flarestar.drones.layout.LayoutBuilderGenerator;
-import com.flarestar.drones.layout.android.Manifest;
-import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeFound;
-import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeParsed;
 import com.flarestar.drones.layout.annotations.Layout;
-import com.flarestar.drones.layout.compilerutilities.TypeInferer;
-import com.flarestar.drones.layout.parser.LayoutProcessor;
-import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
-import com.flarestar.drones.layout.view.ViewNode;
-import com.flarestar.drones.layout.writer.LayoutBuilderWriter;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
 /**
  * TODO
+ *
+ * TODO: check that activity is annotated w/ @Screen too. use a base annotation processor in base-compiler?
  */
 @SupportedSourceVersion(SourceVersion.RELEASE_7)
 @SupportedAnnotationTypes({"com.flarestar.drones.layout.annotations.Layout"})
@@ -47,7 +35,7 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Start processing of @Layout");
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, "Start processing of @Layout");
 
         Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(Layout.class);
         for (Element element : elements) {
@@ -61,7 +49,7 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
             layoutBuilderGenerator.generateLayoutBuilderFor((TypeElement) element);
         }
 
-        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Finish processing of @Layout");
+        processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, "Finish processing of @Layout");
 
         return true;
     }

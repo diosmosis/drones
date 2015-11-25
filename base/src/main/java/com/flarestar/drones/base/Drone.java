@@ -7,7 +7,6 @@ import dalvik.system.DexFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.List;
 
 /**
  * TODO
@@ -15,7 +14,7 @@ import java.util.List;
 public class Drone {
     public final static String LOG_TAG = "com.flarestar";
 
-    public void setUpDrone(Screen screen) {
+    public void setUpDrone(BaseScreen screen) {
         Log.d(LOG_TAG, "Drone: Setting up all drones...");
 
         for (DroneInterface drone : getAllDrones(screen)) {

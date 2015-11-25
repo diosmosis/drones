@@ -5,7 +5,7 @@
 {% macro make_view_function(view, interpolator, styleProcessor) %}
 {% import _self as self %}
 
-    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final Screen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final Scope _parentNodeScope{% endif %}) {
+    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final Scope _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.getScopeDefinition().getScopeClassName() }} scope = ({{ view.parent.getScopeDefinition().getScopeClassName() }})_parentNodeScope;
         {% if view.parent.getScopeDefinition().getParentScope() != null %}final {{ view.parent.getScopeDefinition().getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.getScopeDefinition().properties %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
