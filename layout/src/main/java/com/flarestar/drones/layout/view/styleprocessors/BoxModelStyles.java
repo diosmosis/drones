@@ -85,7 +85,7 @@ public class BoxModelStyles implements Style {
         }
 
         {
-            result.append("BoxModelNode.LayoutParams layoutParams = new BoxModelNode.LayoutParams();\n");
+            result.append("BoxModelNode.LayoutParams layoutParams = new BoxModelNode.LayoutParams(\"\");\n");
         }
 
         addBoxModelProperty(node, result, "boxWidth", width);
