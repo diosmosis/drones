@@ -1,7 +1,7 @@
 {% import "macros.twig" as macros %}
 package {{ package }};
 
-import com.flarestar.drones.base.DroneInterface;
+import com.flarestar.drones.base.Drone;
 import com.flarestar.drones.base.BaseScreen;
 import com.flarestar.drones.views.BoxModelNode;
 import com.flarestar.drones.views.Scope;
@@ -15,7 +15,7 @@ import android.os.Handler;
 import javax.inject.Inject;
 import {{ applicationPackage }}.R;
 
-public class {{ className }} implements DroneInterface {
+public class {{ className }} implements Drone {
 
     {% for scope in scopeDefinitions %}
     public static class {{ scope.getScopeClassName() }} extends Scope<{% if scope.getParentScope() != null %}{{ scope.getParentScope().getScopeClassName() }}{% else %}Scope{% endif %}> {

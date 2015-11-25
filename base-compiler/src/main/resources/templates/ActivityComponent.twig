@@ -2,7 +2,7 @@ package {{ package }};
 
 import dagger.Component;
 import javax.inject.Inject;
-import com.flarestar.drones.base.DroneInterface;
+import com.flarestar.drones.base.Drone;
 import com.flarestar.drones.base.DroneCollection;
 import android.app.Activity;
 
@@ -13,8 +13,8 @@ abstract class {{ moduleClassName }} implements DroneCollection {
     public abstract {{ drone.getClassName() }} make{{ drone.getSimpleClassName() }}();
     {% endfor %}
 
-    public DroneInterface[] getDrones() {
-        return new DroneInterface[] {
+    public Drone[] getDrones() {
+        return new Drone[] {
             {% for drone in drones %}
             make{{ drone.getSimpleClassName() }}(),
             {% endfor %}

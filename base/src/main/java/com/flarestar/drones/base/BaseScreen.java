@@ -2,18 +2,14 @@ package com.flarestar.drones.base;
 
 import android.os.Bundle;
 import android.app.Activity;
-import android.util.Log;
-import com.flarestar.drones.base.DroneInterface;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
 
 /**
  * TODO
  */
 public abstract class BaseScreen extends Activity {
-    private DroneInterface[] drones;
+    private Drone[] drones;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +40,7 @@ public abstract class BaseScreen extends Activity {
         }
 
         drones = collection.getDrones();
-        for (DroneInterface drone : drones) {
+        for (Drone drone : drones) {
             drone.setUpDrone(this);
         }
     }
