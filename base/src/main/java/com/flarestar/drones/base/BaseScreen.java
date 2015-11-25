@@ -8,7 +8,7 @@ import com.flarestar.drones.base.DroneInterface;
 /**
  * TODO
  */
-public abstract class Screen extends Activity
+public abstract class BaseScreen extends Activity
 {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
