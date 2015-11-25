@@ -1,10 +1,10 @@
 package com.flarestar.drones.layout.directives;
 
 import android.widget.ImageView;
+import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.layout.annotations.directive.DirectiveName;
 import com.flarestar.drones.layout.annotations.directive.DirectiveView;
-import com.flarestar.drones.layout.annotations.directive.IsolateScope;
 import com.flarestar.drones.layout.parser.exceptions.InvalidLayoutAttributeValue;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.parser.exceptions.MissingLayoutAttributeValue;
@@ -22,7 +22,7 @@ public class Img extends Directive {
     }
 
     @Override
-    public String afterViewCreated() throws LayoutFileException {
+    public String afterViewCreated(GenerationContext context) throws LayoutFileException {
         String attributeValue = node.attributes.get("src");
         if (attributeValue == null) {
             throw new MissingLayoutAttributeValue("src");

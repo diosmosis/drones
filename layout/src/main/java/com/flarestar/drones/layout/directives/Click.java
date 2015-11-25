@@ -1,5 +1,6 @@
 package com.flarestar.drones.layout.directives;
 
+import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.layout.annotations.directive.DirectiveName;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
@@ -19,7 +20,7 @@ public class Click extends Directive {
     }
 
     @Override
-    public String afterViewCreated() throws LayoutFileException {
+    public String afterViewCreated(GenerationContext context) throws LayoutFileException {
         StringBuilder result = new StringBuilder();
 
         String code = node.attributes.get("ng-click");

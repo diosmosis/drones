@@ -1,5 +1,6 @@
 package com.flarestar.drones.layout.view;
 
+import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.annotations.directive.*;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.directive.exceptions.InvalidDirectiveClassException;
@@ -30,10 +31,14 @@ public abstract class Directive {
         return annotation == null ? null : annotation.view().getName();
     }
 
-    public String getHookCode(String hookName)
+    public String getHookCode(String hookName, GenerationContext context)
             throws LayoutFileException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method hookMethod = getClass().getMethod(hookName);
-        return (String)hookMethod.invoke(this);
+        Method hookMethod = getClass().getMethod(hookName, GenerationContext.class);
+        return (String)hookMethod.invoke(this, context);
+    }
+
+    public void beforeGeneration(GenerationContext context) throws LayoutFileException {
+        // empty
     }
 
     public List<Property> getScopeProperties() throws LayoutFileException {
@@ -57,27 +62,27 @@ public abstract class Directive {
         return annotation != null;
     }
 
-    public String afterViewCreated() throws LayoutFileException {
+    public String afterViewCreated(GenerationContext context) throws LayoutFileException {
         return "";
     }
 
-    public String beforeScopeCreated() throws LayoutFileException {
+    public String beforeScopeCreated(GenerationContext context) throws LayoutFileException {
         return "";
     }
 
-    public String beforeViewCreated() throws LayoutFileException {
+    public String beforeViewCreated(GenerationContext context) throws LayoutFileException {
         return "";
     }
 
-    public String afterViewAdded() throws LayoutFileException {
+    public String afterViewAdded(GenerationContext context) throws LayoutFileException {
         return "";
     }
 
-    public String afterChildrenAdded() throws LayoutFileException {
+    public String afterChildrenAdded(GenerationContext context) throws LayoutFileException {
         return "";
     }
 
-    public String beforeReturnResult() throws LayoutFileException {
+    public String beforeReturnResult(GenerationContext context) throws LayoutFileException {
         return "";
     }
 

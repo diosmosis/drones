@@ -1,5 +1,6 @@
 package com.flarestar.drones.layout.directives;
 
+import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.layout.annotations.directive.DirectiveName;
 import com.flarestar.drones.layout.annotations.directive.DynamicDirective;
@@ -10,11 +11,9 @@ import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.directive.matchers.AttributeMatcher;
-import com.flarestar.drones.layout.view.scope.ScopeDefinition;
 import com.google.inject.Inject;
 
 import javax.lang.model.type.TypeMirror;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,7 +45,8 @@ public class Repeat extends Directive {
         iterableExpression = m.group(2);
     }
 
-    public void postConstruct() throws LayoutFileException {
+    @Override
+    public void beforeGeneration(GenerationContext context) throws LayoutFileException {
         try {
             iterableType = typeInferer.getTypeOfExpression(node.getScopeDefinition(), iterableExpression);
             iterationScopeVariableType = typeInferer.getValueTypeOf(iterableType);
@@ -56,17 +56,17 @@ public class Repeat extends Directive {
     }
 
     @Override
-    public String beforeScopeCreated() throws LayoutFileException {
+    public String beforeScopeCreated(GenerationContext context) throws LayoutFileException {
         return "for (final " + iterationScopeVariableType.toString() + " " + iterationScopeVariable + " : " + iterableExpression + ") {\n";
     }
 
     @Override
-    public String afterViewAdded() throws LayoutFileException {
+    public String afterViewAdded(GenerationContext context) throws LayoutFileException {
         return "}\n";
     }
 
     @Override
-    public String beforeReturnResult() throws LayoutFileException {
+    public String beforeReturnResult(GenerationContext context) throws LayoutFileException {
         StringBuilder result = new StringBuilder();
         result.append("scope.watch(new com.flarestar.drones.views.scope.CollectionWatcher() {\n");
         result.append("    @Override\n");

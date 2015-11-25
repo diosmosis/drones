@@ -2,10 +2,12 @@ package {{ package }};
 
 import dagger.Component;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import com.flarestar.drones.base.Drone;
 import com.flarestar.drones.base.DroneCollection;
 import android.app.Activity;
 
+@Singleton
 @Component(modules = { {{ activityModuleClass }}.class })
 abstract class {{ moduleClassName }} implements DroneCollection {
 

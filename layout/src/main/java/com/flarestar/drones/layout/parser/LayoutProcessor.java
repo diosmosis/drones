@@ -37,12 +37,14 @@ public class LayoutProcessor {
 
     private CSSWriterSettings cssWriterSettings;
     private DirectiveFactory directiveFactory;
+    private LessEngine lessEngine;
     private int lastGeneratedId = 0;
 
     @Inject
-    public LayoutProcessor(DirectiveFactory directiveFactory, CSSWriterSettings cssWriterSettings) {
+    public LayoutProcessor(DirectiveFactory directiveFactory, CSSWriterSettings cssWriterSettings, LessEngine lessEngine) {
         this.cssWriterSettings = cssWriterSettings;
         this.directiveFactory = directiveFactory;
+        this.lessEngine = lessEngine;
     }
 
     public ViewNode createViewTree(InputStream layoutInput, InputStream styleSheetInput) throws LayoutFileException {
@@ -89,12 +91,9 @@ public class LayoutProcessor {
     }
 
     private CascadingStyleSheet parseStyleSheet(InputStream styleSheetInput) throws LayoutFileException {
-        // parse LESS
-        LessEngine engine = new LessEngine();
-
         String cssContent;
         try {
-            cssContent = engine.compile(readWholeInputStream(styleSheetInput));
+            cssContent = lessEngine.compile(readWholeInputStream(styleSheetInput));
         } catch (LessException e) {
             throw new LayoutFileException("Bad LESS stylesheet", e);
         }

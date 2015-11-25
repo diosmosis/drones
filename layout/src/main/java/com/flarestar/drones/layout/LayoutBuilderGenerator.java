@@ -2,6 +2,7 @@ package com.flarestar.drones.layout;
 
 import com.flarestar.drones.base.BaseScreen;
 import com.flarestar.drones.layout.android.Manifest;
+import com.flarestar.drones.layout.android.exceptions.InvalidManifestException;
 import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeFound;
 import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeParsed;
 import com.flarestar.drones.layout.annotations.Layout;
@@ -9,6 +10,7 @@ import com.flarestar.drones.layout.compilerutilities.ProjectSniffer;
 import com.flarestar.drones.layout.compilerutilities.TypeInferer;
 import com.flarestar.drones.layout.parser.LayoutProcessor;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.writer.LayoutBuilderWriter;
 import com.google.inject.Inject;
@@ -80,12 +82,20 @@ public class LayoutBuilderGenerator {
     }
 
     public void generateLayoutBuilderFor(TypeElement activityClassElement) {
-        String screenClassName = activityClassElement.getQualifiedName().toString();
-        String layoutBuilderClassName = screenClassName + "LayoutBuilderDrone";
-        String screenPackage = screenClassName.substring(0, screenClassName.lastIndexOf('.'));
+        GenerationContext context = null;
+        try {
+            context = new GenerationContext(activityClassElement, projectSniffer);
+        } catch (InvalidManifestException e) {
+            throw new RuntimeException(e);
+        }
 
-        typeInferer.setBasePackage(screenPackage); // TODO: should not have this mutability, but not sure how to remove...
+        typeInferer.setBasePackage(context.getActivityPackage()); // TODO: should not have this mutability, but not sure how to remove...
 
+        ViewNode tree = processLayoutAndStyles(activityClassElement);
+        generateLayoutBuilder(context, tree);
+    }
+
+    private ViewNode processLayoutAndStyles(TypeElement activityClassElement) {
         Layout annotation = activityClassElement.getAnnotation(Layout.class);
         String layoutFilePath = annotation.value();
         String stylesheetFilePath = annotation.stylesheet();
@@ -117,14 +127,27 @@ public class LayoutBuilderGenerator {
             throw new RuntimeException("Failed to read " + annotation.value() + " layout file.", e);
         }
 
+        return tree;
+    }
+
+    private void generateLayoutBuilder(final GenerationContext context, ViewNode tree) {
+        String layoutBuilderClassName = context.getLayoutBuilderClassName();
+        String screenClassName = context.getActivityClassName();
+
         processingEnvironment.getMessager().printMessage(Diagnostic.Kind.NOTE, "Generating '" + layoutBuilderClassName + "'.");
 
-        Manifest manifest = null;
-        try {
-            manifest = projectSniffer.findManifestFile();
-        } catch (ManifestCannotBeFound | ManifestCannotBeParsed ex) {
-            throw new RuntimeException(ex.getMessage(), ex);
-        }
+        tree.visit(new ViewNode.Visitor() {
+            @Override
+            public void visit(ViewNode node) {
+                for (Directive directive : node.directives) {
+                    try {
+                        directive.beforeGeneration(context);
+                    } catch (LayoutFileException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        });
 
         JavaFileObject newObject;
         try {
@@ -134,8 +157,7 @@ public class LayoutBuilderGenerator {
         }
 
         try (OutputStream output = newObject.openOutputStream()) {
-            layoutBuilderWriter.writeLayoutBuilder(screenClassName, layoutBuilderClassName,
-                manifest.getApplicationPackage(), tree, output);
+            layoutBuilderWriter.writeLayoutBuilder(context, tree, output);
         } catch (Exception e) {
             throw new RuntimeException("Failed to generate LayoutBuilder for '"+ screenClassName + "'.", e);
         }

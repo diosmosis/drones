@@ -1,5 +1,6 @@
 package com.flarestar.drones.layout.writer;
 
+import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.StyleProcessor;
 import com.flarestar.drones.layout.view.ViewNode;
@@ -37,18 +38,19 @@ public class LayoutBuilderWriter {
         this.interpolator = interpolator;
     }
 
-    public void writeLayoutBuilder(String screenClassName, String layoutBuilderClassName,
-                                   String applicationPackage, ViewNode tree, OutputStream output)
+    public void writeLayoutBuilder(GenerationContext context, ViewNode tree, OutputStream output)
             throws JtwigException, LayoutFileException {
         JtwigModelMap model = new JtwigModelMap();
         model.add("styleProcessor", styleProcessor);
         model.add("interpolator", interpolator);
 
+        model.add("generationContext", context);
         model.add("rootView", tree);
-        model.add("package", getPackageFromClassName(layoutBuilderClassName));
-        model.add("applicationPackage", applicationPackage);
-        model.add("className", getSimpleClassName(layoutBuilderClassName));
-        model.add("screenClassName", screenClassName);
+        model.add("package", context.getActivityPackage());
+        model.add("applicationPackage", context.getApplicationPackage());
+        model.add("className", context.getLayoutBuilderSimpleClassName());
+        model.add("screenClassName", context.getActivityClassName());
+        model.add("injectedProperties", context.getInjectedProperties());
 
         // TODO: viewnode needs a visit method
         Set<ScopeDefinition> definitions = new HashSet<>();
@@ -64,14 +66,6 @@ public class LayoutBuilderWriter {
         }
     }
 
-    private void collectScreenViews(List<ViewNode> screenViews, ViewNode node) {
-        for (ViewNode child : node.children) {
-            collectScreenViews(screenViews, child);
-        }
-
-        screenViews.add(node);
-    }
-
     private void collectUniqueScopeDefinitions(Set<ScopeDefinition> definitions, ViewNode node)
             throws LayoutFileException {
         if (node.hasScope()) {
@@ -81,15 +75,5 @@ public class LayoutBuilderWriter {
         for (ViewNode child : node.children) {
             collectUniqueScopeDefinitions(definitions, child);
         }
-    }
-
-    private String getPackageFromClassName(String screenClassName) {
-        int lastDot = screenClassName.lastIndexOf('.');
-        return screenClassName.substring(0, lastDot == -1 ? screenClassName.length() : lastDot);
-    }
-
-    private String getSimpleClassName(String screenClassName) {
-        int lastDot = screenClassName.lastIndexOf('.');
-        return screenClassName.substring((lastDot == -1 ? 0 : lastDot) + 1);
     }
 }

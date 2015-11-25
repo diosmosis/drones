@@ -1,5 +1,6 @@
 package com.flarestar.drones.layout.directives;
 
+import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.layout.annotations.directive.DirectiveName;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
@@ -15,29 +16,48 @@ import java.util.regex.Pattern;
 @DirectiveName("ng-controller")
 @DirectiveMatcher(AttributeMatcher.class)
 public class Controller extends Directive {
-    public Controller(ViewNode node) {
-        super(node);
-    }
-
     public static class InvalidControllerAttribute extends LayoutFileException {
         public InvalidControllerAttribute(String message) {
             super(message);
         }
     }
 
-    private final static Pattern controllerAttributeRegex = Pattern.compile("(\\w+)\\s+as\\s+(\\w+)");
+    private final static Pattern controllerAttributeRegex = Pattern.compile("(#)?(\\w+)\\s+as\\s+(\\w+)");
 
-    @Override
-    public List<Property> getScopeProperties() throws LayoutFileException {
-        List<Property> result = super.getScopeProperties();
+    private String controllerClass;
+    private String controllerScopeProperty;
+    private boolean isInjected;
+
+    private String initialValue;
+
+    public Controller(ViewNode node) throws LayoutFileException {
+        super(node);
 
         Matcher match = parseAttribute();
 
-        String controllerClass = match.group(1);
-        String controllerScopeProperty = match.group(2);
+        isInjected = match.group(1) != null;
+        controllerClass = match.group(2);
+        controllerScopeProperty = match.group(3);
+    }
 
-        result.add(new Property(controllerScopeProperty, controllerClass,
-            "new " + controllerClass + "(owner.getContext())", this));
+    @Override
+    public void beforeGeneration(GenerationContext context) throws LayoutFileException {
+        context.addInjectedProperty(controllerClass, controllerScopeProperty);
+
+        // TODO: this should be done in construction, but I don't want to pass the generation context to the constructor just yet.
+        //       seems like a rather large task.
+        if (isInjected) {
+            initialValue = context.getLayoutBuilderSimpleClassName() + ".this." + controllerScopeProperty;
+        } else {
+            initialValue = "new " + controllerClass + "(owner.getContext())";
+        }
+    }
+
+    // TODO: getScopeProperties shouldn't throw LayoutFileExceptions since it's just a getter
+    @Override
+    public List<Property> getScopeProperties() throws LayoutFileException {
+        List<Property> result = super.getScopeProperties();
+        result.add(new Property(controllerScopeProperty, controllerClass, initialValue, this));
         return result;
     }
 
@@ -51,7 +71,4 @@ public class Controller extends Directive {
 
         return match;
     }
-
-    // TODO: would be better in the future to use Dagger DI to create controllers instead of manually creating
-    // new instances.
 }

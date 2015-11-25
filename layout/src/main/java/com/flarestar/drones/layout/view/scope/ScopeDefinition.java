@@ -1,16 +1,11 @@
 package com.flarestar.drones.layout.view.scope;
 
-import com.flarestar.drones.layout.compilerutilities.TypeInferer;
-import com.flarestar.drones.layout.compilerutilities.exceptions.*;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.parser.exceptions.ScopePropertyAlreadyDefined;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 
-import javax.lang.model.type.TypeMirror;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 // TODO: refactor whole code base for cleaner code
 

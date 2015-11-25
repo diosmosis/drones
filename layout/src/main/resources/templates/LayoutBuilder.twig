@@ -19,8 +19,13 @@ import {{ applicationPackage }}.R;
 @Singleton
 public class {{ className }} implements Drone {
 
+    {% for property in injectedProperties %}
+    @Inject
+    {{ property.type }} {{ property.name }};
+    {% endfor %}
+
     {% for scope in scopeDefinitions %}
-    public static class {{ scope.getScopeClassName() }} extends Scope<{% if scope.getParentScope() != null %}{{ scope.getParentScope().getScopeClassName() }}{% else %}Scope{% endif %}> {
+    public class {{ scope.getScopeClassName() }} extends Scope<{% if scope.getParentScope() != null %}{{ scope.getParentScope().getScopeClassName() }}{% else %}Scope{% endif %}> {
         {% for property in scope.properties %}
         public {{ property.type }} {{ property.name }};
         {% endfor %}
@@ -59,5 +64,5 @@ public class {{ className }} implements Drone {
         screen.setContentView(rootView);
     }
 
-    {{ macros.make_view_function(rootView, interpolator, styleProcessor) }}
+    {{ macros.make_view_function(rootView, interpolator, styleProcessor, generationContext) }}
 }

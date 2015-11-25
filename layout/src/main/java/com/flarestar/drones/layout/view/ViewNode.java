@@ -16,6 +16,10 @@ import java.util.Map;
  * TODO
  */
 public class ViewNode {
+    public interface Visitor {
+        void visit(ViewNode node);
+    }
+
     public final String id;
     public final String text;
     public final Map<String, String> attributes = new HashMap<>();
@@ -100,6 +104,13 @@ public class ViewNode {
             }
         }
         return isDynamic;
+    }
+
+    public void visit(Visitor visitor) {
+        visitor.visit(this);
+        for (ViewNode child : children) {
+            child.visit(visitor);
+        }
     }
 
     private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {
