@@ -20,8 +20,6 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
      */
     private List<Object> childDefinitions = new ArrayList<>();
 
-    private boolean childrenDirty = false;
-
     public DynamicViewGroup(Context context) {
         super(context);
     }
@@ -34,23 +32,8 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
         super(context, attrs, defStyle);
     }
 
-    public boolean isDirty() {
-        return childrenDirty;
-    }
-
-    public void markAsDirty() {
-        childrenDirty = true;
-
-        ViewParent parent = getParent();
-        if (parent instanceof DynamicViewGroup) {
-            ((DynamicViewGroup) parent).markAsDirty();
-        }
-    }
-
     // TODO: automated tests should detect if memory leaks exist
     public void createChildren() {
-        childrenDirty = false;
-
         if (childDefinitions.isEmpty()) {
             return;
         }

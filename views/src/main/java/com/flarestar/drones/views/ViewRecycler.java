@@ -9,12 +9,15 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
 /**
  * TODO
  */
+@Singleton
 public class ViewRecycler {
 
     private static final String TAG = "drones.views";
@@ -31,6 +34,11 @@ public class ViewRecycler {
             }
         })
         .build();
+
+    @Inject
+    public ViewRecycler() {
+        // empty
+    }
 
     /**
      * TODO
@@ -58,16 +66,16 @@ public class ViewRecycler {
      *
      * @return
      */
-    public View makeView(Class<? extends View> viewClass, String viewSignature, Context context) {
-        View view = reclaimView(viewClass, viewSignature);
+    public <V extends  View> V makeView(Class<V> viewClass, String viewSignature, Context context) {
+        V view = reclaimView(viewClass, viewSignature);
         if (view == null) {
             view = createNewView(viewClass, context);
         }
         return view;
     }
 
-    private View createNewView(Class<? extends View> viewClass, Context context) {
-        Constructor<? extends View> constructor = null;
+    private <V extends  View> V createNewView(Class<V> viewClass, Context context) {
+        Constructor<V> constructor = null;
         try {
             constructor = viewClass.getConstructor(Context.class);
         } catch (NoSuchMethodException e) {
@@ -82,7 +90,7 @@ public class ViewRecycler {
         }
     }
 
-    private synchronized View reclaimView(Class<? extends View> viewClass, String viewSignature) {
+    private synchronized <V extends  View> V reclaimView(Class<V> viewClass, String viewSignature) {
         Collection<View> views = detachedViews.get(viewSignature);
         if (views.isEmpty()) {
             return null;
@@ -102,7 +110,7 @@ public class ViewRecycler {
             Map.Entry<String, View> entry = Maps.immutableEntry(viewSignature, view);
             detachedViewsLimitedCache.asMap().remove(entry);
 
-            return view;
+            return (V)view;
         }
 
         return null;

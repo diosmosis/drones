@@ -30,38 +30,32 @@ public class Controller extends Directive {
 
     private String initialValue;
 
-    public Controller(ViewNode node) throws LayoutFileException {
-        super(node);
+    public Controller(GenerationContext context) throws LayoutFileException {
+        super(context);
+    }
 
-        Matcher match = parseAttribute();
+    @Override
+    public void manipulateViewNode(ViewNode node) throws LayoutFileException {
+        super.manipulateViewNode(node);
+
+        Matcher match = parseAttribute(node);
 
         isInjected = match.group(1) != null;
         controllerClass = match.group(2);
         controllerScopeProperty = match.group(3);
-    }
 
-    @Override
-    public void beforeGeneration(GenerationContext context) throws LayoutFileException {
         context.addInjectedProperty(controllerClass, controllerScopeProperty);
 
-        // TODO: this should be done in construction, but I don't want to pass the generation context to the constructor just yet.
-        //       seems like a rather large task.
         if (isInjected) {
             initialValue = context.getLayoutBuilderSimpleClassName() + ".this." + controllerScopeProperty;
         } else {
             initialValue = "new " + controllerClass + "(owner.getContext())";
         }
+
+        properties.add(new Property(controllerScopeProperty, controllerClass, initialValue, this));
     }
 
-    // TODO: getScopeProperties shouldn't throw LayoutFileExceptions since it's just a getter
-    @Override
-    public List<Property> getScopeProperties() throws LayoutFileException {
-        List<Property> result = super.getScopeProperties();
-        result.add(new Property(controllerScopeProperty, controllerClass, initialValue, this));
-        return result;
-    }
-
-    private Matcher parseAttribute() throws InvalidControllerAttribute {
+    private Matcher parseAttribute(ViewNode node) throws InvalidControllerAttribute {
         String attributeValue = node.attributes.get("ng-controller");
         Matcher match = controllerAttributeRegex.matcher(attributeValue);
         if (!match.matches()) {

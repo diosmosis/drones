@@ -2,6 +2,7 @@ package com.flarestar.drones.layout.view;
 
 import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.annotations.directive.*;
+import com.flarestar.drones.layout.parser.exceptions.InvalidPropertyDescriptor;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.directive.exceptions.InvalidDirectiveClassException;
 import com.flarestar.drones.layout.view.scope.Property;
@@ -16,14 +17,27 @@ import java.util.List;
  */
 public abstract class Directive {
 
-    protected final ViewNode node;
+    protected final GenerationContext context;
+    protected final List<Property> properties = new ArrayList<>();
 
-    public Directive(ViewNode node) {
-        this.node = node;
+    public Directive(GenerationContext context) throws LayoutFileException {
+        this.context = context;
+
+        ScopeProperties annotation = getClass().getAnnotation(ScopeProperties.class);
+        if (annotation != null) {
+            for (String propertyDescriptor : annotation.value()) {
+                Property property = Property.makeFromDescriptor(propertyDescriptor, this);
+                properties.add(property);
+            }
+        }
     }
 
     public void postConstruct() throws LayoutFileException {
         // empty
+    }
+
+    public List<Property> getScopeProperties() {
+        return properties;
     }
 
     public String getViewClassName() {
@@ -31,30 +45,14 @@ public abstract class Directive {
         return annotation == null ? null : annotation.view().getName();
     }
 
-    public String getHookCode(String hookName, GenerationContext context)
+    public String getHookCode(String hookName, ViewNode node)
             throws LayoutFileException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Method hookMethod = getClass().getMethod(hookName, GenerationContext.class);
-        return (String)hookMethod.invoke(this, context);
+        Method hookMethod = getClass().getMethod(hookName, ViewNode.class);
+        return (String)hookMethod.invoke(this, node);
     }
 
-    public void beforeGeneration(GenerationContext context) throws LayoutFileException {
+    public void beforeGeneration(ViewNode node) throws LayoutFileException {
         // empty
-    }
-
-    public List<Property> getScopeProperties() throws LayoutFileException {
-        List<Property> result = new ArrayList<>();
-
-        ScopeProperties annotation = getClass().getAnnotation(ScopeProperties.class);
-        if (annotation == null) {
-            return result;
-        }
-
-        for (String propertyDescriptor : annotation.value()) {
-            Property property = Property.makeFromDescriptor(propertyDescriptor, this);
-            result.add(property);
-        }
-
-        return result;
     }
 
     public boolean isDynamic() {
@@ -62,28 +60,32 @@ public abstract class Directive {
         return annotation != null;
     }
 
-    public String afterViewCreated(GenerationContext context) throws LayoutFileException {
+    public String afterViewCreated(ViewNode node) throws LayoutFileException {
         return "";
     }
 
-    public String beforeScopeCreated(GenerationContext context) throws LayoutFileException {
+    public String beforeScopeCreated(ViewNode node) throws LayoutFileException {
         return "";
     }
 
-    public String beforeViewCreated(GenerationContext context) throws LayoutFileException {
+    public String beforeViewCreated(ViewNode node) throws LayoutFileException {
         return "";
     }
 
-    public String afterViewAdded(GenerationContext context) throws LayoutFileException {
+    public String afterViewAdded(ViewNode node) throws LayoutFileException {
         return "";
     }
 
-    public String afterChildrenAdded(GenerationContext context) throws LayoutFileException {
+    public String afterChildrenAdded(ViewNode node) throws LayoutFileException {
         return "";
     }
 
-    public String beforeReturnResult(GenerationContext context) throws LayoutFileException {
+    public String beforeReturnResult(ViewNode node) throws LayoutFileException {
         return "";
+    }
+
+    public void manipulateViewNode(ViewNode viewNode) throws LayoutFileException {
+        // empty
     }
 
     public String getDirectiveName() {

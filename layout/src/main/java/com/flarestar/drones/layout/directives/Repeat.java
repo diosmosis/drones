@@ -1,5 +1,6 @@
 package com.flarestar.drones.layout.directives;
 
+import android.view.View;
 import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.layout.annotations.directive.DirectiveName;
@@ -11,6 +12,7 @@ import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.directive.matchers.AttributeMatcher;
+import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
 import javax.lang.model.type.TypeMirror;
@@ -24,17 +26,20 @@ import java.util.regex.Pattern;
 public class Repeat extends Directive {
     private static final Pattern REPEAT_ATTRIBUTE_REGEX = Pattern.compile("(\\w+)\\s+in\\s+(.+)");
 
-    private final String iterationScopeVariable;
-    private final String iterableExpression;
+    private String iterationScopeVariable;
+    private String iterableExpression;
     private TypeMirror iterableType;
     private TypeMirror iterationScopeVariableType;
 
     @Inject
     private TypeInferer typeInferer;
 
-    public Repeat(ViewNode node) throws LayoutFileException {
-        super(node);
+    public Repeat(GenerationContext context) throws LayoutFileException {
+        super(context);
+    }
 
+    @Override
+    public void beforeGeneration(ViewNode node) throws LayoutFileException {
         Matcher m = REPEAT_ATTRIBUTE_REGEX.matcher(node.attributes.get("ng-repeat"));
         if (!m.matches()) {
             throw new InvalidLayoutAttributeValue(
@@ -43,12 +48,9 @@ public class Repeat extends Directive {
 
         iterationScopeVariable = m.group(1);
         iterableExpression = m.group(2);
-    }
 
-    @Override
-    public void beforeGeneration(GenerationContext context) throws LayoutFileException {
         try {
-            iterableType = typeInferer.getTypeOfExpression(node.getScopeDefinition(), iterableExpression);
+            iterableType = typeInferer.getTypeOfExpression(node.scopeDefinition, iterableExpression);
             iterationScopeVariableType = typeInferer.getValueTypeOf(iterableType);
         } catch (BaseExpressionException ex) {
             throw new LayoutFileException("Invalid ng-repeat expression", ex);
@@ -56,17 +58,17 @@ public class Repeat extends Directive {
     }
 
     @Override
-    public String beforeScopeCreated(GenerationContext context) throws LayoutFileException {
+    public String beforeScopeCreated(ViewNode node) throws LayoutFileException {
         return "for (final " + iterationScopeVariableType.toString() + " " + iterationScopeVariable + " : " + iterableExpression + ") {\n";
     }
 
     @Override
-    public String afterViewAdded(GenerationContext context) throws LayoutFileException {
+    public String afterViewAdded(ViewNode node) throws LayoutFileException {
         return "}\n";
     }
 
     @Override
-    public String beforeReturnResult(GenerationContext context) throws LayoutFileException {
+    public String beforeReturnResult(ViewNode node) throws LayoutFileException {
         StringBuilder result = new StringBuilder();
         result.append("scope.watch(new com.flarestar.drones.views.scope.CollectionWatcher() {\n");
         result.append("    @Override\n");

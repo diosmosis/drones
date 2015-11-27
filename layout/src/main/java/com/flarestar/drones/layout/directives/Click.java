@@ -15,12 +15,12 @@ import com.flarestar.drones.layout.view.directive.matchers.AttributeMatcher;
 @DirectiveMatcher(AttributeMatcher.class)
 public class Click extends Directive {
 
-    public Click(ViewNode node) {
-        super(node);
+    public Click(GenerationContext context) throws LayoutFileException {
+        super(context);
     }
 
     @Override
-    public String afterViewCreated(GenerationContext context) throws LayoutFileException {
+    public String afterViewCreated(ViewNode node) throws LayoutFileException {
         StringBuilder result = new StringBuilder();
 
         String code = node.attributes.get("ng-click");

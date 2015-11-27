@@ -6,6 +6,7 @@ import com.flarestar.drones.layout.parser.exceptions.MultipleViewClassesExceptio
 import com.flarestar.drones.layout.parser.exceptions.NoViewClassForNode;
 import com.flarestar.drones.layout.view.scope.Property;
 import com.flarestar.drones.layout.view.scope.ScopeDefinition;
+import com.google.common.base.Joiner;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,36 +23,43 @@ public class ViewNode {
 
     public final String id;
     public final String text;
-    public final Map<String, String> attributes = new HashMap<>();
-    public final Map<String, String> styles = new HashMap<>();
-    public final List<ViewNode> children = new ArrayList<>();
+    public final Map<String, String> attributes;
+    public final Map<String, String> styles;
     public final String tagName;
-    public final List<Directive> directives = new ArrayList<>();
+    public final List<Directive> directives;
     public final ViewNode parent;
+    public final List<ViewNode> children = new ArrayList<>();
+    public final ScopeDefinition scopeDefinition;
 
-    private ScopeDefinition scopeDefinition;
     private String viewClass;
     private Boolean hasDynamicDirective = null;
     private Boolean isDynamic = null;
 
-    public ViewNode(String tagName, String id, String text, ViewNode parent) {
+    public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
+                    Map<String, String> styles, List<Directive> directives) throws LayoutFileException {
         this.tagName = tagName;
         this.id = id;
         this.text = text;
         this.parent = parent;
-    }
+        this.attributes = attributes;
+        this.styles = styles;
+        this.directives = directives;
 
-    public ScopeDefinition getScopeDefinition() throws LayoutFileException {
-        if (scopeDefinition == null) {
-            ScopeDefinition computed = new ScopeDefinition(this, hasIsolateScope());
-            if (parent == null || !computed.isPassthroughScope()) {
-                scopeDefinition = computed;
-            } else {
-                scopeDefinition = parent.getScopeDefinition();
-            }
+        for (Directive directive : directives) {
+            directive.manipulateViewNode(this);
         }
 
-        return scopeDefinition;
+        scopeDefinition = createScopeDefinition();
+        viewClass = findViewClass();
+    }
+
+    private ScopeDefinition createScopeDefinition() throws LayoutFileException {
+        ScopeDefinition computed = new ScopeDefinition(this, hasIsolateScope());
+        if (parent == null || !computed.isPassthroughScope()) {
+            return computed;
+        } else {
+            return parent.scopeDefinition;
+        }
     }
 
     public boolean hasIsolateScope() {
@@ -68,15 +76,11 @@ public class ViewNode {
         return false;
     }
 
-    public boolean hasScope() throws LayoutFileException {
-        return getScopeDefinition().getOwner() == this;
+    public boolean hasScope() {
+        return scopeDefinition.getOwner() == this;
     }
 
-    public String getViewClassName() throws LayoutFileException {
-        if (viewClass == null) {
-            viewClass = findViewClass();
-        }
-
+    public String getViewClassName() {
         return viewClass;
     }
 

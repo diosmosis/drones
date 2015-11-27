@@ -3,6 +3,7 @@ package com.flarestar.drones.layout.view.directive.matchers;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.flarestar.drones.layout.view.directive.DirectiveMatcher;
+import org.jsoup.nodes.Element;
 
 /**
  * TODO
@@ -10,7 +11,7 @@ import com.flarestar.drones.layout.view.directive.DirectiveMatcher;
 public class AttributeMatcher implements DirectiveMatcher {
 
     @Override
-    public boolean matches(ViewNode node, Class<?> directiveClass) {
-        return node.attributes.containsKey(Directive.getDirectiveName(directiveClass));
+    public boolean matches(Element node, Class<?> directiveClass) {
+        return node.attributes().hasKey(Directive.getDirectiveName(directiveClass));
     }
 }

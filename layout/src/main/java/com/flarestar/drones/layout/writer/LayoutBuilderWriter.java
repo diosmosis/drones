@@ -52,9 +52,15 @@ public class LayoutBuilderWriter {
         model.add("screenClassName", context.getActivityClassName());
         model.add("injectedProperties", context.getInjectedProperties());
 
-        // TODO: viewnode needs a visit method
-        Set<ScopeDefinition> definitions = new HashSet<>();
-        collectUniqueScopeDefinitions(definitions, tree);
+        final Set<ScopeDefinition> definitions = new HashSet<>();
+        tree.visit(new ViewNode.Visitor() {
+            @Override
+            public void visit(ViewNode node) {
+                if (node.hasScope()) {
+                    definitions.add(node.scopeDefinition);
+                }
+            }
+        });
         model.add("scopeDefinitions", definitions);
 
         String rendered = template.render(model);
@@ -63,17 +69,6 @@ public class LayoutBuilderWriter {
             output.write(rendered.getBytes(Charset.forName("UTF-8")));
         } catch (IOException e) {
             throw new LayoutFileException("Unable to write to output stream.", e);
-        }
-    }
-
-    private void collectUniqueScopeDefinitions(Set<ScopeDefinition> definitions, ViewNode node)
-            throws LayoutFileException {
-        if (node.hasScope()) {
-            definitions.add(node.getScopeDefinition());
-        }
-
-        for (ViewNode child : node.children) {
-            collectUniqueScopeDefinitions(definitions, child);
         }
     }
 }

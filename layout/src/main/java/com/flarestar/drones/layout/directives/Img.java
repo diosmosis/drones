@@ -17,12 +17,12 @@ import com.flarestar.drones.layout.view.directive.matchers.TagMatcher;
 @DirectiveView(view = ImageView.class)
 @DirectiveMatcher(TagMatcher.class)
 public class Img extends Directive {
-    public Img(ViewNode node) {
-        super(node);
+    public Img(GenerationContext context) throws LayoutFileException {
+        super(context);
     }
 
     @Override
-    public String afterViewCreated(GenerationContext context) throws LayoutFileException {
+    public String afterViewCreated(ViewNode node) throws LayoutFileException {
         String attributeValue = node.attributes.get("src");
         if (attributeValue == null) {
             throw new MissingLayoutAttributeValue("src");

@@ -1,6 +1,7 @@
 package com.flarestar.drones.layout.view.directive;
 
 import com.flarestar.drones.layout.DroneModule;
+import com.flarestar.drones.layout.GenerationContext;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
@@ -77,7 +78,8 @@ public class DirectiveFactory {
         this.injector = injector;
     }
 
-    public void detectDirectives(ViewNode node) throws LayoutFileException {
+    public List<Directive> detectDirectives(Element node, GenerationContext context) throws LayoutFileException {
+        List<Directive> directives = new ArrayList<>();
         for (Class<?> directiveClass : allDirectives) {
             DirectiveMatcher matcher = directiveMatchers.get(directiveClass);
             if (!matcher.matches(node, directiveClass)) {
@@ -86,7 +88,7 @@ public class DirectiveFactory {
 
             Directive directive;
             try {
-                directive = (Directive)directiveClass.getConstructor(ViewNode.class).newInstance(node);
+                directive = (Directive)directiveClass.getConstructor(GenerationContext.class).newInstance(context);
             } catch (ReflectiveOperationException e) {
                 throw new InvalidDirectiveClassException("Could not create new instance of directive '"
                     + directiveClass.getName() + "'.", e);
@@ -95,8 +97,9 @@ public class DirectiveFactory {
             injector.injectMembers(directive);
             directive.postConstruct();;
 
-            node.directives.add(directive);
+            directives.add(directive);
         }
+        return directives;
     }
 
     private static void registerDirective(Class<?> directiveClass) {

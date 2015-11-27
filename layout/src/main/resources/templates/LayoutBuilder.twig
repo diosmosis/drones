@@ -9,6 +9,7 @@ import com.flarestar.drones.views.ViewFactory;
 import com.flarestar.drones.views.ScopedViewFactory;
 import com.flarestar.drones.views.ScopedViewGroup;
 import com.flarestar.drones.views.DynamicViewGroup;
+import com.flarestar.drones.views.ViewRecycler;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
@@ -18,6 +19,9 @@ import {{ applicationPackage }}.R;
 
 @Singleton
 public class {{ className }} implements Drone {
+
+    @Inject
+    ViewRecycler _viewRecycler;
 
     {% for property in injectedProperties %}
     @Inject
@@ -64,5 +68,5 @@ public class {{ className }} implements Drone {
         screen.setContentView(rootView);
     }
 
-    {{ macros.make_view_function(rootView, interpolator, styleProcessor, generationContext) }}
+    {{ macros.make_view_function(rootView, interpolator, styleProcessor) }}
 }

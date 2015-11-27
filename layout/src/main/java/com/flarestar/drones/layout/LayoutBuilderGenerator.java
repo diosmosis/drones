@@ -1,10 +1,7 @@
 package com.flarestar.drones.layout;
 
 import com.flarestar.drones.base.BaseScreen;
-import com.flarestar.drones.layout.android.Manifest;
 import com.flarestar.drones.layout.android.exceptions.InvalidManifestException;
-import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeFound;
-import com.flarestar.drones.layout.android.exceptions.ManifestCannotBeParsed;
 import com.flarestar.drones.layout.annotations.Layout;
 import com.flarestar.drones.layout.compilerutilities.ProjectSniffer;
 import com.flarestar.drones.layout.compilerutilities.TypeInferer;
@@ -82,7 +79,7 @@ public class LayoutBuilderGenerator {
     }
 
     public void generateLayoutBuilderFor(TypeElement activityClassElement) {
-        GenerationContext context = null;
+        GenerationContext context;
         try {
             context = new GenerationContext(activityClassElement, projectSniffer);
         } catch (InvalidManifestException e) {
@@ -91,11 +88,11 @@ public class LayoutBuilderGenerator {
 
         typeInferer.setBasePackage(context.getActivityPackage()); // TODO: should not have this mutability, but not sure how to remove...
 
-        ViewNode tree = processLayoutAndStyles(activityClassElement);
+        ViewNode tree = processLayoutAndStyles(activityClassElement, context);
         generateLayoutBuilder(context, tree);
     }
 
-    private ViewNode processLayoutAndStyles(TypeElement activityClassElement) {
+    private ViewNode processLayoutAndStyles(TypeElement activityClassElement, GenerationContext context) {
         Layout annotation = activityClassElement.getAnnotation(Layout.class);
         String layoutFilePath = annotation.value();
         String stylesheetFilePath = annotation.stylesheet();
@@ -120,7 +117,7 @@ public class LayoutBuilderGenerator {
         try (InputStream layoutInput = layoutFileObject.openInputStream();
              InputStream stylesheetInput = stylesheetFileObject == null ? null : stylesheetFileObject.openInputStream()
         ) {
-            tree = xmlProcessor.createViewTree(layoutInput, stylesheetInput);
+            tree = xmlProcessor.createViewTree(context, layoutInput, stylesheetInput);
         } catch (LayoutFileException e) {
             throw new RuntimeException("Layout file " + layoutFilePath + " is malformed: " + e.getMessage(), e);
         } catch (IOException e) {
@@ -141,7 +138,7 @@ public class LayoutBuilderGenerator {
             public void visit(ViewNode node) {
                 for (Directive directive : node.directives) {
                     try {
-                        directive.beforeGeneration(context);
+                        directive.beforeGeneration(node);
                     } catch (LayoutFileException e) {
                         throw new RuntimeException(e);
                     }

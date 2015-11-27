@@ -25,7 +25,7 @@ public class ScopeDefinition {
         if (node.parent == null) {
             parentScope = null;
         } else {
-            parentScope = node.parent.getScopeDefinition();
+            parentScope = node.parent.scopeDefinition;
         }
 
         setScopeProperties(node);
@@ -44,11 +44,7 @@ public class ScopeDefinition {
         }
     }
 
-    public void setScopeProperties(ViewNode node) throws LayoutFileException {
-        processDirectives(node); // TODO: not necessary to have two methods here
-    }
-
-    public void processDirectives(ViewNode node) throws LayoutFileException {
+    private void setScopeProperties(ViewNode node) throws LayoutFileException {
         for (Directive directive : node.directives) {
             processDirectiveProperties(properties, directive);
         }
