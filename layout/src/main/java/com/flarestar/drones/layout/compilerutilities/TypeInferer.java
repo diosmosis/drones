@@ -167,7 +167,7 @@ public class TypeInferer {
             }
 
             String propertyName = m.group(1);
-            Property property = scope.properties.get(propertyName);
+            Property property = scope.allProperties().get(propertyName);
             if (property == null) {
                 throw new InvalidTypeExpression(expression, "no property named '" + propertyName + "'");
             }
@@ -189,5 +189,9 @@ public class TypeInferer {
         }
 
         return getTypeOfExpression(type, expression, context);
+    }
+
+    public boolean isAssignable(String type, String baseType) {
+        return processingEnvironment.getTypeUtils().isAssignable(getTypeMirrorFor(type), getTypeMirrorFor(baseType));
     }
 }

@@ -4,18 +4,23 @@ import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.parser.exceptions.ScopePropertyAlreadyDefined;
 import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Maps;
 
+import javax.annotation.Nullable;
 import java.util.*;
 
 // TODO: refactor whole code base for cleaner code
 
 public class ScopeDefinition {
+
     private String scopeClassName;
     private final ViewNode owner;
     private final ScopeDefinition parentScope;
     public final boolean isIsolateScope;
-    public final Map<String, Property> properties;
+    private final Map<String, Property> properties;
     private Boolean isPassthroughScope;
+    private final Map<String, Property> ownProperties;
 
     public ScopeDefinition(ViewNode node, boolean isIsolateScope) throws LayoutFileException {
         this.properties = new HashMap<>();
@@ -29,7 +34,15 @@ public class ScopeDefinition {
         }
 
         setScopeProperties(node);
+        setInheritedScopeProperties(node.parent);
         setScopeClassName(node);
+
+        ownProperties = Maps.filterValues(properties, new Predicate<Property>() {
+            @Override
+            public boolean apply(@Nullable Property property) {
+                return !(property instanceof InheritedProperty);
+            }
+        });
     }
 
     public String getScopeClassName() {
@@ -81,10 +94,34 @@ public class ScopeDefinition {
             if (isIsolateScope) {
                 isPassthroughScope = false;
             } else {
-                isPassthroughScope = properties.size() == 0;
+                isPassthroughScope = ownProperties().size() == 0;
             }
         }
 
         return isPassthroughScope;
+    }
+
+    public Map<String, Property> allProperties() {
+        return properties;
+    }
+
+    public Map<String, Property> ownProperties() {
+        return ownProperties;
+    }
+
+    private void setInheritedScopeProperties(ViewNode node) {
+        if (node == null) {
+            return;
+        }
+
+        for (Property property : node.scopeDefinition.properties.values()) {
+            if (properties.containsKey(property.name)) {
+                continue;
+            }
+
+            properties.put(property.name, new InheritedProperty(node.scopeDefinition, property));
+        }
+
+        setInheritedScopeProperties(node.parent);
     }
 }

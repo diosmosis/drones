@@ -1,6 +1,7 @@
 package com.flarestar.drones.layout.writer;
 
 import com.flarestar.drones.layout.GenerationContext;
+import com.flarestar.drones.layout.compilerutilities.TypeInferer;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.StyleProcessor;
 import com.flarestar.drones.layout.view.ViewNode;
@@ -27,15 +28,17 @@ public class LayoutBuilderWriter {
     private final JtwigTemplate template;
     private final StyleProcessor styleProcessor;
     private final Interpolator interpolator;
+    private final TypeInferer typeInferer;
 
     @Inject
-    public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator) {
+    public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator, TypeInferer typeInferer) {
         Loader.Resource resource = new ClasspathLoader.ClasspathResource("templates/LayoutBuilder.twig");
         JtwigConfiguration jtwigConfig = JtwigConfigurationBuilder.newConfiguration().build();
         template = new JtwigTemplate(resource, jtwigConfig);
 
         this.styleProcessor = styleProcessor;
         this.interpolator = interpolator;
+        this.typeInferer = typeInferer;
     }
 
     public void writeLayoutBuilder(GenerationContext context, ViewNode tree, OutputStream output)
@@ -43,6 +46,7 @@ public class LayoutBuilderWriter {
         JtwigModelMap model = new JtwigModelMap();
         model.add("styleProcessor", styleProcessor);
         model.add("interpolator", interpolator);
+        model.add("typeInferer", typeInferer);
 
         model.add("generationContext", context);
         model.add("rootView", tree);

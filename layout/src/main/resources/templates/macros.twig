@@ -2,13 +2,13 @@
 {% for directive in view.directives %}{{ directive.getHookCode(hookName, view) }}{% endfor %}
 {% endmacro %}
 
-{% macro make_view_function(view, interpolator, styleProcessor) %}
+{% macro make_view_function(view, interpolator, styleProcessor, typeInferer) %}
 {% import _self as self %}
 
-    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final Scope _parentNodeScope{% endif %}) {
-        {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = ({{ view.parent.scopeDefinition.getScopeClassName() }})_parentNodeScope;
+    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+        {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = _parentNodeScope;
         {% if view.parent.scopeDefinition.getParentScope() != null %}final {{ view.parent.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
-        {% for property in view.scopeDefinition.properties %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
+        {% for property in view.parent.scopeDefinition.allProperties() %}final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
         {% endfor %}{% endif %}
 
     {% if view.hasDynamicDirective() %}
@@ -24,19 +24,18 @@
 
                 final {{ view.getViewClassName() }} result = _viewRecycler.makeView({{ view.getViewClassName() }}.class, "{{ view.getSignature()|escape("js") }}", _screen);
 
-                {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if view.hasIsolateScope() %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if node.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
+                {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if view.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
                 {% if view.scopeDefinition.getParentScope() != null %}final {{ view.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
-                {% for property in view.scopeDefinition.properties %}{% if not property.isInherited %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
-                {% endif %}{% endfor %}{% endif %}
+                {% for property in view.scopeDefinition.ownProperties() %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
+                {% endfor %}{% endif %}
 
                 {{ self.directive_hook(view, "beforeViewCreated") }}
 
                 result.setVisibility(View.VISIBLE);
-                {% if view.hasScope() %}
-                if (result instanceof ScopedViewGroup) {
-                    ((ScopedViewGroup)result).setScope(scope);
-                }
+                {% if view.hasScope() and typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.ScopedViewGroup") %}
+                ((ScopedViewGroup)result).setScope(scope);
                 {% endif %}
+
                 {% if view.text != null and not view.text.isEmpty() %}result.setText({{ interpolator.interpolate(view.text) }});{% endif %}
                 {{ styleProcessor.process(view) }}
 
@@ -65,6 +64,6 @@
     }
 
     {% for child in view.children %}
-    {{ self.make_view_function(child, interpolator, styleProcessor) }}
+    {{ self.make_view_function(child, interpolator, styleProcessor, typeInferer) }}
     {% endfor %}
 {% endmacro %}

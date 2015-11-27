@@ -21,6 +21,10 @@ public class Property {
         this.source = source;
     }
 
+    public String accessCode() {
+        return "scope." + name;
+    }
+
     public static Property makeFromDescriptor(String propertyDescriptor, Directive directive)
         throws InvalidPropertyDescriptor {
         Matcher m = PROPERTY_DESCRIPTOR_REGEX.matcher(propertyDescriptor);

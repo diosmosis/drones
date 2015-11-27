@@ -30,7 +30,7 @@ public class {{ className }} implements Drone {
 
     {% for scope in scopeDefinitions %}
     public class {{ scope.getScopeClassName() }} extends Scope<{% if scope.getParentScope() != null %}{{ scope.getParentScope().getScopeClassName() }}{% else %}Scope{% endif %}> {
-        {% for property in scope.properties %}
+        {% for property in scope.ownProperties() %}
         public {{ property.type }} {{ property.name }};
         {% endfor %}
 
@@ -42,7 +42,7 @@ public class {{ className }} implements Drone {
             super(handler, owner, parent);
         {% endif %}
 
-            {% for property in scope.properties %}
+            {% for property in scope.ownProperties() %}
             {% if property.initialValueExpression != null %}
             this.{{ property.name }} = {{ property.initialValueExpression }};
             {% endif %}
@@ -68,5 +68,5 @@ public class {{ className }} implements Drone {
         screen.setContentView(rootView);
     }
 
-    {{ macros.make_view_function(rootView, interpolator, styleProcessor) }}
+    {{ macros.make_view_function(rootView, interpolator, styleProcessor, typeInferer) }}
 }
