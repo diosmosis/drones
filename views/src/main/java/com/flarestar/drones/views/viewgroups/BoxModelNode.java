@@ -1,4 +1,4 @@
-package com.flarestar.drones.views;
+package com.flarestar.drones.views.viewgroups;
 
 import android.content.Context;
 import android.util.AttributeSet;

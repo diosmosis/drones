@@ -1,9 +1,9 @@
-package com.flarestar.drones.views;
+package com.flarestar.drones.views.viewgroups;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
-import android.view.ViewParent;
+import com.flarestar.drones.views.ViewFactory;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -32,7 +32,7 @@
                 {{ self.directive_hook(view, "beforeViewCreated") }}
 
                 result.setVisibility(View.VISIBLE);
-                {% if view.hasScope() and typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.ScopedViewGroup") %}
+                {% if view.hasScope() and typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.viewgroups.ScopedViewGroup") %}
                 ((ScopedViewGroup)result).setScope(scope);
                 {% endif %}
 

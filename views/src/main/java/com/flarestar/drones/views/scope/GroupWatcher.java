@@ -1,7 +1,5 @@
 package com.flarestar.drones.views.scope;
 
-import com.flarestar.drones.views.Scope;
-
 public abstract class GroupWatcher extends Watcher {
     @Override
     final public Object getWatchValue(Scope<?> scope) {

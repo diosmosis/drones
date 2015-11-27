@@ -1,9 +1,10 @@
-package com.flarestar.drones.views;
+package com.flarestar.drones.views.viewgroups;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import com.flarestar.drones.views.scope.Scope;
 
 public abstract class ScopedViewGroup extends ViewGroup {
 

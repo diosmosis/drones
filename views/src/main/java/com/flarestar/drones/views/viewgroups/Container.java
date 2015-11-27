@@ -1,13 +1,10 @@
 
-package com.flarestar.drones.views;
+package com.flarestar.drones.views.viewgroups;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import com.flarestar.drones.views.viewgroups.BoxModelNode;
 
 /**
  * TODO
@@ -35,7 +32,7 @@ public class Container extends BoxModelNode {
 
         final View child = getChildAt(0);
 
-        if (child.getVisibility() != GONE) {
+        if (child.getVisibility() != View.GONE) {
             BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
             measureBoxModelNodeChild(layoutParams, child, availableWidth, availableHeight);
 
@@ -66,7 +63,7 @@ public class Container extends BoxModelNode {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         final View child = getChildAt(0);
 
-        if (child.getVisibility() == GONE) {
+        if (child.getVisibility() == View.GONE) {
             return;
         }
 

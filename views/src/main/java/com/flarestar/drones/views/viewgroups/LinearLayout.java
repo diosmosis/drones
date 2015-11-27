@@ -1,9 +1,9 @@
-package com.flarestar.drones.views;
+package com.flarestar.drones.views.viewgroups;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
+import com.flarestar.drones.views.viewgroups.BoxModelNode;
 
 /**
  * TODO
@@ -37,7 +37,7 @@ public class LinearLayout extends BoxModelNode {
         for (int i = 0; i != count; ++i) {
             final View child = getChildAt(i);
 
-            if (child.getVisibility() == GONE) {
+            if (child.getVisibility() == View.GONE) {
                 continue;
             }
 
@@ -60,7 +60,7 @@ public class LinearLayout extends BoxModelNode {
         for (int i = 0; i != count; ++i) {
             final View child = getChildAt(i);
 
-            if (child.getVisibility() == GONE) {
+            if (child.getVisibility() == View.GONE) {
                 continue;
             }
 
@@ -111,7 +111,7 @@ public class LinearLayout extends BoxModelNode {
         for (int i = 0; i != count; ++i) {
             final View child = getChildAt(i);
 
-            if (child.getVisibility() == GONE) {
+            if (child.getVisibility() == View.GONE) {
                 continue;
             }
 

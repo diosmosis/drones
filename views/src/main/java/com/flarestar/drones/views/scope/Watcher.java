@@ -1,7 +1,5 @@
 package com.flarestar.drones.views.scope;
 
-import com.flarestar.drones.views.Scope;
-
 import java.io.*;
 
 /**

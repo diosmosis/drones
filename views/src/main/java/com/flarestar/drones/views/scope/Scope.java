@@ -1,8 +1,7 @@
-package com.flarestar.drones.views;
+package com.flarestar.drones.views.scope;
 
 import android.os.Handler;
 import android.view.View;
-import com.flarestar.drones.views.scope.Watcher;
 
 import java.util.ArrayList;
 import java.util.Iterator;
