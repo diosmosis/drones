@@ -189,11 +189,13 @@ public class Scope<P extends Scope> {
     // TODO: angular catches & logs exceptions w/o aborting a digest. should do something similar, but
     // logging in android is not as noticeable as in the browser.
     private Watcher checkWatchers(Watcher lastDirtyWatcher) {
+        boolean isDirty = false;
         for (Watcher watcher : _watchers) {
             Object newValue = watcher.getWatchValue(this);
             Object lastValue = watcher.getLastValue();
             if (!watcher.areValuesEqual(newValue, lastValue)) {
                 lastDirtyWatcher = watcher;
+                isDirty = true;
 
                 watcher.setLastValue(newValue);
                 watcher.onValueChanged(newValue, lastValue == Watcher.INITIAL_VALUE ? newValue : lastValue, this);
@@ -201,9 +203,12 @@ public class Scope<P extends Scope> {
                 // if this watcher is the last dirty watcher for the last iteration, then we've gone through
                 // every watcher (partially in the last iteration) and no watcher is dirty, so we can just
                 // stop here
-                lastDirtyWatcher = null;
                 break;
             }
+        }
+
+        if (!isDirty) {
+            lastDirtyWatcher = null;
         }
 
         // TODO: have changed it a bit from angular to work in Java, which may result in some performance
