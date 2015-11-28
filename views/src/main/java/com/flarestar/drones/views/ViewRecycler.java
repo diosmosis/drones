@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import com.flarestar.drones.views.viewgroups.ScopedViewGroup;
 import com.google.common.cache.*;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
@@ -25,13 +24,14 @@ public class ViewRecycler {
 
     private Multimap<String, View> detachedViews = MultimapBuilder.hashKeys().arrayListValues().build();
 
-    private Cache<View, Map.Entry<String, View>> detachedViewsLimitedCache = CacheBuilder.newBuilder()
+    private Cache<View, View> detachedViewsLimitedCache = CacheBuilder.newBuilder()
         .maximumSize(64)
         .initialCapacity(8)
-        .removalListener(new RemovalListener<View, Map.Entry<String, View>>() {
+        .removalListener(new RemovalListener<View, View>() {
             @Override
-            public void onRemoval(RemovalNotification<View, Map.Entry<String, View>> removalNotification) {
-                detachedViews.entries().remove(removalNotification.getValue());
+            public void onRemoval(RemovalNotification<View, View> removalNotification) {
+                View value = removalNotification.getValue();
+                detachedViews.remove(value.getClass().getName(), value);
             }
         })
         .build();
@@ -46,20 +46,9 @@ public class ViewRecycler {
      *
      * @param view
      */
-    public void recycleView(View view) {
-        ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
-        if (!(layoutParams instanceof ScopedViewGroup.LayoutParams)) {
-            return;
-        }
-
-        String signature = ((ScopedViewGroup.LayoutParams)layoutParams).getSignature();
-        cacheView(signature, view);
-    }
-
-    private synchronized void cacheView(String signature, View view) {
-        Map.Entry<String, View> entry = Maps.immutableEntry(signature, view);
-        detachedViews.entries().add(entry);
-        detachedViewsLimitedCache.put(view, entry);
+    public synchronized void recycleView(View view) {
+        detachedViews.put(view.getClass().getName(), view);
+        detachedViewsLimitedCache.put(view, view);
     }
 
     /**
@@ -67,8 +56,8 @@ public class ViewRecycler {
      *
      * @return
      */
-    public <V extends  View> V makeView(Class<V> viewClass, String viewSignature, Context context) {
-        V view = reclaimView(viewClass, viewSignature);
+    public <V extends  View> V makeView(Class<V> viewClass, Context context) {
+        V view = reclaimView(viewClass);
         if (view == null) {
             view = createNewView(viewClass, context);
         }
@@ -91,8 +80,8 @@ public class ViewRecycler {
         }
     }
 
-    private synchronized <V extends  View> V reclaimView(Class<V> viewClass, String viewSignature) {
-        Collection<View> views = detachedViews.get(viewSignature);
+    private synchronized <V extends  View> V reclaimView(Class<V> viewClass) {
+        Collection<View> views = detachedViews.get(viewClass.getName());
         if (views.isEmpty()) {
             return null;
         }
@@ -102,14 +91,13 @@ public class ViewRecycler {
                 continue;
             }
 
-            if (!viewClass.isInstance(view)) {
-                Log.w(TAG, "Found view of type '" + view.getClass().getName() + "' with unexpected signature: '"
-                    + viewSignature + "'. Trying to reclaim view of type '" + viewClass.getName() + "'.");
+            if (!viewClass.equals(view.getClass())) {
+                Log.w(TAG, "Found view of type '" + view.getClass().getName() + "', expected view of type '"
+                    + viewClass.getName() + "'.");
                 continue;
             }
 
-            Map.Entry<String, View> entry = Maps.immutableEntry(viewSignature, view);
-            detachedViewsLimitedCache.asMap().remove(entry);
+            detachedViewsLimitedCache.invalidate(view);
 
             return (V)view;
         }

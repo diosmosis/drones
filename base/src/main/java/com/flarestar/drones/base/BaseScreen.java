@@ -11,6 +11,10 @@ import java.lang.reflect.Method;
 public abstract class BaseScreen extends Activity {
     private Drone[] drones;
 
+    public Drone[] drones() {
+        return drones;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

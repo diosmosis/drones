@@ -4,23 +4,17 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import com.flarestar.drones.base.BaseScreen;
+import com.flarestar.drones.base.Drone;
+import com.flarestar.drones.views.LayoutBuilder;
+import com.flarestar.drones.views.ViewRecycler;
 import com.flarestar.drones.views.scope.Scope;
 import com.flarestar.drones.views.scope.events.Click;
 
 public abstract class ScopedViewGroup extends ViewGroup {
-
-    public static class LayoutParams extends ViewGroup.LayoutParams {
-        private String signature;
-
-        public LayoutParams(String signature, int width, int height) {
-            super(width, height);
-
-            this.signature = signature;
-        }
-
-        public String getSignature() {
-            return signature;
-        }
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 
     protected Scope<?> scope = null;
@@ -44,6 +38,7 @@ public abstract class ScopedViewGroup extends ViewGroup {
     }
 
     private void setViewRemovalListener() {
+        final ViewRecycler recycler = findViewRecycler();
         OnHierarchyChangeListener listener = new OnHierarchyChangeListener() {
             @Override
             public void onChildViewAdded(View parent, View child) {
@@ -59,10 +54,23 @@ public abstract class ScopedViewGroup extends ViewGroup {
                 }
 
                 scope.detachChild(child);
+
+                recycler.recycleView(child);
             }
         };
 
         setOnHierarchyChangeListener(listener);
+    }
+
+    private ViewRecycler findViewRecycler() {
+        Context context = getContext();
+        for (Drone drone : ((BaseScreen)context).drones()) {
+            if (drone instanceof LayoutBuilder) {
+                return ((LayoutBuilder)drone).getViewRecycler();
+            }
+        }
+
+        throw new RuntimeException("Unexpected state: could not find LayoutBuilder");
     }
 
     public Scope<?> getScope() {

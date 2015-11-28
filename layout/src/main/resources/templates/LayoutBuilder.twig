@@ -11,6 +11,7 @@ import com.flarestar.drones.views.viewgroups.ScopedViewGroup;
 import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
 import com.flarestar.drones.views.ViewRecycler;
 import com.flarestar.drones.views.scope.Listener;
+import com.flarestar.drones.views.LayoutBuilder;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
@@ -19,7 +20,7 @@ import javax.inject.Singleton;
 import {{ applicationPackage }}.R;
 
 @Singleton
-public class {{ className }} implements Drone {
+public class {{ className }} implements Drone, LayoutBuilder {
 
     @Inject
     ViewRecycler _viewRecycler;
@@ -57,6 +58,10 @@ public class {{ className }} implements Drone {
     @Inject
     public {{ className }}() {
         _handler = new Handler();
+    }
+
+    public ViewRecycler getViewRecycler() {
+        return _viewRecycler;
     }
 
     public void setUpDrone(final BaseScreen screen) {

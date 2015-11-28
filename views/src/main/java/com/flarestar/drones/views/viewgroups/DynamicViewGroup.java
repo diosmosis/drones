@@ -15,10 +15,8 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
 
     /**
      * TODO
-     *
-     * holds either Views or ViewFactory's
      */
-    private List<Object> childDefinitions = new ArrayList<>();
+    private List<ViewFactory> childDefinitions = new ArrayList<>();
 
     public DynamicViewGroup(Context context) {
         super(context);
@@ -40,19 +38,9 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
 
         removeAllViews();
 
-        for (Object definition : childDefinitions) {
-            if (definition instanceof View) {
-                addView((View)definition);
-            } else if (definition instanceof ViewFactory) {
-                ((ViewFactory)definition).createViews(this);
-            } else {
-                throw new IllegalStateException("Unexpected child definition type: " + definition.getClass().getName());
-            }
+        for (ViewFactory definition : childDefinitions) {
+            definition.createViews(this);
         }
-    }
-
-    public void addChildDefinition(View child) {
-        childDefinitions.add(child);
     }
 
     public void addChildDefinition(ViewFactory factory) {

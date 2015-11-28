@@ -5,13 +5,14 @@
 {% macro make_view_function(view, interpolator, styleProcessor, typeInferer) %}
 {% import _self as self %}
 
-    private {% if view.isDynamic() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+{# TODO: no longer using isDynamic() or hasDynamicChild(), should remove if not needed #}
+    private {% if view.parent != null %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = _parentNodeScope;
         {% if view.parent.scopeDefinition.getParentScope() != null %}final {{ view.parent.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.parent.scopeDefinition.allProperties() %}final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
         {% endfor %}{% endif %}
 
-    {% if view.isDynamic() %}
+    {% if view.parent != null %}
         final ViewFactory result = new ViewFactory() {
             public void createViews(final ViewGroup parent) {
     {% endif %}
@@ -22,7 +23,7 @@
             @Override
             public View make() {
 
-                final {{ view.getViewClassName() }} result = _viewRecycler.makeView({{ view.getViewClassName() }}.class, "{{ view.getSignature()|escape("js") }}", _screen);
+                final {{ view.getViewClassName() }} result = _viewRecycler.makeView({{ view.getViewClassName() }}.class, _screen);
 
                 {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if view.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
                 {% if view.scopeDefinition.getParentScope() != null %}final {{ view.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
@@ -57,9 +58,9 @@
                 {% endfor %}
 
                 {% for child in view.children %}
-                result.{% if view.hasDynamicChild() %}addChildDefinition{% else %}addView{% endif %}(makeView_{{ child.id }}(_screen, result, scope));
+                result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
                 {% endfor %}
-                {% if view.hasDynamicChild() %}result.createChildren();{% endif %}{# TODO: shouldn't recreate on first watch in this case, will be redundant, eg, w/ ng-repeat #}
+                {% if view.children.size() != 0 %}result.createChildren();{% endif %}{# TODO: shouldn't recreate on first watch in this case, will be redundant, eg, w/ ng-repeat #}
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
 
@@ -67,7 +68,7 @@
             }
         }.make();
 
-    {% if view.isDynamic() %}parent.addView(result);
+    {% if view.parent != null %}parent.addView(result);
 
                 {{ self.directive_hook(view, "afterViewAdded") }}
             }
