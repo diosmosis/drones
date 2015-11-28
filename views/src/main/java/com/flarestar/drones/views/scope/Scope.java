@@ -2,6 +2,8 @@ package com.flarestar.drones.views.scope;
 
 import android.os.Handler;
 import android.view.View;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -65,6 +67,7 @@ public class Scope<P extends Scope> {
     // TODO: use same naming as angular ie, $$ prefix
     private List<Watcher> _watchers = new ArrayList<>();
     private LinkedList<Scope<?>> _children = new LinkedList<>();
+    private Multimap<String, Listener> _listeners = MultimapBuilder.hashKeys().arrayListValues().build();
     private String _phase;
 
     // TODO: should not allow classes other than Scope to set, while still allowing property-like access in generated code
@@ -174,6 +177,41 @@ public class Scope<P extends Scope> {
         _postDigestQueue.add(runnable);
     }
 
+    public <E extends Event> void on(Class<E> eventClass, Listener<E> listener) {
+        _listeners.put(eventClass.getName(), listener);
+    }
+
+    public <E extends Event> void removeListener(Class<E> eventClass, Listener<E> listener){
+        _listeners.remove(eventClass.getName(), listener);
+    }
+
+    public <E extends Event> void emit(E event) {
+        Scope scope = this;
+        do {
+            scope.fire(event);
+
+            if (event.isPropagationEnded()) {
+                return;
+            }
+
+            scope = scope._parent;
+        } while (scope != null);
+    }
+
+    public <E extends Event> void broadcast(E event) {
+        fire(event);
+
+        for (Scope child : _children) {
+            child.broadcast(event);
+        }
+    }
+
+    private <E extends Event> void fire(E event) {
+        for (Listener listener : _listeners.get(event.getClass().getName())) {
+            listener.invoke(event);
+        }
+   }
+
     private void beginPhase(String phase) {
         if (_phase != null) {
             throw new PhaseAlreadyInProgressException("Phase '" + phase + "' is already in progress.");
@@ -252,6 +290,7 @@ public class Scope<P extends Scope> {
             if (childScope._owner == owner) {
                 childScope._parent = null;
                 childScope._watchers.clear();
+                childScope._listeners.clear();
                 childScope._owner = null;
                 it.remove();
                 return;
