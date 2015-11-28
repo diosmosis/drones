@@ -33,7 +33,7 @@ public class ViewNode {
 
     private String viewClass;
     private Boolean hasDynamicDirective = null;
-    private Boolean isDynamic = null;
+    private Boolean hasDynamicChild = null;
 
     public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
                     Map<String, String> styles, List<Directive> directives) throws LayoutFileException {
@@ -97,17 +97,21 @@ public class ViewNode {
         return hasDynamicDirective;
     }
 
-    public boolean isDynamic() {
-        if (isDynamic == null) {
-            isDynamic = false;
+    public boolean hasDynamicChild() {
+        if (hasDynamicChild == null) {
+            hasDynamicChild = false;
             for (ViewNode child : children) {
-                if (child.hasDynamicDirective()) {
-                    isDynamic = true;
+                if (child.isDynamic()) {
+                    hasDynamicChild = true;
                     break;
                 }
             }
         }
-        return isDynamic;
+        return hasDynamicChild;
+    }
+
+    public boolean isDynamic() {
+        return parent != null && (hasDynamicDirective() || hasScope());
     }
 
     public void visit(Visitor visitor) {

@@ -5,13 +5,13 @@
 {% macro make_view_function(view, interpolator, styleProcessor, typeInferer) %}
 {% import _self as self %}
 
-    private {% if view.hasDynamicDirective() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+    private {% if view.isDynamic() %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = _parentNodeScope;
         {% if view.parent.scopeDefinition.getParentScope() != null %}final {{ view.parent.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.parent.scopeDefinition.allProperties() %}final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
         {% endfor %}{% endif %}
 
-    {% if view.hasDynamicDirective() %}
+    {% if view.isDynamic() %}
         final ViewFactory result = new ViewFactory() {
             public void createViews(final ViewGroup parent) {
     {% endif %}
@@ -32,7 +32,7 @@
                 {{ self.directive_hook(view, "beforeViewCreated") }}
 
                 result.setVisibility(View.VISIBLE);
-                {% if view.hasScope() and typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.viewgroups.ScopedViewGroup") %}
+                {% if typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.viewgroups.ScopedViewGroup") %}
                 ((ScopedViewGroup)result).setScope(scope);
                 {% endif %}
 
@@ -41,9 +41,25 @@
 
                 {{ self.directive_hook(view, "afterViewCreated") }}
 
-                {% for child in view.children %}
-                result.{% if view.isDynamic() %}addChildDefinition{% else %}addView{% endif %}(makeView_{{ child.id }}(_screen, result, scope));
+                {% for event in view.scopeDefinition.events %}
+                scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClass.getName() }}>() {
+                    @Override
+                    public boolean invoke({{ event.eventClass.getName() }} event) {
+                        try {
+                            {{ event.expression }};
+                            scope.apply();
+                            return true;{# TODO: how to handle propagation in directive attributes? #}
+                        } catch (Exception e) {
+                            throw new RuntimeException("Unexpected error when invoking event handler.", e);
+                        }
+                    }
+                });
                 {% endfor %}
+
+                {% for child in view.children %}
+                result.{% if view.hasDynamicChild() %}addChildDefinition{% else %}addView{% endif %}(makeView_{{ child.id }}(_screen, result, scope));
+                {% endfor %}
+                {% if view.hasDynamicChild() %}result.createChildren();{% endif %}{# TODO: shouldn't recreate on first watch in this case, will be redundant, eg, w/ ng-repeat #}
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
 
@@ -51,7 +67,7 @@
             }
         }.make();
 
-    {% if view.hasDynamicDirective() %}parent.addView(result);
+    {% if view.isDynamic() %}parent.addView(result);
 
                 {{ self.directive_hook(view, "afterViewAdded") }}
             }

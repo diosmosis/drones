@@ -66,7 +66,9 @@ public class Scope<P extends Scope> {
 
     // TODO: use same naming as angular ie, $$ prefix
     private List<Watcher> _watchers = new ArrayList<>();
-    private LinkedList<Scope<?>> _children = new LinkedList<>();
+    public LinkedList<Scope<?>> _children = new LinkedList<>();
+    // TODO: in general, scopes will only be visible to views, no other java code, so it may be more efficient
+    //       to avoid using a map, and instead override fire in generated code.
     private Multimap<String, Listener> _listeners = MultimapBuilder.hashKeys().arrayListValues().build();
     private String _phase;
 
@@ -296,5 +298,14 @@ public class Scope<P extends Scope> {
                 return;
             }
         }
+    }
+
+    public Scope<?> getChildScopeFor(View child) {
+        for (Scope<?> childScope : _children) {
+            if (childScope._owner == child) {
+                return childScope;
+            }
+        }
+        return null;
     }
 }

@@ -5,6 +5,7 @@ import com.flarestar.drones.layout.annotations.directive.*;
 import com.flarestar.drones.layout.parser.exceptions.InvalidPropertyDescriptor;
 import com.flarestar.drones.layout.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.layout.view.directive.exceptions.InvalidDirectiveClassException;
+import com.flarestar.drones.layout.view.scope.Event;
 import com.flarestar.drones.layout.view.scope.Property;
 
 import java.lang.reflect.InvocationTargetException;
@@ -19,6 +20,7 @@ public abstract class Directive {
 
     protected final GenerationContext context;
     protected final List<Property> properties = new ArrayList<>();
+    protected final List<Event> events = new ArrayList<>();
 
     public Directive(GenerationContext context) throws LayoutFileException {
         this.context = context;
@@ -38,6 +40,10 @@ public abstract class Directive {
 
     public List<Property> getScopeProperties() {
         return properties;
+    }
+
+    public List<Event> getEvents() {
+        return events;
     }
 
     public String getViewClassName() {

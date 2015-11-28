@@ -5,6 +5,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import com.flarestar.drones.views.scope.Scope;
+import com.flarestar.drones.views.scope.events.Click;
 
 public abstract class ScopedViewGroup extends ViewGroup {
 
@@ -45,8 +46,9 @@ public abstract class ScopedViewGroup extends ViewGroup {
     private void setViewRemovalListener() {
         OnHierarchyChangeListener listener = new OnHierarchyChangeListener() {
             @Override
-            public void onChildViewAdded(View view, View view1) {
-                // empty
+            public void onChildViewAdded(View parent, View child) {
+                // TODO: what about the root view? should be done in the LayoutBuilder.
+                linkListenersToScopeEvents(child);
             }
 
             @Override
@@ -73,5 +75,20 @@ public abstract class ScopedViewGroup extends ViewGroup {
         }
 
         this.scope = scope;
+    }
+
+    private void linkListenersToScopeEvents(final View child) {
+        // TODO: link all other listeners
+        child.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Scope<?> childViewScope = scope.getChildScopeFor(child);
+                if (childViewScope == null) {
+                    return; // TODO: should we log here?
+                }
+
+                childViewScope.emit(new Click(view));
+            }
+        });
     }
 }

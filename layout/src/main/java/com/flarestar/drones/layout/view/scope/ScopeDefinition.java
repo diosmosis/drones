@@ -6,6 +6,7 @@ import com.flarestar.drones.layout.view.Directive;
 import com.flarestar.drones.layout.view.ViewNode;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
+import com.google.common.collect.MultimapBuilder;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -22,6 +23,9 @@ public class ScopeDefinition {
     private Boolean isPassthroughScope;
     private final Map<String, Property> ownProperties;
 
+    // TODO: when calling apply() after an event, need to make sure only one apply ends up being scheduled
+    public final List<Event> events = new ArrayList<>();
+
     public ScopeDefinition(ViewNode node, boolean isIsolateScope) throws LayoutFileException {
         this.properties = new HashMap<>();
         this.owner = node;
@@ -34,6 +38,7 @@ public class ScopeDefinition {
         }
 
         setScopeProperties(node);
+        setScopeEvents(node);
         setInheritedScopeProperties(node.parent);
         setScopeClassName(node);
 
@@ -59,7 +64,15 @@ public class ScopeDefinition {
 
     private void setScopeProperties(ViewNode node) throws LayoutFileException {
         for (Directive directive : node.directives) {
-            processDirectiveProperties(properties, directive);
+            processDirectiveProperties(directive);
+        }
+    }
+
+    private void setScopeEvents(ViewNode node) {
+        for (Directive directive : node.directives) {
+            for (Event event : directive.getEvents()) {
+                events.add(event);
+            }
         }
     }
 
@@ -75,7 +88,7 @@ public class ScopeDefinition {
         return parentScope;
     }
 
-    private void processDirectiveProperties(Map<String, Property> properties, Directive directive)
+    private void processDirectiveProperties(Directive directive)
             throws LayoutFileException {
         List<Property> directiveProperties = directive.getScopeProperties();
         for (Property property : directiveProperties) {
@@ -94,7 +107,7 @@ public class ScopeDefinition {
             if (isIsolateScope) {
                 isPassthroughScope = false;
             } else {
-                isPassthroughScope = ownProperties().size() == 0;
+                isPassthroughScope = ownProperties().size() == 0 && events.size() == 0;
             }
         }
 
