@@ -43,6 +43,12 @@ public class Scope<P extends Scope> {
         Object run(Scope<?> scope);
     }
 
+    public static abstract class PostDigestRunnable implements java.lang.Runnable {
+        public boolean isFixed() {
+            return false;
+        }
+    }
+
     private static class QueuedRunnable implements java.lang.Runnable {
         public final Scope<?> scope;
         public final Runnable runnable;
@@ -62,7 +68,7 @@ public class Scope<P extends Scope> {
 
     // TODO: there is only one of these per hierarchy. should note this somewhere.
     private final LinkedList<QueuedRunnable> _asyncQueue;
-    private final LinkedList<java.lang.Runnable> _postDigestQueue;
+    private final LinkedList<PostDigestRunnable> _postDigestQueue;
 
     // TODO: use same naming as angular ie, $$ prefix
     private List<Watcher> _watchers = new ArrayList<>();
@@ -78,11 +84,11 @@ public class Scope<P extends Scope> {
     private View _owner;
 
     public Scope(Handler handler, View owner) {
-        this(handler, owner, null, new LinkedList<QueuedRunnable>(), new LinkedList<java.lang.Runnable>());
+        this(handler, owner, null, new LinkedList<QueuedRunnable>(), new LinkedList<PostDigestRunnable>());
     }
 
     public Scope(Handler handler, View owner, P parent) {
-        this(handler, owner, parent, ((Scope<?>)parent)._asyncQueue, ((Scope<?>)parent)._postDigestQueue);
+        this(handler, owner, parent, ((Scope<?>)parent)._asyncQueue, ((Scope)parent)._postDigestQueue);
 
         if (_parent != null) {
             _parent.addChild(this);
@@ -90,7 +96,7 @@ public class Scope<P extends Scope> {
     }
 
     private Scope(Handler handler, View owner, P parent, LinkedList<QueuedRunnable> asyncQueue,
-                  LinkedList<java.lang.Runnable> postDigestQueue) {
+                  LinkedList<PostDigestRunnable> postDigestQueue) {
         _handler = handler;
         _owner = owner;
         _parent = parent;
@@ -175,7 +181,7 @@ public class Scope<P extends Scope> {
 
     // TODO: not implementing applyAsync right now. not sure if it's necessary.
 
-    public void postDigest(java.lang.Runnable runnable) {
+    public void postDigest(PostDigestRunnable runnable) {
         _postDigestQueue.add(runnable);
     }
 
@@ -273,8 +279,14 @@ public class Scope<P extends Scope> {
     }
 
     private void consumePostDigestQueue() {
-        while (!_postDigestQueue.isEmpty()) {
-            _postDigestQueue.removeFirst().run();
+        Iterator<PostDigestRunnable> it = _postDigestQueue.iterator();
+        while (it.hasNext()) {
+            PostDigestRunnable runnable = it.next();
+            runnable.run();
+
+            if (!runnable.isFixed()) {
+                it.remove();
+            }
         }
     }
 

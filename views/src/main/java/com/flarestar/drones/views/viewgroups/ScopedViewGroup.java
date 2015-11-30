@@ -12,6 +12,7 @@ import com.flarestar.drones.views.scope.Scope;
 import com.flarestar.drones.views.scope.events.Click;
 
 public abstract class ScopedViewGroup extends ViewGroup {
+
     @Override
     public int hashCode() {
         return super.hashCode();

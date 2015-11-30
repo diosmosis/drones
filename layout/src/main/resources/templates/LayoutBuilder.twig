@@ -69,7 +69,33 @@ public class {{ className }} implements Drone, LayoutBuilder {
             return;
         }
 
-        DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ rootView.id }}(screen);
+        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ rootView.id }}(screen);
+
+        rootView.getScope().postDigest(new Scope.PostDigestRunnable() {
+            @Override
+            public void run() {
+                recreateIfDirty(rootView);
+            }
+
+            private void recreateIfDirty(DynamicViewGroup view) {
+                if (view.isDirty()) {
+                    view.createChildren();
+                } else {
+                    for (int i = 0; i != view.getChildCount(); ++i) {
+                        final View child = view.getChildAt(i);
+                        if (child instanceof DynamicViewGroup) {
+                            recreateIfDirty((DynamicViewGroup)child);
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public boolean isFixed() {
+                return true;
+            }
+        });
+
         rootView.getScope().apply();
         screen.setContentView(rootView);
     }

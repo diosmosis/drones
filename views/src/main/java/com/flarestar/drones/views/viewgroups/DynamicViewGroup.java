@@ -13,6 +13,8 @@ import java.util.List;
  */
 public abstract class DynamicViewGroup extends ScopedViewGroup {
 
+    private boolean isDirty = false;
+
     /**
      * TODO
      */
@@ -32,6 +34,8 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
 
     // TODO: automated tests should detect if memory leaks exist
     public void createChildren() {
+        isDirty = false;
+
         if (childDefinitions.isEmpty()) {
             return;
         }
@@ -45,5 +49,13 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
 
     public void addChildDefinition(ViewFactory factory) {
         childDefinitions.add(factory);
+    }
+
+    public void markDirty() {
+        isDirty = true;
+    }
+
+    public boolean isDirty() {
+        return isDirty;
     }
 }

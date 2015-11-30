@@ -84,9 +84,8 @@ public class Repeat extends Directive {
         result.append("\n");
         result.append("    @Override\n");
         result.append("    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {\n");
-        // TODO: we should only do this ONCE per tree. and need to take into context child views. do createChildren calls for them
-        // get invalidated when a parent has to be changed? not sure....
-        result.append("        _parentView.createChildren();\n");
+        result.append("        if (newValue == oldValue) return;\n");
+        result.append("        _parentView.markDirty();\n");
         result.append("    }\n");
         result.append("});\n");
         return result.toString();
