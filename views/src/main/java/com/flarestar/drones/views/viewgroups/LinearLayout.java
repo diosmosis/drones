@@ -3,7 +3,6 @@ package com.flarestar.drones.views.viewgroups;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
-import com.flarestar.drones.views.viewgroups.BoxModelNode;
 
 /**
  * TODO
@@ -26,6 +25,12 @@ public class LinearLayout extends BoxModelNode {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int count = getChildCount();
+
+        /* if no available width/height, we can't do scrolling, so throw exception in this case.
+         * if available width is not -1, then we can go bit by bit. so, let's make some changes:
+         *
+         * - if availableWidth == -1
+         */
 
         int availableWidth = getAvailableSize(widthMeasureSpec, isHorizontal);
         int availableHeight = getAvailableSize(heightMeasureSpec, !isHorizontal);
@@ -78,8 +83,8 @@ public class LinearLayout extends BoxModelNode {
                 extraAvailableWidth = availableWidth == -1 ? 0 : (availableWidth - aggregateWidth);
                 extraAvailableHeight = (availableHeight == -1 ? aggregateHeight : availableHeight) - child.getMeasuredHeight();
 
-                int childHeightAdjustment = getChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
-                int childWidthAdjustment = getChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
+                int childHeightAdjustment = computeChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
+                int childWidthAdjustment = computeChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
 
                 adjustedAggregateWidth += childWidthAdjustment;
                 adjustedAggregateHeight = Math.max(adjustedAggregateHeight, childHeightAdjustment + child.getMeasuredHeight());
@@ -87,8 +92,8 @@ public class LinearLayout extends BoxModelNode {
                 extraAvailableWidth = (availableWidth == -1 ? aggregateWidth : availableWidth) - child.getMeasuredWidth();
                 extraAvailableHeight = availableHeight == -1 ? 0 : (availableHeight - aggregateHeight);
 
-                int childHeightAdjustment = getChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
-                int childWidthAdjustment = getChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
+                int childHeightAdjustment = computeChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
+                int childWidthAdjustment = computeChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
 
                 adjustedAggregateWidth = Math.max(adjustedAggregateWidth, childWidthAdjustment + child.getMeasuredWidth());
                 adjustedAggregateHeight += childHeightAdjustment;
@@ -105,8 +110,8 @@ public class LinearLayout extends BoxModelNode {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         final int count = getChildCount();
 
-        int currentChildTop = 0;
-        int currentChildLeft = 0;
+        int currentChildTop = getScrollY();
+        int currentChildLeft = getScrollX();
 
         for (int i = 0; i != count; ++i) {
             final View child = getChildAt(i);

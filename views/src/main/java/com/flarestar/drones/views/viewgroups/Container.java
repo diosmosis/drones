@@ -4,7 +4,6 @@ package com.flarestar.drones.views.viewgroups;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
-import com.flarestar.drones.views.viewgroups.BoxModelNode;
 
 /**
  * TODO
@@ -43,8 +42,8 @@ public class Container extends BoxModelNode {
             int childWidthAdjustment = 0;
 
             if (layoutParams != null) {
-                childHeightAdjustment = getChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
-                childWidthAdjustment = getChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
+                childHeightAdjustment = computeChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
+                childWidthAdjustment = computeChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
             }
 
             if (availableWidth == -1) {
@@ -67,8 +66,8 @@ public class Container extends BoxModelNode {
             return;
         }
 
-        int top = 0;
-        int left = 0;
+        int top = getScrollY();
+        int left = getScrollX();
 
         BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
         if (layoutParams != null) {

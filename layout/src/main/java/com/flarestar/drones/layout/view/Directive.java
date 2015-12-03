@@ -78,15 +78,19 @@ public abstract class Directive {
         return "";
     }
 
-    public String afterViewAdded(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
     public String afterChildrenAdded(ViewNode node) throws LayoutFileException {
         return "";
     }
 
     public String beforeReturnResult(ViewNode node) throws LayoutFileException {
+        return "";
+    }
+
+    public String beginViewFactory(ViewNode node) throws LayoutFileException {
+        return "";
+    }
+
+    public String endViewFactory(ViewNode node) throws LayoutFileException {
         return "";
     }
 

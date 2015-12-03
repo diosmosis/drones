@@ -12,7 +12,7 @@ public abstract class BoxModelNode extends DynamicViewGroup {
     protected final static int UNSPECIFIED_MEASURE_SPEC = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 
     public static class Size {
-        public static final int CONTEXT_AVAILABLE_SPACE = 0;
+        public static final int CONTEXT_AVAILABLE_SPACE = 0; // TODO: use an enum
         public static final int CONTEXT_MEASURED_WIDTH = 1;
         public static final int CONTEXT_MEASURED_HEIGHT = 2;
 
@@ -88,13 +88,17 @@ public abstract class BoxModelNode extends DynamicViewGroup {
         }
     }
 
-    protected int getBoxModelChildMeasureSpec(Size size, int availableSpace, View child) {
+    protected int getBoxModelChildMeasureSpec(Size size, int availableSpace, View child, boolean isScrollEnabled) {
         if (size == null) {
-            return availableSpace == -1 ? UNSPECIFIED_MEASURE_SPEC : MeasureSpec.makeMeasureSpec(availableSpace, MeasureSpec.AT_MOST);
+            if (availableSpace < 0 || isScrollEnabled) {
+                return UNSPECIFIED_MEASURE_SPEC;
+            } else {
+                return MeasureSpec.makeMeasureSpec(availableSpace, MeasureSpec.AT_MOST);
+            }
         }
 
         int contextValue = size.getContextValue(availableSpace, child);
-        if (contextValue == -1) {
+        if (contextValue < 0) {
             return UNSPECIFIED_MEASURE_SPEC;
         } else {
             return MeasureSpec.makeMeasureSpec(size.compute(contextValue), MeasureSpec.EXACTLY);
@@ -132,25 +136,27 @@ public abstract class BoxModelNode extends DynamicViewGroup {
         int childWidthMeasureSpec;
         int childHeightMeasureSpec;
 
-        if (layoutParams == null) {
-            // TODO: code redundancy here + above in getBoxModelChildMeasureSpec
-            childWidthMeasureSpec = availableWidth == -1 ? UNSPECIFIED_MEASURE_SPEC : MeasureSpec.makeMeasureSpec(availableWidth, MeasureSpec.AT_MOST);
-            childHeightMeasureSpec = availableHeight == -1 ? UNSPECIFIED_MEASURE_SPEC : MeasureSpec.makeMeasureSpec(availableHeight, MeasureSpec.AT_MOST);
-        } else {
+        Size width = null;
+        Size height = null;
+
+        if (layoutParams != null) {
             if ((layoutParams.boxWidth != null && layoutParams.boxWidth.needsChildDimension())
                 || (layoutParams.boxHeight != null && layoutParams.boxHeight.needsChildDimension())
                 ) {
                 measureChild(child, UNSPECIFIED_MEASURE_SPEC, UNSPECIFIED_MEASURE_SPEC);
             }
 
-            childWidthMeasureSpec = getBoxModelChildMeasureSpec(layoutParams.boxWidth, availableWidth, child);
-            childHeightMeasureSpec = getBoxModelChildMeasureSpec(layoutParams.boxHeight, availableHeight, child);
+            width = layoutParams.boxWidth;
+            height = layoutParams.boxHeight;
         }
+
+        childWidthMeasureSpec = getBoxModelChildMeasureSpec(width, availableWidth, child, isHorizontalScrollBarEnabled());
+        childHeightMeasureSpec = getBoxModelChildMeasureSpec(height, availableHeight, child, isVerticalScrollBarEnabled());
 
         child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 
-    protected int getChildWidthAdjustment(LayoutParams layoutParams, int availableSpace, View child) {
+    protected int computeChildWidthAdjustment(LayoutParams layoutParams, int availableSpace, View child) {
         int adjustment = 0;
 
         adjustment += getBoxModelSize(layoutParams.marginLeft, availableSpace, child);
@@ -161,7 +167,7 @@ public abstract class BoxModelNode extends DynamicViewGroup {
         return adjustment;
     }
 
-    protected int getChildHeightAdjustment(LayoutParams layoutParams, int availableSpace, View child) {
+    protected int computeChildHeightAdjustment(LayoutParams layoutParams, int availableSpace, View child) {
         int adjustment = 0;
 
         adjustment += getBoxModelSize(layoutParams.marginTop, availableSpace, child);

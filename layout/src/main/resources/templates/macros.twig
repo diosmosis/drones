@@ -13,13 +13,18 @@
         {% endfor %}{% endif %}
 
     {% if view.parent != null %}
-        final ViewFactory result = new ViewFactory() {
-            public void createViews(final ViewGroup parent) {
+    {% if view.hasDynamicDirective() %}
+        {{ self.directive_hook(view, "beginViewFactory") }}
+    {% else %}
+        return new SingleViewFactory() {
+            public View makeView() {
+    {% endif %}
     {% endif %}
 
         {{ self.directive_hook(view, "beforeScopeCreated") }}
 
-        View result = new ScopedViewFactory() {
+        {# TODO: use underscores for all internal variables #}
+        return new ScopedViewFactory() {
             @Override
             public View make() {
 
@@ -60,24 +65,24 @@
                 {% for child in view.children %}
                 result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
                 {% endfor %}
-                {% if view.children.size() != 0 %}result.createChildren();{% endif %}{# TODO: shouldn't recreate on first watch in this case, will be redundant, eg, w/ ng-repeat #}
+                {% if view.children.size() != 0 %}result.createChildren();{% endif %}
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
+
+                {{ self.directive_hook(view, "beforeReturnResult") }}
 
                 return result;
             }
         }.make();
 
-    {% if view.parent != null %}parent.addView(result);
-
-                {{ self.directive_hook(view, "afterViewAdded") }}
+    {% if view.parent != null %}
+    {% if view.hasDynamicDirective() %}
+        {{ self.directive_hook(view, "endViewFactory") }}
+    {% else %}
             }
         };
     {% endif %}
-
-        {{ self.directive_hook(view, "beforeReturnResult") }}
-
-        return result;
+    {% endif %}
     }
 
     {% for child in view.children %}

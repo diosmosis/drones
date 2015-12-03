@@ -58,13 +58,48 @@ public class Repeat extends Directive {
     }
 
     @Override
-    public String beforeScopeCreated(ViewNode node) throws LayoutFileException {
-        return "for (final " + iterationScopeVariableType.toString() + " " + iterationScopeVariable + " : " + iterableExpression + ") {\n";
+    public String beginViewFactory(ViewNode node) throws LayoutFileException {
+        StringBuilder result = new StringBuilder();
+
+        {
+            result.append("return new RangeViewFactory<");
+            result.append(iterationScopeVariableType.toString());
+            result.append(">() {\n");
+        }
+
+        result.append("@Override\n");
+        result.append("protected Iterable getCollection() {\n");
+
+        {
+            result.append("    return ");
+            result.append(iterableExpression);
+            result.append(";\n");
+        }
+
+        result.append("}\n");
+
+        result.append("@Override\n");
+
+        {
+            result.append("protected View makeView(");
+            result.append(iterationScopeVariableType.toString());
+            result.append(" currentValue, final int index) {\n");
+        }
+
+        {
+            result.append("final ");
+            result.append(iterationScopeVariableType.toString());
+            result.append(' ');
+            result.append(iterationScopeVariable);
+            result.append(" = currentValue;\n");
+        }
+
+        return result.toString();
     }
 
     @Override
-    public String afterViewAdded(ViewNode node) throws LayoutFileException {
-        return "}\n";
+    public String endViewFactory(ViewNode node) throws LayoutFileException {
+        return "    }\n};\n";
     }
 
     @Override

@@ -1,8 +1,17 @@
 package com.flarestar.drones.views;
 
-import android.view.ViewGroup;
+import android.view.View;
 
+// TODO: ViewFactory is not a very accurate name
 public interface ViewFactory {
 
-    void createViews(ViewGroup parent);
+    interface Iterator {
+        boolean hasNext();
+
+        void next();
+
+        View makeView();
+    }
+
+    ViewFactory.Iterator iterator();
 }
