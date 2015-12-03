@@ -120,7 +120,7 @@ public class Repeat extends Directive {
         result.append("    @Override\n");
         result.append("    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {\n");
         result.append("        if (newValue == oldValue) return;\n");
-        result.append("        _parentView.markDirty();\n");
+        result.append("        _parentView.removeAllViews();\n");
         result.append("    }\n");
         result.append("});\n");
         return result.toString();

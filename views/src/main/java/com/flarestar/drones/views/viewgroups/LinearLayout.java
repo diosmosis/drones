@@ -24,6 +24,8 @@ public class LinearLayout extends BoxModelNode {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         final int count = getChildCount();
 
         /* if no available width/height, we can't do scrolling, so throw exception in this case.

@@ -52,13 +52,12 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
         }
     }
 
-    private boolean isDirty = false;
-    private int startViewIndex = 0;
+    protected int startViewIndex = 0; // TODO: this isn't used here, maybe it should be moved to BoxModelNode
 
     /**
      * TODO
      */
-    private List<ViewFactory> childDefinitions = new ArrayList<>();
+    protected List<ViewFactory> childDefinitions = new ArrayList<>();
 
     public DynamicViewGroup(Context context) {
         super(context);
@@ -73,53 +72,18 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
     }
 
     // TODO: automated tests should detect if memory leaks exist
-    public void createChildren() {
-        isDirty = false;
-
-        if (childDefinitions.isEmpty()) {
-            return;
-        }
-
-        removeAllViews();
-
-        ChildViewCreatorIterator it = viewCreationIterator();
-        for (int i = 0; i < startViewIndex; ++i) {
-            if (it.hasNext()) {
-                it.next();
-            } else {
-                break;
-            }
-        }
-
-        for (; it.hasNext(); it.next()) {
-            View childView = it.makeView();
-            addView(childView);
-        }
-
-            // TODO: only add Views if they are in the viewport. HOW TO DO THISSSS??? let's do it in boxmodelnode.
-            //       here, we'll create a child view iterator? and iterate forward? use c++ forward iterator, not Iterator<>.
-            //       we go until hasNext() returns false. boxmodelnode can create it's own iterator that will stop if
-            //       we go out of the viewport. this way, it can handle all scroll related stuff.
+    // TODO: only add Views if they are in the viewport. HOW TO DO THISSSS??? let's do it in boxmodelnode.
+    //       here, we'll create a child view iterator? and iterate forward? use c++ forward iterator, not Iterator<>.
+    //       we go until hasNext() returns false. boxmodelnode can create it's own iterator that will stop if
+    //       we go out of the viewport. this way, it can handle all scroll related stuff.
 
             /* NEXT TODO:
-             * 1) instead of this loop here, use an iterator and make sure it works (both activities)
-             * 2) move child view creation to onMeasure() (LinearLayout + Container) and make sure it all works
              * 3) move child measurement to iterator and make sure it all works
-             * 4) remove createChildren() and instead make views call removeAllViews()
              * ...
              */
-    }
 
     public void addChildDefinition(ViewFactory factory) {
         childDefinitions.add(factory);
-    }
-
-    public void markDirty() {
-        isDirty = true;
-    }
-
-    public boolean isDirty() {
-        return isDirty;
     }
 
     @Override

@@ -65,11 +65,12 @@
                 {% for child in view.children %}
                 result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
                 {% endfor %}
-                {% if view.children.size() != 0 %}result.createChildren();{% endif %}
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
 
                 {{ self.directive_hook(view, "beforeReturnResult") }}
+
+                scope.digest();
 
                 return result;
             }

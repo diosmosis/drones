@@ -177,4 +177,27 @@ public abstract class BoxModelNode extends DynamicViewGroup {
 
         return adjustment;
     }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        if (getChildCount() != 0) {
+            return;
+        }
+
+        ChildViewCreatorIterator it = viewCreationIterator();
+        for (int i = 0; i < startViewIndex; ++i) {
+            if (it.hasNext()) {
+                it.next();
+            } else {
+                break;
+            }
+        }
+
+        for (; it.hasNext(); it.next()) {
+            View childView = it.makeView();
+            addView(childView);
+        }
+    }
 }

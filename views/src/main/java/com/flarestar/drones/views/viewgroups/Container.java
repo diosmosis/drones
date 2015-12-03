@@ -23,6 +23,8 @@ public class Container extends BoxModelNode {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
         int availableWidth = getAvailableSize(widthMeasureSpec, true);
         int availableHeight = getAvailableSize(heightMeasureSpec, true);
 
@@ -81,7 +83,7 @@ public class Container extends BoxModelNode {
     @Override
     public void addView(View child) {
         if (getChildCount() > 1) {
-            throw new RuntimeException("Trying to add more than one child view to Container!");
+            throw new RuntimeException("Trying to add more than one child view to Container! (child = " + child.toString() + ")");
         }
 
         super.addView(child);

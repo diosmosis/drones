@@ -24,6 +24,7 @@ public class ViewRecycler {
 
     private Multimap<String, View> detachedViews = MultimapBuilder.hashKeys().arrayListValues().build();
 
+    // TODO: the cache size should be configurable or detected automatically
     private Cache<View, View> detachedViewsLimitedCache = CacheBuilder.newBuilder()
         .maximumSize(64)
         .initialCapacity(8)
