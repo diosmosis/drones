@@ -73,14 +73,6 @@ public abstract class DynamicViewGroup extends ScopedViewGroup {
 
     // TODO: automated tests should detect if memory leaks exist
     // TODO: only add Views if they are in the viewport. HOW TO DO THISSSS??? let's do it in boxmodelnode.
-    //       here, we'll create a child view iterator? and iterate forward? use c++ forward iterator, not Iterator<>.
-    //       we go until hasNext() returns false. boxmodelnode can create it's own iterator that will stop if
-    //       we go out of the viewport. this way, it can handle all scroll related stuff.
-
-            /* NEXT TODO:
-             * 3) move child measurement to iterator and make sure it all works
-             * ...
-             */
 
     public void addChildDefinition(ViewFactory factory) {
         childDefinitions.add(factory);

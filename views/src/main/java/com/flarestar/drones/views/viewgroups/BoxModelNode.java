@@ -182,22 +182,45 @@ public abstract class BoxModelNode extends DynamicViewGroup {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        if (getChildCount() != 0) {
-            return;
-        }
+        // TODO: code redundancy w/ both Container & LinearLayout. should probably use some utility classes for measuring/layout.
+        int availableWidth = getAvailableSize(widthMeasureSpec, shouldFillHorizontal());
+        int availableHeight = getAvailableSize(heightMeasureSpec, shouldFillVertical());
 
-        ChildViewCreatorIterator it = viewCreationIterator();
-        for (int i = 0; i < startViewIndex; ++i) {
-            if (it.hasNext()) {
-                it.next();
-            } else {
-                break;
+        if (getChildCount() == 0) {
+            ChildViewCreatorIterator it = viewCreationIterator();
+            for (int i = 0; i < startViewIndex; ++i) {
+                if (it.hasNext()) {
+                    it.next();
+                } else {
+                    break;
+                }
+            }
+
+            for (; it.hasNext(); it.next()) {
+                View child = it.makeView();
+                addView(child);
+
+                if (child.getVisibility() == View.GONE) {
+                    continue;
+                }
+
+                BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
+                measureBoxModelNodeChild(layoutParams, child, availableWidth, availableHeight);
+            }
+        } else {
+            for (int i = 0; i != getChildCount(); ++i) {
+                View child = getChildAt(i);
+
+                if (child.getVisibility() == View.GONE) {
+                    continue;
+                }
+
+                BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
+                measureBoxModelNodeChild(layoutParams, child, availableWidth, availableHeight);
             }
         }
-
-        for (; it.hasNext(); it.next()) {
-            View childView = it.makeView();
-            addView(childView);
-        }
     }
+
+    protected abstract boolean shouldFillHorizontal();
+    protected abstract boolean shouldFillVertical();
 }

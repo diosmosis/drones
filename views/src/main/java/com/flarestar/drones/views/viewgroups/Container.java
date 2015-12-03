@@ -21,6 +21,14 @@ public class Container extends BoxModelNode {
         super(context, attrs, defStyleAttr);
     }
 
+    protected boolean shouldFillHorizontal() {
+        return true;
+    }
+
+    protected boolean shouldFillVertical() {
+        return true;
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -35,7 +43,6 @@ public class Container extends BoxModelNode {
 
         if (child.getVisibility() != View.GONE) {
             BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
-            measureBoxModelNodeChild(layoutParams, child, availableWidth, availableHeight);
 
             final int extraAvailableHeight = availableHeight == -1 ? 0 : availableHeight;
             final int extraAvailableWidth = availableWidth == -1 ? 0 : availableWidth;

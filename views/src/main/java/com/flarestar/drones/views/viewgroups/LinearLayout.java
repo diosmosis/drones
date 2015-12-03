@@ -22,6 +22,14 @@ public class LinearLayout extends BoxModelNode {
         super(context, attrs, defStyleAttr);
     }
 
+    protected boolean shouldFillHorizontal() {
+        return isHorizontal;
+    }
+
+    protected boolean shouldFillVertical() {
+        return !isHorizontal;
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
@@ -47,9 +55,6 @@ public class LinearLayout extends BoxModelNode {
             if (child.getVisibility() == View.GONE) {
                 continue;
             }
-
-            BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
-            measureBoxModelNodeChild(layoutParams, child, availableWidth, availableHeight);
 
             if (isHorizontal) {
                 aggregateWidth += child.getMeasuredWidth();
