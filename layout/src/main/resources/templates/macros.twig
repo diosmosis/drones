@@ -6,7 +6,7 @@
 {% import _self as self %}
 
 {# TODO: no longer using isDynamic() or hasDynamicChild(), should remove if not needed #}
-    private {% if view.parent != null %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+    private {% if view.parent != null %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final ViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = _parentNodeScope;
         {% if view.parent.scopeDefinition.getParentScope() != null %}final {{ view.parent.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.parent.scopeDefinition.allProperties() %}final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
@@ -38,8 +38,8 @@
                 {{ self.directive_hook(view, "beforeViewCreated") }}
 
                 result.setVisibility(View.VISIBLE);
-                {% if typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.viewgroups.ScopedViewGroup") %}
-                ((ScopedViewGroup)result).setScope(scope);
+                {% if typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.viewgroups.BaseDroneViewGroup") %}
+                ((BaseDroneViewGroup)result).setScope(scope);
                 {% endif %}
 
                 {% if view.text != null and not view.text.isEmpty() %}result.setText({{ interpolator.interpolate(view.text) }});{% endif %}

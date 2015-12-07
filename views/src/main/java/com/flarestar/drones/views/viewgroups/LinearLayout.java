@@ -9,6 +9,9 @@ import android.view.View;
  */
 public class LinearLayout extends BoxModelNode {
     protected boolean isHorizontal = false;
+    protected int startViewIndex = 0;
+    private int aggregateChildHeight = 0;
+    private int aggregateChildWidth = 0;
 
     public LinearLayout(Context context) {
         super(context);
@@ -18,21 +21,25 @@ public class LinearLayout extends BoxModelNode {
         super(context, attrs);
     }
 
-    public LinearLayout(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    protected boolean shouldFillHorizontal() {
-        return isHorizontal;
-    }
-
-    protected boolean shouldFillVertical() {
-        return !isHorizontal;
-    }
-
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        if (getChildCount() == 0) {
+            ChildViewCreatorIterator it = viewCreationIterator();
+            for (int i = 0; i < startViewIndex; ++i) {
+                if (it.hasNext()) {
+                    it.next();
+                } else {
+                    break;
+                }
+            }
+
+            for (; it.hasNext(); it.next()) {
+                View child = it.makeView();
+                addView(child);
+            }
+        }
 
         final int count = getChildCount();
 
@@ -45,10 +52,12 @@ public class LinearLayout extends BoxModelNode {
         int availableWidth = getAvailableSize(widthMeasureSpec, isHorizontal);
         int availableHeight = getAvailableSize(heightMeasureSpec, !isHorizontal);
 
-        int aggregateWidth = 0;
-        int aggregateHeight = 0;
+        int unadjustedAggregateWidth = 0;
+        int unadjustedAggregateHeight = 0;
 
         // first pass, we measure each child
+        int remainingAvailableWidth = availableWidth;
+        int remainingAvailableHeight = availableHeight;
         for (int i = 0; i != count; ++i) {
             final View child = getChildAt(i);
 
@@ -56,17 +65,24 @@ public class LinearLayout extends BoxModelNode {
                 continue;
             }
 
+            BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
+            measureBoxModelNodeChild(layoutParams, child, remainingAvailableWidth, remainingAvailableHeight);
+
             if (isHorizontal) {
-                aggregateWidth += child.getMeasuredWidth();
-                aggregateHeight = Math.max(aggregateHeight, child.getMeasuredHeight());
+                unadjustedAggregateWidth += child.getMeasuredWidth();
+                remainingAvailableWidth -= child.getMeasuredWidth();
+
+                unadjustedAggregateHeight = Math.max(unadjustedAggregateHeight, child.getMeasuredHeight());
             } else {
-                aggregateWidth = Math.max(aggregateWidth, child.getMeasuredWidth());
-                aggregateHeight += child.getMeasuredHeight();
+                unadjustedAggregateHeight += child.getMeasuredHeight();
+                remainingAvailableHeight -= child.getMeasuredHeight();
+
+                unadjustedAggregateWidth = Math.max(unadjustedAggregateWidth, child.getMeasuredWidth());
             }
         }
 
-        int adjustedAggregateWidth = aggregateWidth;
-        int adjustedAggregateHeight = aggregateHeight;
+        aggregateChildHeight = unadjustedAggregateHeight;
+        aggregateChildWidth = unadjustedAggregateWidth;
 
         // second pass, we determine the margin & padding of each child
         for (int i = 0; i != count; ++i) {
@@ -83,32 +99,29 @@ public class LinearLayout extends BoxModelNode {
 
             // TODO: for now we do not allow margin/padding to affect the available width/height. maybe it would be useful
             //       to implement in the future, but it would be rather complicated.
-            int extraAvailableWidth;
-            int extraAvailableHeight;
-
             if (isHorizontal) {
-                extraAvailableWidth = availableWidth == -1 ? 0 : (availableWidth - aggregateWidth);
-                extraAvailableHeight = (availableHeight == -1 ? aggregateHeight : availableHeight) - child.getMeasuredHeight();
+                int extraAvailableWidth = availableWidth == -1 ? 0 : (availableWidth - unadjustedAggregateWidth);
+                int extraAvailableHeight = (availableHeight == -1 ? unadjustedAggregateHeight : availableHeight) - child.getMeasuredHeight();
 
                 int childHeightAdjustment = computeChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
                 int childWidthAdjustment = computeChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
 
-                adjustedAggregateWidth += childWidthAdjustment;
-                adjustedAggregateHeight = Math.max(adjustedAggregateHeight, childHeightAdjustment + child.getMeasuredHeight());
+                aggregateChildWidth += childWidthAdjustment;
+                aggregateChildHeight = Math.max(aggregateChildHeight, childHeightAdjustment + child.getMeasuredHeight());
             } else {
-                extraAvailableWidth = (availableWidth == -1 ? aggregateWidth : availableWidth) - child.getMeasuredWidth();
-                extraAvailableHeight = availableHeight == -1 ? 0 : (availableHeight - aggregateHeight);
+                int extraAvailableWidth = (availableWidth == -1 ? unadjustedAggregateWidth : availableWidth) - child.getMeasuredWidth();
+                int extraAvailableHeight = availableHeight == -1 ? 0 : (availableHeight - unadjustedAggregateHeight);
 
                 int childHeightAdjustment = computeChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
                 int childWidthAdjustment = computeChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
 
-                adjustedAggregateWidth = Math.max(adjustedAggregateWidth, childWidthAdjustment + child.getMeasuredWidth());
-                adjustedAggregateHeight += childHeightAdjustment;
+                aggregateChildWidth = Math.max(aggregateChildWidth, childWidthAdjustment + child.getMeasuredWidth());
+                aggregateChildHeight += childHeightAdjustment;
             }
         }
 
-        int width = availableWidth == -1 ? adjustedAggregateWidth : availableWidth;
-        int height = availableHeight == -1 ? adjustedAggregateHeight : availableHeight;
+        int width = availableWidth == -1 ? aggregateChildWidth : availableWidth;
+        int height = availableHeight == -1 ? aggregateChildHeight : availableHeight;
 
         setMeasuredDimension(width, height);
     }
@@ -117,8 +130,8 @@ public class LinearLayout extends BoxModelNode {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         final int count = getChildCount();
 
-        int currentChildTop = getScrollY();
-        int currentChildLeft = getScrollX();
+        int currentChildTop = 0;
+        int currentChildLeft = 0;
 
         for (int i = 0; i != count; ++i) {
             final View child = getChildAt(i);
@@ -158,5 +171,21 @@ public class LinearLayout extends BoxModelNode {
                 }
             }
         }
+
+        // TODO: is this necessary? old comment:
+        // Calling this with the present values causes it to re-claim them
+        if (isHorizontalScrollBarEnabled() || isVerticalScrollBarEnabled()) {
+            scrollTo(getScrollX(), getScrollY());
+        }
+    }
+
+    @Override
+    public int getAggregateChildHeight() {
+        return aggregateChildHeight;
+    }
+
+    @Override
+    public int getAggregateChildWidth() {
+        return aggregateChildWidth;
     }
 }

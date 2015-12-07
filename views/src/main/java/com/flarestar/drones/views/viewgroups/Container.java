@@ -4,9 +4,13 @@ package com.flarestar.drones.views.viewgroups;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 
+// TODO: profile all drones after this all works.
 /**
- * TODO
+ * CHANGES:
+ * - removing getTopFadingEdgeStrength() and getBottomFadingEdgeStrength(). neither seem to be used in
+ *   android source code. though it's possible for vendors to use them? code is still in ScrollingAspect.
  */
 public class Container extends BoxModelNode {
     public Container(Context context) {
@@ -17,21 +21,47 @@ public class Container extends BoxModelNode {
         super(context, attrs);
     }
 
-    public Container(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-    }
-
-    protected boolean shouldFillHorizontal() {
+    // TODO: should return true if scrolling enabled (ie, enabled + child size is greater than this size). can be put in BoxModelNode
+    @Override
+    public boolean shouldDelayChildPressedState() {
         return true;
     }
 
-    protected boolean shouldFillVertical() {
-        return true;
+    @Override
+    public void addView(View child) {
+        throwIfAddingMoreThanOneView();
+        super.addView(child);
+    }
+
+    @Override
+    public void addView(View child, int index) {
+        throwIfAddingMoreThanOneView();
+        super.addView(child, index);
+    }
+
+    @Override
+    public void addView(View child, ViewGroup.LayoutParams params) {
+        throwIfAddingMoreThanOneView();
+        super.addView(child, params);
+    }
+
+    @Override
+    public void addView(View child, int index, ViewGroup.LayoutParams params) {
+        throwIfAddingMoreThanOneView();
+        super.addView(child, index, params);
     }
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        if (getChildCount() == 0) {
+            ChildViewCreatorIterator it = viewCreationIterator();
+            for (; it.hasNext(); it.next()) {
+                View child = it.makeView();
+                addView(child);
+            }
+        }
 
         int availableWidth = getAvailableSize(widthMeasureSpec, true);
         int availableHeight = getAvailableSize(heightMeasureSpec, true);
@@ -43,16 +73,17 @@ public class Container extends BoxModelNode {
 
         if (child.getVisibility() != View.GONE) {
             BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
+            measureBoxModelNodeChild(layoutParams, child, availableWidth, availableHeight);
 
-            final int extraAvailableHeight = availableHeight == -1 ? 0 : availableHeight;
-            final int extraAvailableWidth = availableWidth == -1 ? 0 : availableWidth;
+            final int totalAvailableHeight = availableHeight == -1 ? 0 : availableHeight;
+            final int totalAvailableWidth = availableWidth == -1 ? 0 : availableWidth;
 
             int childHeightAdjustment = 0;
             int childWidthAdjustment = 0;
 
             if (layoutParams != null) {
-                childHeightAdjustment = computeChildHeightAdjustment(layoutParams, extraAvailableHeight, child);
-                childWidthAdjustment = computeChildWidthAdjustment(layoutParams, extraAvailableWidth, child);
+                childHeightAdjustment = computeChildHeightAdjustment(layoutParams, totalAvailableHeight, child);
+                childWidthAdjustment = computeChildWidthAdjustment(layoutParams, totalAvailableWidth, child);
             }
 
             if (availableWidth == -1) {
@@ -71,28 +102,37 @@ public class Container extends BoxModelNode {
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
         final View child = getChildAt(0);
 
-        if (child.getVisibility() == View.GONE) {
-            return;
+        if (child.getVisibility() != View.GONE) {
+            int top = 0;
+            int left = 0;
+
+            BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
+            if (layoutParams != null) {
+                top += getComputedBoxModelSize(layoutParams.marginTop) + getComputedBoxModelSize(layoutParams.paddingTop);
+                left += getComputedBoxModelSize(layoutParams.marginLeft) + getComputedBoxModelSize(layoutParams.paddingLeft);
+            }
+
+            child.layout(top, left, child.getMeasuredWidth(), child.getMeasuredHeight());
         }
 
-        int top = getScrollY();
-        int left = getScrollX();
-
-        BoxModelNode.LayoutParams layoutParams = getChildLayoutParams(child);
-        if (layoutParams != null) {
-            top += getComputedBoxModelSize(layoutParams.marginTop) + getComputedBoxModelSize(layoutParams.paddingTop);
-            left += getComputedBoxModelSize(layoutParams.marginLeft) + getComputedBoxModelSize(layoutParams.paddingLeft);
+        // TODO: is this necessary? old comment:
+        // Calling this with the present values causes it to re-claim them
+        if (isHorizontalScrollBarEnabled() || isVerticalScrollBarEnabled()) {
+            scrollTo(getScrollX(), getScrollY());
         }
-
-        child.layout(top, left, child.getMeasuredWidth(), child.getMeasuredHeight());
     }
 
-    @Override
-    public void addView(View child) {
-        if (getChildCount() > 1) {
-            throw new RuntimeException("Trying to add more than one child view to Container! (child = " + child.toString() + ")");
+    private void throwIfAddingMoreThanOneView() {
+        if (getChildCount() > 0) {
+            throw new IllegalStateException("Container can host only one direct child");
         }
+    }
 
-        super.addView(child);
+    public int getAggregateChildHeight() {
+        return getChildAt(0).getHeight();
+    }
+
+    public int getAggregateChildWidth() {
+        return getChildAt(0).getWidth();
     }
 }

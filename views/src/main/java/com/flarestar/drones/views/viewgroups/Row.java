@@ -18,10 +18,4 @@ public class Row extends LinearLayout {
 
         isHorizontal = true;
     }
-
-    public Row(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-
-        isHorizontal = true;
-    }
 }

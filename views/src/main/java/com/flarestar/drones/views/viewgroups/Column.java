@@ -18,10 +18,4 @@ public class Column extends LinearLayout {
 
         isHorizontal = false;
     }
-
-    public Column(Context context, AttributeSet attrs, int defStyleAttr) {
-        super(context, attrs, defStyleAttr);
-
-        isHorizontal = false;
-    }
 }

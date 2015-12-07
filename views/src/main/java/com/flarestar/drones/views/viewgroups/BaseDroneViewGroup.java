@@ -11,28 +11,23 @@ import com.flarestar.drones.views.ViewRecycler;
 import com.flarestar.drones.views.scope.Scope;
 import com.flarestar.drones.views.scope.events.Click;
 
-public abstract class ScopedViewGroup extends ViewGroup {
-
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
+public abstract class BaseDroneViewGroup extends ViewGroup {
 
     protected Scope<?> scope = null;
 
-    public ScopedViewGroup(Context context) {
+    public BaseDroneViewGroup(Context context) {
         super(context);
 
         setViewRemovalListener();
     }
 
-    public ScopedViewGroup(Context context, AttributeSet attrs) {
+    public BaseDroneViewGroup(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         setViewRemovalListener();
     }
 
-    public ScopedViewGroup(Context context, AttributeSet attrs, int defStyle) {
+    public BaseDroneViewGroup(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
         setViewRemovalListener();
@@ -49,7 +44,7 @@ public abstract class ScopedViewGroup extends ViewGroup {
 
             @Override
             public void onChildViewRemoved(View parent, View child) {
-                Scope<?> scope = ((ScopedViewGroup)parent).scope;
+                Scope<?> scope = ((BaseDroneViewGroup)parent).scope;
                 if (scope == null) {
                     return;
                 }
@@ -99,5 +94,18 @@ public abstract class ScopedViewGroup extends ViewGroup {
                 childViewScope.emit(new Click(view));
             }
         });
+    }
+
+    // TODO: following are methods made public so we can abstract some view logic into another class. it might be possible
+    //       to do this another way though, by creating new public methods that call these protected methods. the public
+    //       methods would have real purpose (ie, like `scrollTo(...)`.
+    @Override
+    public void onScrollChanged(int l, int t, int oldl, int oldt) {
+        super.onScrollChanged(l, t, oldl, oldt);
+    }
+
+    @Override
+    public boolean awakenScrollBars() {
+        return super.awakenScrollBars();
     }
 }

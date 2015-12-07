@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import com.flarestar.drones.views.viewgroups.ScopedViewGroup;
 import com.google.common.cache.*;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;

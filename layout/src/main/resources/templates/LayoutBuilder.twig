@@ -7,13 +7,14 @@ import com.flarestar.drones.views.viewgroups.BoxModelNode;
 import com.flarestar.drones.views.scope.Scope;
 import com.flarestar.drones.views.ViewFactory;
 import com.flarestar.drones.views.ScopedViewFactory;
-import com.flarestar.drones.views.viewgroups.ScopedViewGroup;
+import com.flarestar.drones.views.viewgroups.BaseDroneViewGroup;
 import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
 import com.flarestar.drones.views.viewgroups.dynamic.SingleViewFactory;
 import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
 import com.flarestar.drones.views.ViewRecycler;
 import com.flarestar.drones.views.scope.Listener;
 import com.flarestar.drones.views.LayoutBuilder;
+import com.flarestar.drones.views.aspect.ScrollingAspect;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
@@ -71,7 +72,7 @@ public class {{ className }} implements Drone, LayoutBuilder {
             return;
         }
 
-        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ rootView.id }}(screen);
+        final View rootView = makeView_{{ rootView.id }}(screen);
         screen.setContentView(rootView);
     }
 

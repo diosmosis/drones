@@ -15,12 +15,21 @@ public class OverflowStyles implements Style {
         String overflowX = getOverflowConstant(node, OVERFLOW_X_STYLE);
         String overflowY = getOverflowConstant(node, OVERFLOW_Y_STYLE);
 
+        boolean hasScrolling = false;
         if (overflowX != null && overflowX.equals(SCROLL)) {
             result.append("result.setHorizontalScrollBarEnabled(true);\n");
+
+            hasScrolling = true;
         }
 
         if (overflowY != null && overflowY.equals(SCROLL)) {
             result.append("result.setVerticalScrollBarEnabled(true);\n");
+
+            hasScrolling = true;
+        }
+
+        if (hasScrolling) {
+            result.append("result.addAspect(new ScrollingAspect(result));\n");
         }
     }
 
