@@ -128,6 +128,8 @@ public class LinearLayout extends BoxModelNode {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+
         final int count = getChildCount();
 
         int currentChildTop = 0;

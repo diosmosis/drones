@@ -37,4 +37,8 @@ public abstract class ViewAspect {
     public void onDraw(Canvas canvas) {
         // empty
     }
+
+    public void onLayoutStarted() {
+        // empty
+    }
 }

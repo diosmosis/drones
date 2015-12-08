@@ -144,12 +144,30 @@ public abstract class BoxModelNode extends DynamicViewGroup {
     }
 
     @Override
+    protected int computeHorizontalScrollRange() {
+        ScrollingAspect aspect = getAspect(ScrollingAspect.class);
+        if (aspect != null) {
+            return aspect.computeHorizontalScrollRange();
+        }
+        return super.computeHorizontalScrollRange();
+    }
+
+    @Override
     protected int computeVerticalScrollOffset() {
         ScrollingAspect aspect = getAspect(ScrollingAspect.class);
         if (aspect != null) {
             return aspect.computeVerticalScrollOffset(super.computeVerticalScrollOffset());
         }
         return super.computeVerticalScrollOffset();
+    }
+
+    @Override
+    protected int computeHorizontalScrollOffset() {
+        ScrollingAspect aspect = getAspect(ScrollingAspect.class);
+        if (aspect != null) {
+            return aspect.computeHorizontalScrollOffset(super.computeHorizontalScrollOffset());
+        }
+        return super.computeHorizontalScrollOffset();
     }
 
     @Override
@@ -304,4 +322,11 @@ public abstract class BoxModelNode extends DynamicViewGroup {
 
     public abstract int getAggregateChildHeight();
     public abstract int getAggregateChildWidth();
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        for (ViewAspect aspect : aspects) {
+            aspect.onLayoutStarted();
+        }
+    }
 }

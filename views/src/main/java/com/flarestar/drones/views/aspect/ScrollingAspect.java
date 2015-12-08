@@ -22,24 +22,79 @@ public class ScrollingAspect extends ViewAspect {
 
     /**
      * Sentinel value for no current active pointer.
-     * Used by {@link #activePointerId}.
      */
     public static final int INVALID_POINTER = -1;
 
-    /**
-     * ID of the active pointer. This is used to retain consistency during
-     * drags/flings if multiple pointers are used.
-     */
-    public int activePointerId = INVALID_POINTER;
+    public class TouchVector {
+        private int activePointerId = INVALID_POINTER;
+        private int x1;
+        private int y1;
+        private int dx;
+        private int dy;
 
-    /**
-     * Position of the last motion event.
-     */
-    public int lastMotionY;
+        public void setStart(MotionEvent motion) {
+            assert activePointerId != INVALID_POINTER;
 
-    /**
-     * TODO: wtf is a 'touch slop'?
-     */
+            final int activePointerIndex = motion.findPointerIndex(activePointerId);
+            x1 = (int) motion.getX(activePointerIndex);
+            y1 = (int) motion.getY(activePointerIndex);
+        }
+
+        public void setStart(MotionEvent motion, int pointerIndex) {
+            x1 = (int) motion.getX();
+            y1 = (int) motion.getY();
+            activePointerId = motion.getPointerId(pointerIndex);
+        }
+
+        public void setEnd(MotionEvent motion) {
+            assert activePointerId != INVALID_POINTER; // TODO: use BuildConfig?
+
+            final int activePointerIndex = motion.findPointerIndex(activePointerId);
+            dx = view.isHorizontalScrollBarEnabled() ? ((int) motion.getX(activePointerIndex) - x1) : 0;
+            dy = view.isVerticalScrollBarEnabled() ? ((int) motion.getY(activePointerIndex) - y1) : 0;
+        }
+
+        public int magnitude() {
+            return (int)Math.sqrt(dx * dx + dy * dy);
+        }
+
+        public int pointer() {
+            return activePointerId;
+        }
+
+        public void advance() {
+            x1 += dx;
+            dx = 0;
+
+            y1 += dy;
+            dy = 0;
+        }
+
+        public void clear() {
+            activePointerId = INVALID_POINTER;
+        }
+
+        /**
+         * Dragging doesn't start until the user has moved a certain distance (the distance is
+         * called the 'touch slop'). When dragging starts, we don't want to *start* scrolling, as
+         * if the user has not moved their finger at all. So once the drag has started, we remove
+         * the slop from the deltas before scrolling.
+         *
+         * This only happens when starting a drag via a finger movement.
+         */
+        public int withoutSlop(int delta) {
+            if (delta == 0) {
+                return 0;
+            } else if (delta > 0) {
+                return delta - touchSlop;
+            } else {
+                return delta + touchSlop;
+            }
+        }
+    }
+
+    private TouchVector dragVector = new TouchVector();
+
     public int touchSlop;
 
     public int minimumVelocityForFling;
@@ -58,9 +113,14 @@ public class ScrollingAspect extends ViewAspect {
 
     private boolean isDragging = false;
 
+    private int scrollRangeX;
+    private int scrollRangeY;
+
     // TODO: needs to be initialized properly.
     private EdgeEffect edgeGlowTop;
     private EdgeEffect edgeGlowBottom;
+    private EdgeEffect edgeGlowLeft;
+    private EdgeEffect edgeGlowRight;
 
     public ScrollingAspect(BoxModelNode view) {
         this.view = view;
@@ -78,8 +138,15 @@ public class ScrollingAspect extends ViewAspect {
 
         final int mode = view.getOverScrollMode();
         if (mode != View.OVER_SCROLL_NEVER) {
-            edgeGlowTop = new EdgeEffect(context);
-            edgeGlowBottom = new EdgeEffect(context);
+            if (view.isHorizontalScrollBarEnabled()) {
+                edgeGlowLeft = new EdgeEffect(context);
+                edgeGlowRight = new EdgeEffect(context);
+            }
+
+            if (view.isVerticalScrollBarEnabled()) {
+                edgeGlowTop = new EdgeEffect(context);
+                edgeGlowBottom = new EdgeEffect(context);
+            }
         }
 
         view.setFocusable(true);
@@ -92,7 +159,25 @@ public class ScrollingAspect extends ViewAspect {
     }
 
     /**
-     * Can be used to intercept events that are meant for child views.
+     * Update the computed scroll range after a measure pass has been done on the view.
+     */
+    @Override
+    public void onLayoutStarted() {
+        if (view.isVerticalScrollBarEnabled()) {
+            scrollRangeY = Math.max(0, view.getAggregateChildHeight() - (view.getHeight() - view.getPaddingBottom() - view.getPaddingTop()));
+        } else {
+            scrollRangeY = 0;
+        }
+
+        if (view.isHorizontalScrollBarEnabled()) {
+            scrollRangeX = Math.max(0, view.getAggregateChildWidth() - (view.getWidth() - view.getPaddingLeft() - view.getPaddingRight()));
+        } else {
+            scrollRangeX = 0;
+        }
+    }
+
+    /**
+     * Used to intercept events that are meant for child views.
      *
      * Used to check if there is the user is dragging within the scrollable view. If yes,
      * the events are intercepted (by returning true). In this case, future events are
@@ -115,12 +200,8 @@ public class ScrollingAspect extends ViewAspect {
 
         switch (action & MotionEvent.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN:
-                if (!inChild((int) event.getX(), (int) event.getY())) {
-                    abortDrag();
-                    return false;
-                }
-
                 cleanVelocityTracker();
+                getVelocityTracker().addMovement(event);
 
                 handleTouchDown(event);
                 break;
@@ -159,11 +240,11 @@ public class ScrollingAspect extends ViewAspect {
                 handleTouchCancel(event);
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                saveMotionState(event, event.getActionIndex());
+                dragVector.setStart(event, event.getActionIndex());
                 break;
             case MotionEvent.ACTION_POINTER_UP:
                 onSecondaryPointerUp(event);
-                saveMotionState(event);
+                dragVector.setStart(event); // TODO: initialize is not the right name. maybe 'set'
                 break;
         }
 
@@ -171,8 +252,7 @@ public class ScrollingAspect extends ViewAspect {
     }
 
     private void handleTouchDown(MotionEvent event) {
-        saveMotionState(event);
-        getVelocityTracker().addMovement(event);
+        dragVector.setStart(event, 0);
 
         // If being flinged and user touches the screen, initiate drag.
         if (isFlinging()) {
@@ -181,62 +261,82 @@ public class ScrollingAspect extends ViewAspect {
     }
 
     private void handleTouchMove(MotionEvent event) {
-        if (activePointerId == INVALID_POINTER) {
+        if (dragVector.pointer() == INVALID_POINTER) {
             // If we don't have a valid id, the initial touch down was on content outside of this view.
             return;
         }
 
-        final int activePointerIndex = event.findPointerIndex(activePointerId);
-        final int y = (int) event.getY(activePointerIndex);
-        int deltaY = lastMotionY - y;
-        if (!isDragging() && Math.abs(deltaY) > touchSlop) {
+        dragVector.setEnd(event);
+
+        int deltaY = dragVector.dy;
+        int deltaX = dragVector.dx;
+
+        if (!isDragging() && dragVector.magnitude() > touchSlop) {
             startDrag();
 
-            if (deltaY > 0) {
-                deltaY -= touchSlop;
-            } else {
-                deltaY += touchSlop;
-            }
+            deltaX = dragVector.withoutSlop(deltaX);
+            deltaY = dragVector.withoutSlop(deltaY);
         }
 
         if (!isDragging()) {
             return;
         }
 
-        saveMotionState(event);
+        dragVector.advance();
 
         getVelocityTracker().addMovement(event);
 
         final int oldX = view.getScrollX();
         final int oldY = view.getScrollY();
-        final int range = getScrollRange(); // TODO: handle non ViewGroups please.
 
-        // TODO: don't depend on overScrollBy/onOverScrolled in View. it's fucking weird. instead let's re-implement scrolling ourselves.
-        if (scrollBy(0, deltaY, 0, view.getScrollY(), 0, range, 0, overscrollDistance, true)) {
+        boolean overScrolled = scrollBy(deltaX, deltaY, view.getScrollX(), view.getScrollY(), scrollRangeX,
+            scrollRangeY, overscrollDistance, overscrollDistance, true);
+        if (overScrolled) {
             // Break our velocity if we hit a scroll barrier.
             resetVelocityTracker();
         }
 
         view.onScrollChanged(view.getScrollX(), view.getScrollY(), oldX, oldY);
 
-        if (canOverscroll()) {
-            final int pulledToY = oldY + deltaY;
-            if (pulledToY < 0) {
-                edgeGlowTop.onPull((float) deltaY / view.getHeight());
-                if (!edgeGlowBottom.isFinished()) {
-                    edgeGlowBottom.onRelease();
-                }
-            } else if (pulledToY > range) {
-                edgeGlowBottom.onPull((float) deltaY / view.getHeight());
-                if (!edgeGlowTop.isFinished()) {
-                    edgeGlowTop.onRelease();
-                }
-            }
+        updateEdgeEffectsOnOverscroll(oldX, oldY, deltaX, deltaY);
+    }
 
-            if (!edgeGlowTop.isFinished() || !edgeGlowBottom.isFinished()) {
-                view.postInvalidateOnAnimation();
+    private void updateEdgeEffectsOnOverscroll(int oldX, int oldY, int deltaX, int deltaY) {
+        if (!canOverscroll()) {
+            return;
+        }
+
+        boolean shouldInvalidate = updateEdgeEffectsOnOverscroll(oldY, deltaY, scrollRangeY, view.getHeight(),
+            edgeGlowTop, edgeGlowBottom);
+
+        shouldInvalidate |= updateEdgeEffectsOnOverscroll(oldX, deltaX, scrollRangeX, view.getWidth(), edgeGlowLeft,
+            edgeGlowRight);
+
+        if (!shouldInvalidate) {
+            view.postInvalidateOnAnimation();
+        }
+    }
+
+    private boolean updateEdgeEffectsOnOverscroll(int old, int delta, int max, int viewDimension,
+                                                  EdgeEffect zeroBoundary, EdgeEffect maxBoundary) {
+        if (zeroBoundary == null) {
+            return false;
+        }
+
+        final int newScroll = old + delta;
+        if (newScroll < 0) {
+            zeroBoundary.onPull((float) delta / viewDimension);
+            if (!maxBoundary.isFinished()) {
+                maxBoundary.onRelease();
+            }
+        } else if (newScroll > max) {
+            maxBoundary.onPull((float) delta / viewDimension);
+            if (!zeroBoundary.isFinished()) {
+                zeroBoundary.onRelease();
             }
         }
+
+        return !zeroBoundary.isFinished() || !maxBoundary.isFinished();
     }
 
     private void handleTouchCancel(MotionEvent event) {
@@ -246,7 +346,7 @@ public class ScrollingAspect extends ViewAspect {
 
         abortDrag();
 
-        if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, 0, 0, getScrollRange())) {
+        if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, scrollRangeX, 0, scrollRangeY)) {
             view.postInvalidateOnAnimation();
         }
     }
@@ -258,12 +358,15 @@ public class ScrollingAspect extends ViewAspect {
 
         final VelocityTracker velocityTracker = getVelocityTracker();
         velocityTracker.computeCurrentVelocity(1000, maximumVelocityForFling);
-        int initialVelocity = (int) velocityTracker.getYVelocity(activePointerId);
+        int initialVelocityY = (int) velocityTracker.getYVelocity(dragVector.pointer());
+        int initialVelocityX = (int) velocityTracker.getXVelocity(dragVector.pointer());
 
-        if ((Math.abs(initialVelocity) > minimumVelocityForFling)) {
-            startFling(-initialVelocity);
+        if (Math.abs(initialVelocityY) > minimumVelocityForFling) {
+            startVerticalFling(-initialVelocityY);
+        } else if (Math.abs(initialVelocityX) > minimumVelocityForFling) {
+            startHorizontalFling(-initialVelocityX);
         } else {
-            if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, 0, 0, getScrollRange())) {
+            if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, scrollRangeX, 0, scrollRangeY)) {
                 view.postInvalidateOnAnimation();
             }
 
@@ -271,17 +374,27 @@ public class ScrollingAspect extends ViewAspect {
         }
     }
 
-    public void startFling(int velocityY) {
+    private void startVerticalFling(int velocityY) {
         int height = view.getHeight() - view.getPaddingBottom() - view.getPaddingTop();
         int bottom = view.getAggregateChildHeight();
 
-        scroller.fling(view.getScrollX(), view.getScrollY(), 0, velocityY, 0, 0, 0,
-            Math.max(0, bottom - height), 0, height/2);
+        scroller.fling(view.getScrollX(), view.getScrollY(), 0, velocityY, 0, 0, 0, Math.max(0, bottom - height), 0,
+            height/2);
 
         view.postInvalidateOnAnimation();
     }
 
-    public void startDrag() {
+    private void startHorizontalFling(int velocityX) {
+        int width = view.getWidth() - view.getPaddingLeft() - view.getPaddingRight();
+        int right = view.getAggregateChildWidth();
+
+        scroller.fling(view.getScrollX(), view.getScrollY(), velocityX, 0, 0, Math.max(0, right - width), 0, 0,
+            width/2, 0);
+
+        view.postInvalidateOnAnimation();
+    }
+
+    private void startDrag() {
         if (isFlinging()) {
             abortFling();
         }
@@ -298,10 +411,10 @@ public class ScrollingAspect extends ViewAspect {
         scroller.abortAnimation();
     }
 
-    public void abortDrag() {
+    private void abortDrag() {
         isDragging = false;
 
-        activePointerId = INVALID_POINTER;
+        dragVector.clear();
 
         recycleVelocityTracker();
 
@@ -309,99 +422,55 @@ public class ScrollingAspect extends ViewAspect {
             edgeGlowTop.onRelease();
             edgeGlowBottom.onRelease();
         }
+
+        if (edgeGlowLeft != null) {
+            edgeGlowLeft.onRelease();
+            edgeGlowRight.onRelease();
+        }
     }
-
-    // TODO: copied methods below. they all seem strange and possibly unnecessary. let's try to remove them.
-    private int getScrollRange() {
-        return Math.max(0, view.getAggregateChildHeight() - (view.getHeight() - view.getPaddingBottom() - view.getPaddingTop()));
-    }
-
-    /**
-     * Returns true if a point relative to the scrollable view's viewport is within the scrollable contents.
-     *
-     * TODO: this is weird code. i don't think it's even needed. won't a point in the motion event ALWAYS be in the view?
-     *
-     * @param x
-     * @param y
-     * @return
-     */
-    private boolean inChild(int x, int y) {
-        // make x & y relative to the scroll position
-        x += view.getScrollX();
-        y += view.getScrollY();
-
-        return y >= 0 && y < view.getAggregateChildHeight() && x >= 0 && x < view.getAggregateChildWidth();
-    }
-
 
     private void onSecondaryPointerUp(MotionEvent ev) {
         final int pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>
             MotionEvent.ACTION_POINTER_INDEX_SHIFT;
         final int pointerId = ev.getPointerId(pointerIndex);
-        if (pointerId == activePointerId) {
+        if (pointerId == dragVector.pointer()) {
             // This was our active pointer going up. Choose a new
             // active pointer and adjust accordingly.
             // TODO: Make this decision more intelligent.
             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
-            saveMotionState(ev, newPointerIndex);
+            dragVector.setStart(ev, newPointerIndex);
             resetVelocityTracker();
         }
     }
 
 
-    public VelocityTracker getVelocityTracker() {
+    private VelocityTracker getVelocityTracker() {
         if (velocityTracker == null) {
             velocityTracker = VelocityTracker.obtain();
         }
         return velocityTracker;
     }
 
-    public void recycleVelocityTracker() {
+    private void recycleVelocityTracker() {
         if (velocityTracker != null) {
             velocityTracker.recycle();
             velocityTracker = null;
         }
     }
 
-    public VelocityTracker getCleanVelocityTracker() {
-        if (velocityTracker == null) {
-            velocityTracker = VelocityTracker.obtain();
-        } else {
-            velocityTracker.clear();
-        }
-        return velocityTracker;
-    }
-
-    public void cleanVelocityTracker() {
+    private void cleanVelocityTracker() {
         if (velocityTracker != null) {
             velocityTracker.clear();
         }
     }
 
-    public void resetVelocityTracker() {
+    private void resetVelocityTracker() {
         if (velocityTracker != null) {
             velocityTracker.clear();
         }
     }
 
-    public void saveMotionState(MotionEvent event) {
-        if (activePointerId == INVALID_POINTER) {
-            lastMotionY = (int) event.getY();
-            activePointerId = event.getPointerId(0);
-        } else {
-            final int pointerIndex = event.findPointerIndex(activePointerId);
-            lastMotionY = (int) event.getY(pointerIndex);
-        }
-    }
-
-    public void saveMotionState(MotionEvent event, int pointerIndex) {
-        assert activePointerId == INVALID_POINTER;
-
-        lastMotionY = (int) event.getY();
-        activePointerId = event.getPointerId(pointerIndex);
-    }
-
-    public boolean isFlinging() {
+    private boolean isFlinging() {
         return !scroller.isFinished();
     }
 
@@ -417,20 +486,12 @@ public class ScrollingAspect extends ViewAspect {
         final int y = scroller.getCurrY();
 
         if (oldX != x || oldY != y) {
-            final int range = getScrollRange();
-            scrollBy(x - oldX, y - oldY, oldX, oldY, 0, range, 0, overflingDistance, false);
+            scrollBy(x - oldX, y - oldY, oldX, oldY, scrollRangeX, scrollRangeY, 0, overflingDistance, false);
 
             // TODO: (this is more of a note) removing this since in drones we don't care about View subclasses. there should be none. instead, we'll post a scope event when the scroll changes
-            //       we do want to make sure views are created if scroll changes though. so i guess it should be posted. for now, comment it out.
             // onScrollChanged(getScrollX(), getScrollY(), oldX, oldY
 
-            if (canOverscroll()) {
-                if (y < 0 && oldY >= 0) {
-                    edgeGlowTop.onAbsorb((int) scroller.getCurrVelocity());
-                } else if (y > range && oldY <= range) {
-                    edgeGlowBottom.onAbsorb((int) scroller.getCurrVelocity());
-                }
-            }
+            updateEdgeEffectsIfReachScrollBoundary(oldX, oldY, x, y);
         }
 
         if (!view.awakenScrollBars()) {
@@ -439,16 +500,42 @@ public class ScrollingAspect extends ViewAspect {
         }
     }
 
+    private void updateEdgeEffectsIfReachScrollBoundary(int oldX, int oldY, int x, int y) {
+        if (!canOverscroll()) {
+            return;
+        }
+
+        updateEdgeEffectsIfReachScrollBoundary(oldY, y, scrollRangeY, edgeGlowTop, edgeGlowBottom);
+        updateEdgeEffectsIfReachScrollBoundary(oldX, x, scrollRangeX, edgeGlowLeft, edgeGlowRight);
+    }
+
+    private void updateEdgeEffectsIfReachScrollBoundary(int old, int current, int max, EdgeEffect zeroBoundary,
+                                                        EdgeEffect maxBoundary) {
+        if (zeroBoundary == null) {
+            return;
+        }
+
+        if (current < 0 && old >= 0) {
+            zeroBoundary.onAbsorb((int) scroller.getCurrVelocity());
+        } else if (current > max && old <= max) {
+            maxBoundary.onAbsorb((int) scroller.getCurrVelocity());
+        }
+    }
+
     public boolean canOverscroll() {
         final int overscrollMode = view.getOverScrollMode();
-        final int range = getScrollRange();
 
         return overscrollMode == View.OVER_SCROLL_ALWAYS
-            || (overscrollMode == View.OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
+            || (overscrollMode == View.OVER_SCROLL_IF_CONTENT_SCROLLS && (scrollRangeY > 0 || scrollRangeX > 0));
     }
 
     @Override
     public void onDraw(Canvas canvas) {
+        drawVerticalEdgesIfAnimationOngoing(canvas);
+        drawHorizontalEdgesIfAnimationOngoing(canvas);
+    }
+
+    private void drawVerticalEdgesIfAnimationOngoing(Canvas canvas) {
         if (edgeGlowTop == null) {
             return;
         }
@@ -473,7 +560,7 @@ public class ScrollingAspect extends ViewAspect {
         if (!edgeGlowBottom.isFinished()) {
             final int restoreCount = canvas.save();
 
-            canvas.translate(-width + view.getPaddingLeft(), Math.max(getScrollRange(), scrollY) + height);
+            canvas.translate(-width + view.getPaddingLeft(), Math.max(scrollRangeY, scrollY) + height);
             canvas.rotate(180, width, 0);
 
             edgeGlowBottom.setSize(width, height);
@@ -485,11 +572,51 @@ public class ScrollingAspect extends ViewAspect {
         }
     }
 
+    // TODO: drawing left/right edges doesn't seem to work... it gets to the canvas bit, but nothing shows up
+    //       at least in the emulator.
+    private void drawHorizontalEdgesIfAnimationOngoing(Canvas canvas) {
+        if (edgeGlowLeft == null) {
+            return;
+        }
+
+        final int width = view.getWidth();
+        final int height = view.getHeight() - view.getPaddingBottom() - view.getPaddingTop();
+
+        final int scrollX = view.getScrollX();
+        if (!edgeGlowLeft.isFinished()){
+            final int restoreCount = canvas.save();
+
+            canvas.rotate(270);
+            canvas.translate(Math.min(0, scrollX), view.getPaddingTop());
+
+            edgeGlowLeft.setSize(width, height);
+            if (edgeGlowLeft.draw(canvas)) {
+                view.postInvalidateOnAnimation(); // TODO: this can be called 4 times, i don't think that's necessary.
+            }
+
+            canvas.restoreToCount(restoreCount);
+        }
+
+        if (!edgeGlowRight.isFinished()) {
+            final int restoreCount = canvas.save();
+
+            canvas.translate(Math.max(scrollRangeX, scrollX) + width, -height + view.getPaddingTop());
+            canvas.rotate(90, 0, height);
+
+            edgeGlowRight.setSize(width, height);
+            if (edgeGlowRight.draw(canvas)) {
+                view.postInvalidateOnAnimation();
+            }
+
+            canvas.restoreToCount(restoreCount);
+        }
+    }
+
     public void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
-        // Treat animating scrolls differently; see #computeScroll() for why.
         if (!scroller.isFinished() && clampedY) {
-            scroller.springBack(scrollX, scrollY, 0, 0, 0, getScrollRange());
+            scroller.springBack(scrollX, scrollY, 0, scrollRangeX, 0, scrollRangeY);
             /* TODO: for now commenting this stuff out, let's see if we can live w/o it.
+        // Treat animating scrolls differently; see #computeScroll() for why.
             viewInternalsManipulator.setScrollXRaw(this, scrollX);
             viewInternalsManipulator.setScrollYRaw(this, scrollY);
             viewInternalsManipulator.invalidateParentIfNeeded(this);
@@ -513,21 +640,39 @@ public class ScrollingAspect extends ViewAspect {
             return false;
         }
 
+        int oldScrollY = view.getScrollY();
+        int newScrollY = oldScrollY;
+
+        int oldScrollX = view.getScrollX();
+        int newScrollX = oldScrollX;
+
         final float vscroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
         if (vscroll != 0) {
             final int delta = (int) (vscroll * 3.0);//getVerticalScrollFactor() TODO
-            final int range = getScrollRange();
-            int oldScrollY = view.getScrollY();
-            int newScrollY = oldScrollY - delta;
+
+            newScrollY = oldScrollY - delta;
             if (newScrollY < 0) {
                 newScrollY = 0;
-            } else if (newScrollY > range) {
-                newScrollY = range;
+            } else if (newScrollY > scrollRangeY) {
+                newScrollY = scrollRangeY;
             }
-            if (newScrollY != oldScrollY) {
-                view.scrollTo(view.getScrollX(), newScrollY);
-                return true;
+        }
+
+        final float hscroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
+        if (hscroll != 0) {
+            final int delta = (int) (hscroll * 3.0); // TODO: getHorizontalScrollFactor()
+
+            newScrollX = oldScrollX - delta;
+            if (oldScrollX < 0) {
+                oldScrollX = 0;
+            } else if (oldScrollX > scrollRangeX) {
+                oldScrollX = scrollRangeX;
             }
+        }
+
+        if (newScrollY != oldScrollY || newScrollX != oldScrollX) {
+            view.scrollTo(newScrollX, newScrollY);
+            return true;
         }
 
         return false;
@@ -541,6 +686,10 @@ public class ScrollingAspect extends ViewAspect {
     }
 
     public int computeVerticalScrollRange() {
+        if (!view.isVerticalScrollBarEnabled()) {
+            return 0;
+        }
+
         final int contentHeight = view.getHeight() - view.getPaddingBottom() - view.getPaddingTop();
 
         int scrollRange = view.getAggregateChildHeight();
@@ -556,9 +705,33 @@ public class ScrollingAspect extends ViewAspect {
         return scrollRange;
     }
 
-    private Rect tempRect = new Rect();
+    public int computeHorizontalScrollRange() {
+        if (!view.isHorizontalScrollBarEnabled()) {
+            return 0;
+        }
+
+        final int contentWidth = view.getWidth() - view.getPaddingLeft() - view.getPaddingRight();
+
+        int scrollRange = view.getAggregateChildWidth();
+
+        final int scrollX = view.getScrollX();
+        final int overscrollRight = Math.max(0, scrollRange - contentWidth);
+        if (scrollX < 0) {
+            scrollRange -= scrollX;
+        } else if (scrollX > overscrollRight) {
+            scrollRange += scrollX - overscrollRight;
+        }
+
+        return scrollRange;
+    }
+
+    private Rect tempRect = new Rect(); // TODO: move above
 
     public int computeVerticalScrollOffset(int baseScrollOffset) {
+        return Math.max(0, baseScrollOffset);
+    }
+
+    public int computeHorizontalScrollOffset(int baseScrollOffset) {
         return Math.max(0, baseScrollOffset);
     }
 
@@ -577,12 +750,17 @@ public class ScrollingAspect extends ViewAspect {
             int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(tempRect);
             doScrollY(scrollDelta);
         }
+
+        // TODO: w/ horizontal scrolling, need to handle width. need to think about how. applies also to following methods:
+        //       computeScrollDeltaToGetChildRectOnScreen(), isWithinDeltaOfScreen(), doScrollY()
     }
 
     /**
      * Compute the amount to scroll in the Y direction in order to get
      * a rectangle completely on the screen (or, if taller than the screen,
      * at least the first screen size chunk of it).
+     *
+     * NOTE: only used by onSizeChanged
      *
      * @param rect The rect.
      * @return The scroll delta.

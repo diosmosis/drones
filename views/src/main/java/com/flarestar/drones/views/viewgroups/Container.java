@@ -100,6 +100,8 @@ public class Container extends BoxModelNode {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+
         final View child = getChildAt(0);
 
         if (child.getVisibility() != View.GONE) {
