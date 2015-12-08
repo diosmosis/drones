@@ -11,7 +11,6 @@ import com.flarestar.drones.views.viewgroups.BaseDroneViewGroup;
 import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
 import com.flarestar.drones.views.viewgroups.dynamic.SingleViewFactory;
 import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
-import com.flarestar.drones.views.ViewRecycler;
 import com.flarestar.drones.views.scope.Listener;
 import com.flarestar.drones.views.LayoutBuilder;
 import com.flarestar.drones.views.aspect.ScrollingAspect;
@@ -24,9 +23,6 @@ import {{ applicationPackage }}.R;
 
 @Singleton
 public class {{ className }} implements Drone, LayoutBuilder {
-
-    @Inject
-    ViewRecycler _viewRecycler;
 
     {% for property in injectedProperties %}
     @Inject
@@ -61,10 +57,6 @@ public class {{ className }} implements Drone, LayoutBuilder {
     @Inject
     public {{ className }}() {
         _handler = new Handler();
-    }
-
-    public ViewRecycler getViewRecycler() {
-        return _viewRecycler;
     }
 
     public void setUpDrone(final BaseScreen screen) {

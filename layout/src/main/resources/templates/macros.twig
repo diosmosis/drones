@@ -28,7 +28,7 @@
             @Override
             public View make() {
 
-                final {{ view.getViewClassName() }} result = _viewRecycler.makeView({{ view.getViewClassName() }}.class, _screen);
+                final {{ view.getViewClassName() }} result = new {{ view.getViewClassName() }}(_screen);
 
                 {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if view.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
                 {% if view.scopeDefinition.getParentScope() != null %}final {{ view.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}

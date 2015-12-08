@@ -116,7 +116,6 @@ public class ScrollingAspect extends ViewAspect {
     private int scrollRangeX;
     private int scrollRangeY;
 
-    // TODO: needs to be initialized properly.
     private EdgeEffect edgeGlowTop;
     private EdgeEffect edgeGlowBottom;
     private EdgeEffect edgeGlowLeft;
@@ -403,7 +402,7 @@ public class ScrollingAspect extends ViewAspect {
 
         final ViewParent parent = view.getParent();
         if (parent != null) {
-            parent.requestDisallowInterceptTouchEvent(true); // TODO: do this when starting dragbehavior? (done once below)
+            parent.requestDisallowInterceptTouchEvent(true);
         }
     }
 

@@ -4,10 +4,6 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import com.flarestar.drones.base.BaseScreen;
-import com.flarestar.drones.base.Drone;
-import com.flarestar.drones.views.LayoutBuilder;
-import com.flarestar.drones.views.ViewRecycler;
 import com.flarestar.drones.views.scope.Scope;
 import com.flarestar.drones.views.scope.events.Click;
 
@@ -34,7 +30,6 @@ public abstract class BaseDroneViewGroup extends ViewGroup {
     }
 
     private void setViewRemovalListener() {
-        final ViewRecycler recycler = findViewRecycler();
         OnHierarchyChangeListener listener = new OnHierarchyChangeListener() {
             @Override
             public void onChildViewAdded(View parent, View child) {
@@ -50,23 +45,10 @@ public abstract class BaseDroneViewGroup extends ViewGroup {
                 }
 
                 scope.detachChild(child);
-
-                recycler.recycleView(child);
             }
         };
 
         setOnHierarchyChangeListener(listener);
-    }
-
-    private ViewRecycler findViewRecycler() {
-        Context context = getContext();
-        for (Drone drone : ((BaseScreen)context).drones()) {
-            if (drone instanceof LayoutBuilder) {
-                return ((LayoutBuilder)drone).getViewRecycler();
-            }
-        }
-
-        throw new RuntimeException("Unexpected state: could not find LayoutBuilder");
     }
 
     public Scope<?> getScope() {
