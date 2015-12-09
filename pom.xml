@@ -11,7 +11,7 @@
     <modules>
         <module>base</module>
         <module>base-compiler</module>
-        <module>layout</module>
+        <module>mvw-compiler</module>
         <module>views</module>
     </modules>
 

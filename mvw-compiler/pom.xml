@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.flarestar.drones</groupId>
-	<artifactId>layout</artifactId>
+	<artifactId>mvw-compiler</artifactId>
 	<version>0.1.0</version>
 	<packaging>jar</packaging>
-	<name>layout</name>
+	<name>mvw-compiler</name>
 
 	<parent>
 	    <groupId>com.flarestar.drones</groupId>
