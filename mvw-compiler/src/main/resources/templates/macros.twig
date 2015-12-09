@@ -68,6 +68,22 @@
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
 
+                {% for directive in view.directives %}
+                {% for watcher in directive.watchers %}
+                scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
+                    @Override
+                    public Object getWatchValue(Scope<?> _scope) {
+                        {{ watcher.getCodeForGetWatchValue() }}
+                    }
+
+                    @Override
+                    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {
+                        {{ watcher.getCodeForOnValueChanged() }}
+                    }
+                });
+                {% endfor %}
+                {% endfor %}
+
                 {{ self.directive_hook(view, "beforeReturnResult") }}
 
                 scope.digest();

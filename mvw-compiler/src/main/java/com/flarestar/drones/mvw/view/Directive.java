@@ -6,6 +6,7 @@ import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
 import com.flarestar.drones.mvw.view.scope.Event;
 import com.flarestar.drones.mvw.view.scope.Property;
+import com.flarestar.drones.mvw.view.scope.WatcherDefinition;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,6 +21,7 @@ public abstract class Directive {
     protected final GenerationContext context;
     protected final List<Property> properties = new ArrayList<>();
     protected final List<Event> events = new ArrayList<>();
+    protected final List<WatcherDefinition> watchers = new ArrayList<>();
 
     public Directive(GenerationContext context) throws LayoutFileException {
         this.context = context;
@@ -39,6 +41,10 @@ public abstract class Directive {
 
     public List<Property> getScopeProperties() {
         return properties;
+    }
+
+    public List<WatcherDefinition> getWatchers() {
+        return watchers;
     }
 
     public List<Event> getEvents() {

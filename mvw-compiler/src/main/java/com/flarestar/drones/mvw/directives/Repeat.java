@@ -11,6 +11,8 @@ import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.matchers.AttributeMatcher;
+import com.flarestar.drones.mvw.view.scope.WatcherDefinition;
+import com.flarestar.drones.views.scope.CollectionWatcher;
 import com.google.inject.Inject;
 
 import javax.lang.model.type.TypeMirror;
@@ -53,6 +55,12 @@ public class Repeat extends Directive {
         } catch (BaseExpressionException ex) {
             throw new LayoutFileException("Invalid ng-repeat expression", ex);
         }
+
+        watchers.add(new WatcherDefinition(
+            CollectionWatcher.class,
+            "return " + iterableExpression + ";",
+            "if (newValue == oldValue) return;\n_parentView.removeAllViews();"
+        ));
     }
 
     @Override
@@ -98,29 +106,5 @@ public class Repeat extends Directive {
     @Override
     public String endViewFactory(ViewNode node) throws LayoutFileException {
         return "    }\n};\n";
-    }
-
-    @Override
-    public String beforeReturnResult(ViewNode node) throws LayoutFileException {
-        StringBuilder result = new StringBuilder();
-        result.append("scope.watch(new com.flarestar.drones.views.scope.CollectionWatcher() {\n");
-        result.append("    @Override\n");
-        result.append("    public Object getWatchValue(Scope<?> _scope) {\n");
-
-        {
-            result.append("        return ");
-            result.append(iterableExpression);
-            result.append(";\n");
-        }
-
-        result.append("    }\n");
-        result.append("\n");
-        result.append("    @Override\n");
-        result.append("    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {\n");
-        result.append("        if (newValue == oldValue) return;\n");
-        result.append("        _parentView.removeAllViews();\n");
-        result.append("    }\n");
-        result.append("});\n");
-        return result.toString();
     }
 }

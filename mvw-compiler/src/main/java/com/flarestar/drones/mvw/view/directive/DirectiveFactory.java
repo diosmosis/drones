@@ -93,7 +93,7 @@ public class DirectiveFactory {
             }
 
             injector.injectMembers(directive);
-            directive.postConstruct();;
+            directive.postConstruct();
 
             directives.add(directive);
         }
