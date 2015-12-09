@@ -1,0 +1,11 @@
+<directives>
+    <directive class="com.flarestar.drones.mvw.directives.Button" />
+    <directive class="com.flarestar.drones.mvw.directives.Click" />
+    <directive class="com.flarestar.drones.mvw.directives.Column" />
+    <directive class="com.flarestar.drones.mvw.directives.Container" />
+    <directive class="com.flarestar.drones.mvw.directives.Img" />
+    <directive class="com.flarestar.drones.mvw.directives.Row" />
+    <directive class="com.flarestar.drones.mvw.directives.Controller" />
+    <directive class="com.flarestar.drones.mvw.directives.Label" />
+    <directive class="com.flarestar.drones.mvw.directives.Repeat" />
+</directives>
