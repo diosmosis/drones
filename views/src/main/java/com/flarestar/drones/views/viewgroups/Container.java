@@ -55,14 +55,6 @@ public class Container extends BoxModelNode {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        if (getChildCount() == 0) {
-            ChildViewCreatorIterator it = viewCreationIterator();
-            for (; it.hasNext(); it.next()) {
-                View child = it.makeView();
-                addView(child);
-            }
-        }
-
         int availableWidth = getAvailableSize(widthMeasureSpec, true);
         int availableHeight = getAvailableSize(heightMeasureSpec, true);
 

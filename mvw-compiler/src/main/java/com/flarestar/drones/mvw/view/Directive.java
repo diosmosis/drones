@@ -99,6 +99,10 @@ public abstract class Directive {
         return "";
     }
 
+    public String onCreatedNewScope(ViewNode node) throws LayoutFileException {
+        return "";
+    }
+
     public void manipulateViewNode(ViewNode viewNode) throws LayoutFileException {
         // empty
     }

@@ -9,7 +9,6 @@ import android.view.View;
  */
 public class LinearLayout extends BoxModelNode {
     protected boolean isHorizontal = false;
-    protected int startViewIndex = 0;
     private int aggregateChildHeight = 0;
     private int aggregateChildWidth = 0;
 
@@ -24,22 +23,6 @@ public class LinearLayout extends BoxModelNode {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-
-        if (getChildCount() == 0) {
-            ChildViewCreatorIterator it = viewCreationIterator();
-            for (int i = 0; i < startViewIndex; ++i) {
-                if (it.hasNext()) {
-                    it.next();
-                } else {
-                    break;
-                }
-            }
-
-            for (; it.hasNext(); it.next()) {
-                View child = it.makeView();
-                addView(child);
-            }
-        }
 
         final int count = getChildCount();
 

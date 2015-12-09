@@ -13,42 +13,14 @@ public abstract class BaseDroneViewGroup extends ViewGroup {
 
     public BaseDroneViewGroup(Context context) {
         super(context);
-
-        setViewRemovalListener();
     }
 
     public BaseDroneViewGroup(Context context, AttributeSet attrs) {
         super(context, attrs);
-
-        setViewRemovalListener();
     }
 
     public BaseDroneViewGroup(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-
-        setViewRemovalListener();
-    }
-
-    private void setViewRemovalListener() {
-        OnHierarchyChangeListener listener = new OnHierarchyChangeListener() {
-            @Override
-            public void onChildViewAdded(View parent, View child) {
-                // TODO: what about the root view? should be done in the LayoutBuilder.
-                linkListenersToScopeEvents(child);
-            }
-
-            @Override
-            public void onChildViewRemoved(View parent, View child) {
-                Scope<?> scope = ((BaseDroneViewGroup)parent).scope;
-                if (scope == null) {
-                    return;
-                }
-
-                scope.detachChild(child);
-            }
-        };
-
-        setOnHierarchyChangeListener(listener);
     }
 
     public Scope<?> getScope() {
@@ -63,6 +35,7 @@ public abstract class BaseDroneViewGroup extends ViewGroup {
         this.scope = scope;
     }
 
+    // TODO: what about linking listeners for the root view? should be done in the LayoutBuilder.
     private void linkListenersToScopeEvents(final View child) {
         // TODO: link all other listeners
         child.setOnClickListener(new OnClickListener() {
@@ -89,5 +62,80 @@ public abstract class BaseDroneViewGroup extends ViewGroup {
     @Override
     public boolean awakenScrollBars() {
         return super.awakenScrollBars();
+    }
+
+    @Override
+    public void addView(View child) {
+        super.addView(child);
+
+        linkListenersToScopeEvents(child);
+    }
+
+    @Override
+    public void addView(View child, int index) {
+        super.addView(child, index);
+
+        linkListenersToScopeEvents(child);
+    }
+
+    @Override
+    public void addView(View child, int width, int height) {
+        super.addView(child, width, height);
+
+        linkListenersToScopeEvents(child);
+    }
+
+    @Override
+    public void addView(View child, LayoutParams params) {
+        super.addView(child, params);
+
+        linkListenersToScopeEvents(child);
+    }
+
+    @Override
+    public void addView(View child, int index, LayoutParams params) {
+        super.addView(child, index, params);
+
+        linkListenersToScopeEvents(child);
+    }
+
+    @Override
+    public void removeView(View view) {
+        removeChildScope(view);
+
+        super.removeView(view);
+    }
+
+    @Override
+    public void removeViewAt(int index) {
+        removeChildScope(getChildAt(index));
+
+        super.removeViewAt(index);
+    }
+
+    @Override
+    public void removeViews(int start, int count) {
+        for (int i = 0; i != start + count; ++i) {
+            removeChildScope(getChildAt(i));
+        }
+
+        super.removeViews(start, count);
+    }
+
+    @Override
+    public void removeAllViews() {
+        for (int i = 0; i != getChildCount(); ++i) {
+            removeChildScope(getChildAt(i));
+        }
+
+        super.removeAllViews();
+    }
+
+    private void removeChildScope(View child) {
+        if (scope == null) {
+            return;
+        }
+
+        scope.detachChild(child);
     }
 }

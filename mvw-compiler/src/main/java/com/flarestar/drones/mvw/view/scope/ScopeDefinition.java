@@ -136,4 +136,8 @@ public class ScopeDefinition {
 
         setInheritedScopeProperties(node.parent);
     }
+
+    public void addProperty(Property property) {
+        properties.put(property.name, property);
+    }
 }

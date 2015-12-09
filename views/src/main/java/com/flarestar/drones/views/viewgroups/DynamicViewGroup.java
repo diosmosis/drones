@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import com.flarestar.drones.views.ViewFactory;
+import com.flarestar.drones.views.scope.Scope;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,7 +21,7 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
 
         public ChildViewCreatorIterator() {
             if (childDefinitionIterator.hasNext()) {
-                current = childDefinitionIterator.next().iterator();
+                current = childDefinitionIterator.next().iterator(DynamicViewGroup.this);
             }
         }
 
@@ -36,7 +37,7 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
                         break;
                     }
 
-                    current = childDefinitionIterator.next().iterator();
+                    current = childDefinitionIterator.next().iterator(DynamicViewGroup.this);
 
                     if (current.hasNext()) {
                         break;
@@ -70,7 +71,6 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
     }
 
     // TODO: automated tests should detect if memory leaks exist
-    // TODO: only add Views if they are in the viewport. HOW TO DO THISSSS??? let's do it in boxmodelnode.
 
     public void addChildDefinition(ViewFactory factory) {
         childDefinitions.add(factory);
@@ -79,6 +79,20 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
     @Override
     public void onScrollChanged(int l, int t, int oldl, int oldt) {
         super.onScrollChanged(l, t, oldl, oldt);
+    }
+
+    public void moveView(int from, int to) {
+        View view = getChildAt(from);
+        removeViewAt(from);
+        addView(view, to);
+    }
+
+    public void createChildren() {
+        ChildViewCreatorIterator it = viewCreationIterator();
+        for (; it.hasNext(); it.next()) {
+            View view = it.makeView();
+            addView(view);
+        }
     }
 
     protected ChildViewCreatorIterator viewCreationIterator() {

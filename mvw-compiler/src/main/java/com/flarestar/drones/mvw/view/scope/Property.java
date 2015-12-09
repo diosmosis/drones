@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Property {
-    private static final Pattern PROPERTY_DESCRIPTOR_REGEX = Pattern.compile("(\\w+)\\s+(\\w+)\\s*(?:=\\s*(.+))?");
+    private static final Pattern PROPERTY_DESCRIPTOR_REGEX = Pattern.compile("([\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*(.+))?");
 
     public final String name;
     public final String type;

@@ -2,11 +2,25 @@
 {% for directive in view.directives %}{{ directive.getHookCode(hookName, view) }}{% endfor %}
 {% endmacro %}
 
+{% macro watcher(watcher) %}
+scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
+    @Override
+    public Object getWatchValue(Scope<?> _scope) {
+        {{ watcher.getCodeForGetWatchValue() }}
+    }
+
+    @Override
+    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {
+        {{ watcher.getCodeForOnValueChanged() }}
+    }
+});
+{% endmacro %}
+
 {% macro make_view_function(view, interpolator, styleProcessor, typeInferer) %}
 {% import _self as self %}
 
 {# TODO: no longer using isDynamic() or hasDynamicChild(), should remove if not needed #}
-    private {% if view.parent != null %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final ViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+    private {% if view.parent != null %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = _parentNodeScope;
         {% if view.parent.scopeDefinition.getParentScope() != null %}final {{ view.parent.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.parent.scopeDefinition.allProperties() %}final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
@@ -14,9 +28,9 @@
 
     {% if view.parent != null %}
     {% if view.hasDynamicDirective() %}
-        {{ self.directive_hook(view, "beginViewFactory") }}
+        final ViewFactory _viewFactory = {{ self.directive_hook(view, "beginViewFactory") }}
     {% else %}
-        return new SingleViewFactory() {
+        final ViewFactory _viewFactory = new SingleViewFactory() {
             public View makeView() {
     {% endif %}
     {% endif %}
@@ -31,6 +45,7 @@
                 final {{ view.getViewClassName() }} result = new {{ view.getViewClassName() }}(_screen);
 
                 {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if view.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
+                {{ self.directive_hook(view, "onCreatedNewScope") }}
                 {% if view.scopeDefinition.getParentScope() != null %}final {{ view.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
                 {% for property in view.scopeDefinition.ownProperties() %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
                 {% endfor %}{% endif %}
@@ -65,28 +80,19 @@
                 {% for child in view.children %}
                 result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
                 {% endfor %}
+                {% if not view.children.isEmpty() %}
+                result.createChildren();
+                {% endif %}
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
 
                 {% for directive in view.directives %}
                 {% for watcher in directive.watchers %}
-                scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
-                    @Override
-                    public Object getWatchValue(Scope<?> _scope) {
-                        {{ watcher.getCodeForGetWatchValue() }}
-                    }
-
-                    @Override
-                    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {
-                        {{ watcher.getCodeForOnValueChanged() }}
-                    }
-                });
+                {% if not watcher.isOnParentScope() %}{{ self.watcher(watcher) }}{% endif %}
                 {% endfor %}
                 {% endfor %}
 
                 {{ self.directive_hook(view, "beforeReturnResult") }}
-
-                scope.digest();
 
                 return result;
             }
@@ -99,6 +105,14 @@
             }
         };
     {% endif %}
+
+    {% for directive in view.directives %}
+    {% for watcher in directive.watchers %}
+    {% if watcher.isOnParentScope() %}{{ self.watcher(watcher) }}{% endif %}
+    {% endfor %}
+    {% endfor %}
+
+    return _viewFactory;
     {% endif %}
     }
 

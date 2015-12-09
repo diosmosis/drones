@@ -9,11 +9,18 @@ public class WatcherDefinition {
     private final Class<? extends Watcher> watcherClass;
     protected final String getWatchValueCode;
     protected final String onValueChangedCode;
+    private final boolean isOnParentScope;
 
-    public WatcherDefinition(Class<? extends Watcher> watcherClass, String getWatchValueCode, String onValueChangedCode) {
+    public WatcherDefinition(Class<? extends Watcher> watcherClass, String getWatchValueCode, String onValueChangedCode,
+                             boolean isOnParentScope) {
         this.watcherClass = watcherClass;
         this.getWatchValueCode = getWatchValueCode;
         this.onValueChangedCode = onValueChangedCode;
+        this.isOnParentScope = isOnParentScope;
+    }
+
+    public WatcherDefinition(Class<? extends Watcher> watcherClass, String getWatchValueCode, String onValueChangedCode) {
+        this(watcherClass, getWatchValueCode, onValueChangedCode, false);
     }
 
     public WatcherDefinition(String getWatchValueCode, String onValueChangedCode) {
@@ -30,5 +37,9 @@ public class WatcherDefinition {
 
     public String getCodeForOnValueChanged() {
         return onValueChangedCode;
+    }
+
+    public boolean isOnParentScope() {
+        return isOnParentScope;
     }
 }

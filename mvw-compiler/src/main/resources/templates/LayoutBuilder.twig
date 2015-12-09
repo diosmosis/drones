@@ -64,7 +64,8 @@ public class {{ className }} implements Drone, LayoutBuilder {
             return;
         }
 
-        final View rootView = makeView_{{ rootView.id }}(screen);
+        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ rootView.id }}(screen);
+        rootView.getScope().apply();
         screen.setContentView(rootView);
     }
 
