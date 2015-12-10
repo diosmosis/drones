@@ -32,10 +32,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <repository>
-            <id>android</id>
-            <url>file:///home/runic/Android/Sdk/extras/android/m2repository</url>
-        </repository>
     </repositories>
 
 	<dependencies>
