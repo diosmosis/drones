@@ -1,6 +1,6 @@
 package com.flarestar.drones.mvw.view;
 
-import com.flarestar.drones.mvw.annotations.directive.IsolateScope;
+import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.parser.exceptions.NoViewClassForNode;
@@ -51,7 +51,7 @@ public class ViewNode {
     }
 
     private ScopeDefinition createScopeDefinition() throws LayoutFileException {
-        ScopeDefinition computed = new ScopeDefinition(this, hasIsolateScope());
+        ScopeDefinition computed = new ScopeDefinition(this, hasIsolateDirective());
         if (parent == null || !computed.isPassthroughScope()) {
             return computed;
         } else {
@@ -59,13 +59,13 @@ public class ViewNode {
         }
     }
 
-    public boolean hasIsolateScope() {
+    public boolean hasIsolateDirective() {
         if (parent == null) {
             return true;
         }
 
         for (Directive directive : directives) {
-            IsolateScope annotation = directive.getClass().getAnnotation(IsolateScope.class);
+            IsolateDirective annotation = directive.getClass().getAnnotation(IsolateDirective.class);
             if (annotation != null) {
                 return true;
             }

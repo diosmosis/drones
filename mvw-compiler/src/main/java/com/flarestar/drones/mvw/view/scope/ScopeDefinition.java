@@ -17,7 +17,7 @@ public class ScopeDefinition {
     private String scopeClassName;
     private final ViewNode owner;
     private final ScopeDefinition parentScope;
-    public final boolean isIsolateScope;
+    public final boolean isIsolateDirective;
     private final Map<String, Property> properties;
     private Boolean isPassthroughScope;
     private final Map<String, Property> ownProperties;
@@ -26,10 +26,10 @@ public class ScopeDefinition {
     // TODO: when calling apply() after an event, need to make sure only one apply ends up being scheduled
     public final List<Event> events = new ArrayList<>();
 
-    public ScopeDefinition(ViewNode node, boolean isIsolateScope) throws LayoutFileException {
+    public ScopeDefinition(ViewNode node, boolean isIsolateDirective) throws LayoutFileException {
         this.properties = new HashMap<>();
         this.owner = node;
-        this.isIsolateScope = isIsolateScope;
+        this.isIsolateDirective = isIsolateDirective;
 
         if (node.parent == null) {
             parentScope = null;
@@ -111,7 +111,7 @@ public class ScopeDefinition {
 
     public boolean isPassthroughScope() {
         if (isPassthroughScope == null) {
-            if (isIsolateScope) {
+            if (isIsolateDirective) {
                 isPassthroughScope = false;
             } else {
                 isPassthroughScope = ownProperties().size() == 0 && events.size() == 0;
