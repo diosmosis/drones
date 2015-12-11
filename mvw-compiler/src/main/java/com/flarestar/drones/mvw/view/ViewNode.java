@@ -31,6 +31,7 @@ public class ViewNode {
     private String viewClass;
     private Boolean hasDynamicDirective = null;
     private Boolean hasDynamicChild = null;
+    private final boolean hasIsolateDirective;
 
     public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
                     Map<String, String> styles, List<Directive> directives) throws LayoutFileException {
@@ -48,6 +49,7 @@ public class ViewNode {
 
         scopeDefinition = createScopeDefinition();
         viewClass = findViewClass();
+        hasIsolateDirective = checkHasIsolateDirective();
     }
 
     private ScopeDefinition createScopeDefinition() throws LayoutFileException {
@@ -59,18 +61,29 @@ public class ViewNode {
         }
     }
 
-    public boolean hasIsolateDirective() {
+    private boolean checkHasIsolateDirective() throws LayoutFileException {
         if (parent == null) {
             return true;
         }
 
+        boolean hasDirective = false;
         for (Directive directive : directives) {
             IsolateDirective annotation = directive.getClass().getAnnotation(IsolateDirective.class);
-            if (annotation != null) {
-                return true;
+            if (annotation == null) {
+                continue;
             }
+
+            if (hasDirective) {
+                throw new LayoutFileException("Element '" + id + "' has multiple isolate directives, only one is allowed per element.");
+            }
+
+            hasDirective = true;
         }
-        return false;
+        return hasDirective;
+    }
+
+    public boolean hasIsolateDirective() {
+        return hasIsolateDirective;
     }
 
     public boolean hasScope() {
