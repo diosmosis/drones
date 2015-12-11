@@ -5,6 +5,10 @@ public class InvalidPropertyDescriptor extends LayoutFileException {
         super(createMessage(propertyDescriptor, directiveName));
     }
 
+    public InvalidPropertyDescriptor(String propertyDescriptor, String directiveName, String message) {
+        super(createMessage(propertyDescriptor, directiveName, message));
+    }
+
     public InvalidPropertyDescriptor(String propertyDescriptor, String directiveName, Throwable cause) {
         super(createMessage(propertyDescriptor, directiveName), cause);
     }
@@ -15,6 +19,16 @@ public class InvalidPropertyDescriptor extends LayoutFileException {
     }
 
     private static String createMessage(String propertyDescriptor, String directiveName) {
-        return "Invalid property descriptor '" + propertyDescriptor + "' in directive '" + directiveName + "'.";
+        return createMessage(propertyDescriptor, directiveName, null);
+    }
+
+    private static String createMessage(String propertyDescriptor, String directiveName, String reason) {
+        String result = "Invalid property descriptor '" + propertyDescriptor + "' in directive '" + directiveName + "'";
+        if (reason == null) {
+            result += ".";
+        } else {
+            result += ": " + reason;
+        }
+        return result;
     }
 }

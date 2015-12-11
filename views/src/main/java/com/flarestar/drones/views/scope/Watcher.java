@@ -41,7 +41,9 @@ public abstract class Watcher {
      * @param newValue
      * @param oldValue
      */
-    public abstract void onValueChanged(Object newValue, Object oldValue, Scope<?> scope);
+    public void onValueChanged(Object newValue, Object oldValue, Scope<?> scope) {
+        // empty
+    }
 
     /**
      * TODO

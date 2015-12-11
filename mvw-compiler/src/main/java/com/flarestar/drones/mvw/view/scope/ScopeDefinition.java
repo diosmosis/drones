@@ -21,6 +21,7 @@ public class ScopeDefinition {
     private final Map<String, Property> properties;
     private Boolean isPassthroughScope;
     private final Map<String, Property> ownProperties;
+    private final Map<String, Property> inheritedProperties;
 
     // TODO: when calling apply() after an event, need to make sure only one apply ends up being scheduled
     public final List<Event> events = new ArrayList<>();
@@ -45,6 +46,13 @@ public class ScopeDefinition {
             @Override
             public boolean apply(@Nullable Property property) {
                 return !(property instanceof InheritedProperty);
+            }
+        });
+
+        inheritedProperties = Maps.filterValues(properties, new Predicate<Property>() {
+            @Override
+            public boolean apply(@Nullable Property property) {
+                return property instanceof InheritedProperty;
             }
         });
     }
@@ -119,6 +127,10 @@ public class ScopeDefinition {
 
     public Map<String, Property> ownProperties() {
         return ownProperties;
+    }
+
+    public Map<String, Property> inheritedProperties() {
+        return inheritedProperties;
     }
 
     private void setInheritedScopeProperties(ViewNode node) {

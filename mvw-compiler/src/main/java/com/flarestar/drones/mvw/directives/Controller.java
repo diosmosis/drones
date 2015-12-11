@@ -51,7 +51,7 @@ public class Controller extends Directive {
             initialValue = "new " + controllerClass + "(owner.getContext())";
         }
 
-        properties.add(new Property(controllerScopeProperty, controllerClass, initialValue, this));
+        properties.add(new Property(controllerScopeProperty, controllerClass, null, initialValue, this));
     }
 
     private Matcher parseAttribute(ViewNode node) throws InvalidControllerAttribute {

@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.os.Handler;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.concurrent.Callable;
 import {{ applicationPackage }}.R;
 
 @Singleton
@@ -43,9 +44,38 @@ public class {{ className }} implements Drone, LayoutBuilder {
             super(handler, owner, parent);
         {% endif %}
 
+            final _self = this;
+
+            {% for property in view.parent.scopeDefinition.inheritedProperties() %}
+            final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
+            {% endfor %}
+
             {% for property in scope.ownProperties() %}
-            {% if property.initialValueExpression != null %}
-            this.{{ property.name }} = {{ property.initialValueExpression }};
+            {% set initialValue = property.getInitialValueExpression() %}
+            {% if initialValue != null %}
+            this.{{ property.name }} = {% if property.hasBidirectionalBinding() %}parent.{% endif %}{{ initialValue }};
+            {% endif %}
+            {% if property.hasBidirectionalBinding() %}
+            watch(new Watcher() { // bidirectional binding watch
+                @Override
+                public Object getWatchValue(Scope<?> _scope) {
+                    final {{ property.type }} _parentValue = parent.{{ initialValue }};
+
+                    // if parent value != new value, set parent value
+                    // what if parent value changes, how do we sync new value?
+                    if (_self.{{ property.name }} == _parentValue) {
+                        return _parentValue;
+                    }
+
+                    if (parentValue != lastValue) { // parent value has changed, sync w/ this value
+                        _self.{{ property.name }} = _parentValue;
+                    } else { // current scope value changed, sync w/ parent
+                        parent.{{ initialValue }} = _self.{{ property.name }};
+                    }
+
+                    return parentValue;
+                }
+            });
             {% endif %}
             {% endfor %}
         }

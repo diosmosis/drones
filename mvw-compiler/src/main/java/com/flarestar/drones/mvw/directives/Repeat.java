@@ -71,7 +71,7 @@ public class Repeat extends Directive {
             true
         ));
 
-        node.scopeDefinition.addProperty(new Property(iterationScopeVariable, iterationScopeVariableType.toString(), null, this));
+        node.scopeDefinition.addProperty(new Property(iterationScopeVariable, iterationScopeVariableType.toString(), null, null, this));
     }
 
     @Override
