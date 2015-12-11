@@ -16,17 +16,49 @@ scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
 });
 {% endmacro %}
 
-{% macro make_view_function(view, interpolator, styleProcessor, typeInferer) %}
+{% macro event(event) %}
+scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClass.getName() }}>() {
+    @Override
+    public boolean invoke({{ event.eventClass.getName() }} event) {
+        try {
+            {{ event.expression }};
+            scope.apply();
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected error when invoking event handler.", e);
+        }
+    }
+});
+{% endmacro %}
+
+{% macro make_view_function(view, directive, interpolator, styleProcessor, typeInferer) %}
 {% import _self as self %}
+    {% if directive != null %}
+    {% set functionName = "makeDirectiveView_" ~ directive.getDirectiveName() %}
+    {% set functionResult = "ViewFactory" %}
+    {% set functionPrefix = " <P extends Scope<?>>" %}
+    {% set parentScopeClass = "P" %}
+    {% else %}
+    {% set functionName = "makeView_" ~ view.id %}
+
+    {% if view.parent != null %}
+    {% set functionResult = "ViewFactory" %}
+    {% else %}
+    {% set functionResult = "View" %}
+    {% endif %}
+
+    {% set functionPrefix = "" %}
+    {% set parentScopeClass = view.parent.scopeDefinition.getScopeClassName() %}
+    {% endif %}
 
 {# TODO: no longer using isDynamic() or hasDynamicChild(), should remove if not needed #}
-    private {% if view.parent != null %}ViewFactory{% else %}View{% endif %} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ view.parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+    private{{ functionPrefix }} {{ functionResult }} {{ functionName }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ parentScopeClass }} _parentNodeScope{% endif %}) {
         {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = _parentNodeScope;
         {% if view.parent.scopeDefinition.getParentScope() != null %}final {{ view.parent.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.parent.scopeDefinition.allProperties() %}final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
         {% endfor %}{% endif %}
 
-    {% if view.parent != null %}
+    {% if functionResult == 'ViewFactory' %}
     {% if view.hasDynamicDirective() %}
         final ViewFactory _viewFactory = {{ self.directive_hook(view, "beginViewFactory") }}
     {% else %}
@@ -53,8 +85,10 @@ scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
                 {{ self.directive_hook(view, "beforeViewCreated") }}
 
                 result.setVisibility(View.VISIBLE);
+                {% if view.getViewClassName() != null %}
                 {% if typeInferer.isAssignable(view.getViewClassName(), "com.flarestar.drones.views.viewgroups.BaseDroneViewGroup") %}
                 ((BaseDroneViewGroup)result).setScope(scope);
+                {% endif %}
                 {% endif %}
 
                 {% if view.text != null and not view.text.isEmpty() %}result.setText({{ interpolator.interpolate(view.text) }});{% endif %}
@@ -63,22 +97,11 @@ scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
                 {{ self.directive_hook(view, "afterViewCreated") }}
 
                 {% for event in view.scopeDefinition.events %}
-                scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClass.getName() }}>() {
-                    @Override
-                    public boolean invoke({{ event.eventClass.getName() }} event) {
-                        try {
-                            {{ event.expression }};
-                            scope.apply();
-                            return true;{# TODO: how to handle propagation in directive attributes? #}
-                        } catch (Exception e) {
-                            throw new RuntimeException("Unexpected error when invoking event handler.", e);
-                        }
-                    }
-                });
+                {{ self.event(event) }}
                 {% endfor %}
 
                 {% for child in view.children %}
-                result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
+                result.addChildDefinition({{ child.getMakeViewFunctionName() }}(_screen, result, scope));
                 {% endfor %}
                 {% if not view.children.isEmpty() %}
                 result.createChildren();
@@ -117,6 +140,8 @@ scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
     }
 
     {% for child in view.children %}
-    {{ self.make_view_function(child, interpolator, styleProcessor, typeInferer) }}
+    {% if not child.hasIsolateDirective() %}
+    {{ self.make_view_function(child, directive, interpolator, styleProcessor, typeInferer) }}
+    {% endif %}
     {% endfor %}
 {% endmacro %}

@@ -37,7 +37,8 @@ public class Property {
 
     // TODO: support required/optional attribute binding
     // TODO: handle collection watches when binding attributes?
-    private static final Pattern PROPERTY_DESCRIPTOR_REGEX = Pattern.compile("([\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*([=@&]?)(.+))?");
+    private static final Pattern PROPERTY_DESCRIPTOR_REGEX =
+        Pattern.compile("([.\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*([=@&]?)(.+))?");
 
     public final String name;
     public final String type;

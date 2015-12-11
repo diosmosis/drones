@@ -1,8 +1,10 @@
 package com.flarestar.drones.mvw.writer;
 
-import com.flarestar.drones.mvw.GenerationContext;
+import com.flarestar.drones.mvw.parser.IsolateDirectiveProcessor;
+import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.StyleProcessor;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
@@ -29,9 +31,11 @@ public class LayoutBuilderWriter {
     private final StyleProcessor styleProcessor;
     private final Interpolator interpolator;
     private final TypeInferer typeInferer;
+    private final IsolateDirectiveProcessor isolateDirectiveProcessor;
 
     @Inject
-    public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator, TypeInferer typeInferer) {
+    public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator, TypeInferer typeInferer,
+                               IsolateDirectiveProcessor isolateDirectiveProcessor) {
         Loader.Resource resource = new ClasspathLoader.ClasspathResource("templates/LayoutBuilder.twig");
         JtwigConfiguration jtwigConfig = JtwigConfigurationBuilder.newConfiguration().build();
         template = new JtwigTemplate(resource, jtwigConfig);
@@ -39,9 +43,10 @@ public class LayoutBuilderWriter {
         this.styleProcessor = styleProcessor;
         this.interpolator = interpolator;
         this.typeInferer = typeInferer;
+        this.isolateDirectiveProcessor = isolateDirectiveProcessor;
     }
 
-    public void writeLayoutBuilder(GenerationContext context, ViewNode tree, OutputStream output)
+    public void writeLayoutBuilder(ActivityGenerationContext context, ViewNode tree, OutputStream output)
             throws JtwigException, LayoutFileException {
         JtwigModelMap model = new JtwigModelMap();
         model.add("styleProcessor", styleProcessor);
@@ -50,6 +55,8 @@ public class LayoutBuilderWriter {
 
         model.add("generationContext", context);
         model.add("rootView", tree);
+        model.add("isolateDirectiveTrees", getIsolateDirectiveTrees(context, tree));
+
         model.add("package", context.getActivityPackage());
         model.add("applicationPackage", context.getApplicationPackage());
         model.add("className", context.getLayoutBuilderSimpleClassName());
@@ -74,5 +81,26 @@ public class LayoutBuilderWriter {
         } catch (IOException e) {
             throw new LayoutFileException("Unable to write to output stream.", e);
         }
+    }
+
+    private Map<Directive, ViewNode> getIsolateDirectiveTrees(final ActivityGenerationContext context, ViewNode tree) {
+        final Set<Class<? extends Directive>> directiveClassesFound = new HashSet<>();
+        final Map<Directive, ViewNode> result = new HashMap<>();
+
+        tree.visit(new ViewNode.Visitor() {
+            @Override
+            public void visit(ViewNode node) {
+                for (Directive directive : node.directives) {
+                    if (!directive.isIsolateDirective() || !directiveClassesFound.contains(directive.getClass())) {
+                        continue;
+                    }
+
+                    result.put(directive, isolateDirectiveProcessor.getDirectiveTree(context, directive.getClass()));
+                    directiveClassesFound.add(directive.getClass());
+                }
+            }
+        });
+
+        return result;
     }
 }

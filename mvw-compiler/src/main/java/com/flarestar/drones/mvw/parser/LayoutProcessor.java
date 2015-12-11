@@ -2,7 +2,8 @@ package com.flarestar.drones.mvw.parser;
 
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
-import com.flarestar.drones.mvw.GenerationContext;
+import com.flarestar.drones.mvw.context.ActivityGenerationContext;
+import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.DirectiveFactory;
@@ -25,6 +26,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
@@ -38,25 +42,26 @@ public class LayoutProcessor {
     private CSSWriterSettings cssWriterSettings;
     private DirectiveFactory directiveFactory;
     private LessEngine lessEngine;
+    private ProcessingEnvironment processingEnvironment;
     private int lastGeneratedId = 0;
 
     @Inject
-    public LayoutProcessor(DirectiveFactory directiveFactory, CSSWriterSettings cssWriterSettings, LessEngine lessEngine) {
+    public LayoutProcessor(DirectiveFactory directiveFactory, CSSWriterSettings cssWriterSettings, LessEngine lessEngine,
+                           ProcessingEnvironment processingEnvironment) {
         this.cssWriterSettings = cssWriterSettings;
         this.directiveFactory = directiveFactory;
         this.lessEngine = lessEngine;
+        this.processingEnvironment = processingEnvironment;
     }
 
-    public ViewNode createViewTree(GenerationContext context, InputStream layoutInput, InputStream styleSheetInput)
+    private ViewNode createViewTree(GenerationContext context, InputStream layoutInput, InputStream styleSheetInput)
             throws LayoutFileException {
-        // handle layout file
         Document document = parseXmlDocument(layoutInput);
 
         Table<Element, String, String> stylesByElement = HashBasedTable.create();
 
-        CascadingStyleSheet styleSheet = null;
-        if (styleSheetInput !=  null) {
-            styleSheet = parseStyleSheet(styleSheetInput);
+        if (styleSheetInput != null) {
+            CascadingStyleSheet styleSheet = parseStyleSheet(styleSheetInput);
             processStyleSheet(styleSheet, document, stylesByElement);
         }
 
@@ -147,6 +152,33 @@ public class LayoutProcessor {
             return Jsoup.parse(input, "UTF-8", "", Parser.xmlParser());
         } catch (IOException e) {
             throw new RuntimeException("Unable to read input.", e);
+        }
+    }
+
+    public ViewNode processTemplateAndLess(GenerationContext context, String template, String less) {
+        FileObject templateFileObject = getResource(template);
+
+        FileObject stylesheetFileObject = null;
+        if (!less.isEmpty()) {
+            stylesheetFileObject = getResource(less);
+        }
+
+        try (InputStream layoutInput = templateFileObject.openInputStream();
+             InputStream stylesheetInput = stylesheetFileObject == null ? null : stylesheetFileObject.openInputStream()
+        ) {
+            return createViewTree(context, layoutInput, stylesheetInput);
+        } catch (LayoutFileException e) {
+            throw new RuntimeException("Layout file " + template + " is malformed: " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read " + template + " layout file.", e);
+        }
+    }
+
+    private FileObject getResource(String path) {
+        try {
+            return processingEnvironment.getFiler().getResource(StandardLocation.CLASS_PATH, "", path);
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected error: cannot open " + path, e);
         }
     }
 }

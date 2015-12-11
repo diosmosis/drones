@@ -5,6 +5,9 @@ import com.flarestar.drones.mvw.android.exceptions.InvalidManifestException;
 import com.flarestar.drones.mvw.annotations.Layout;
 import com.flarestar.drones.mvw.compilerutilities.ProjectSniffer;
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
+import com.flarestar.drones.mvw.context.ActivityGenerationContext;
+import com.flarestar.drones.mvw.context.GenerationContext;
+import com.flarestar.drones.mvw.parser.IsolateDirectiveProcessor;
 import com.flarestar.drones.mvw.parser.LayoutProcessor;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
@@ -33,16 +36,18 @@ public class LayoutBuilderGenerator {
     private TypeMirror screenType;
     private ProjectSniffer projectSniffer;
     private TypeInferer typeInferer;
+    private IsolateDirectiveProcessor isolateDirectiveProcessor;
 
     @Inject
     public LayoutBuilderGenerator(LayoutProcessor xmlProcessor, LayoutBuilderWriter layoutBuilderWriter,
                                   ProcessingEnvironment processingEnvironment, ProjectSniffer projectSniffer,
-                                  TypeInferer typeInferer) {
+                                  TypeInferer typeInferer, IsolateDirectiveProcessor isolateDirectiveProcessor) {
         this.xmlProcessor = xmlProcessor;
         this.layoutBuilderWriter = layoutBuilderWriter;
         this.processingEnvironment = processingEnvironment;
         this.projectSniffer = projectSniffer;
         this.typeInferer = typeInferer;
+        this.isolateDirectiveProcessor = isolateDirectiveProcessor;
 
         try {
             this.screenType = typeInferer.getTypeMirrorFor(BaseScreen.class.getName());
@@ -79,9 +84,9 @@ public class LayoutBuilderGenerator {
     }
 
     public void generateLayoutBuilderFor(TypeElement activityClassElement) {
-        GenerationContext context;
+        final ActivityGenerationContext context;
         try {
-            context = new GenerationContext(activityClassElement, projectSniffer);
+            context = new ActivityGenerationContext(activityClassElement, projectSniffer);
         } catch (InvalidManifestException e) {
             throw new RuntimeException(e);
         }
@@ -89,6 +94,14 @@ public class LayoutBuilderGenerator {
         typeInferer.setBasePackage(context.getActivityPackage()); // TODO: should not have this mutability, but not sure how to remove...
 
         ViewNode tree = processLayoutAndStyles(activityClassElement, context);
+        tree.visit(new ViewNode.Visitor() {
+            @Override
+            public void visit(ViewNode node) {
+                if (node.hasIsolateDirective()) {
+                    isolateDirectiveProcessor.processIsolateDirectives(context, node);
+                }
+            }
+        });
         generateLayoutBuilder(context, tree);
     }
 
@@ -97,37 +110,10 @@ public class LayoutBuilderGenerator {
         String layoutFilePath = annotation.value();
         String stylesheetFilePath = annotation.stylesheet();
 
-        FileObject layoutFileObject;
-        try {
-            layoutFileObject = processingEnvironment.getFiler().getResource(StandardLocation.CLASS_PATH, "", layoutFilePath);
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected error: cannot open " + layoutFilePath, e);
-        }
-
-        FileObject stylesheetFileObject = null;
-        if (!stylesheetFilePath.isEmpty()) {
-            try {
-                stylesheetFileObject = processingEnvironment.getFiler().getResource(StandardLocation.CLASS_PATH, "", stylesheetFilePath);
-            } catch (Exception e) {
-                throw new RuntimeException("Unexpected error: cannot open " + stylesheetFilePath, e);
-            }
-        }
-
-        ViewNode tree;
-        try (InputStream layoutInput = layoutFileObject.openInputStream();
-             InputStream stylesheetInput = stylesheetFileObject == null ? null : stylesheetFileObject.openInputStream()
-        ) {
-            tree = xmlProcessor.createViewTree(context, layoutInput, stylesheetInput);
-        } catch (LayoutFileException e) {
-            throw new RuntimeException("Layout file " + layoutFilePath + " is malformed: " + e.getMessage(), e);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read " + annotation.value() + " layout file.", e);
-        }
-
-        return tree;
+        return xmlProcessor.processTemplateAndLess(context, layoutFilePath, stylesheetFilePath);
     }
 
-    private void generateLayoutBuilder(final GenerationContext context, ViewNode tree) {
+    private void generateLayoutBuilder(final ActivityGenerationContext context, ViewNode tree) {
         String layoutBuilderClassName = context.getLayoutBuilderClassName();
         String screenClassName = context.getActivityClassName();
 

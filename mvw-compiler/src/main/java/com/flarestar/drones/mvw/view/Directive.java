@@ -1,6 +1,6 @@
 package com.flarestar.drones.mvw.view;
 
-import com.flarestar.drones.mvw.GenerationContext;
+import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.annotations.directive.*;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
@@ -118,5 +118,9 @@ public abstract class Directive {
                 + "' directive.");
         }
         return annotation.value();
+    }
+
+    public boolean isIsolateDirective() {
+        return getClass().getAnnotation(IsolateDirective.class) != null;
     }
 }

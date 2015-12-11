@@ -99,5 +99,9 @@ public class {{ className }} implements Drone, LayoutBuilder {
         screen.setContentView(rootView);
     }
 
-    {{ macros.make_view_function(rootView, interpolator, styleProcessor, typeInferer) }}
+    {{ macros.make_view_function(rootView, null, interpolator, styleProcessor, typeInferer) }}
+
+    {% for directive, directiveTree in isolateDirectiveTrees %}
+    {{ macros.make_view_function(directiveTree, directive, interpolator, styleProcessor, typeInferer) }}
+    {% endfor %}
 }

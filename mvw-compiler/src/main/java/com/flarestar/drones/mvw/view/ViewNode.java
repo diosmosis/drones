@@ -31,7 +31,7 @@ public class ViewNode {
     private String viewClass;
     private Boolean hasDynamicDirective = null;
     private Boolean hasDynamicChild = null;
-    private final boolean hasIsolateDirective;
+    private final Directive isolateDirective;
 
     public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
                     Map<String, String> styles, List<Directive> directives) throws LayoutFileException {
@@ -48,8 +48,16 @@ public class ViewNode {
         }
 
         scopeDefinition = createScopeDefinition();
+        isolateDirective = findIsolateDirective();
         viewClass = findViewClass();
-        hasIsolateDirective = checkHasIsolateDirective();
+    }
+
+    public String getMakeViewFunctionName() {
+        if (hasIsolateDirective()) {
+            return "makeDirectiveView_" + isolateDirective.getDirectiveName();
+        } else {
+            return "makeView_" + id;
+        }
     }
 
     private ScopeDefinition createScopeDefinition() throws LayoutFileException {
@@ -61,29 +69,25 @@ public class ViewNode {
         }
     }
 
-    private boolean checkHasIsolateDirective() throws LayoutFileException {
-        if (parent == null) {
-            return true;
-        }
-
-        boolean hasDirective = false;
+    private Directive findIsolateDirective() throws LayoutFileException {
+        Directive isolateDirective = null;
         for (Directive directive : directives) {
             IsolateDirective annotation = directive.getClass().getAnnotation(IsolateDirective.class);
             if (annotation == null) {
                 continue;
             }
 
-            if (hasDirective) {
+            if (isolateDirective != null) {
                 throw new LayoutFileException("Element '" + id + "' has multiple isolate directives, only one is allowed per element.");
             }
 
-            hasDirective = true;
+            isolateDirective = directive;
         }
-        return hasDirective;
+        return isolateDirective;
     }
 
     public boolean hasIsolateDirective() {
-        return hasIsolateDirective;
+        return isolateDirective != null || parent == null;
     }
 
     public boolean hasScope() {
@@ -132,6 +136,10 @@ public class ViewNode {
     }
 
     private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {
+        if (hasIsolateDirective()) {
+            return null;
+        }
+
         String viewClass = null;
 
         for (Directive directive : directives) {
