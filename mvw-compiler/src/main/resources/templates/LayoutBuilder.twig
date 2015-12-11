@@ -44,7 +44,7 @@ public class {{ className }} implements Drone, LayoutBuilder {
             super(handler, owner, parent);
         {% endif %}
 
-            final _self = this;
+            final {{ scope.getScopeClassName() }} _self = this;
 
             {% for property in view.parent.scopeDefinition.inheritedProperties() %}
             final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};

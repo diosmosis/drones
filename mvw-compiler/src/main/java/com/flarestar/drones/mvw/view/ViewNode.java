@@ -87,7 +87,7 @@ public class ViewNode {
     }
 
     public boolean hasIsolateDirective() {
-        return isolateDirective != null || parent == null;
+        return isolateDirective != null;
     }
 
     public boolean hasScope() {

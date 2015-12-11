@@ -141,7 +141,7 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
 
     {% for child in view.children %}
     {% if not child.hasIsolateDirective() %}
-    {{ self.make_view_function(child, directive, interpolator, styleProcessor, typeInferer) }}
+    {{ self.make_view_function(child, null, interpolator, styleProcessor, typeInferer) }}
     {% endif %}
     {% endfor %}
 {% endmacro %}

@@ -91,7 +91,7 @@ public class LayoutBuilderWriter {
             @Override
             public void visit(ViewNode node) {
                 for (Directive directive : node.directives) {
-                    if (!directive.isIsolateDirective() || !directiveClassesFound.contains(directive.getClass())) {
+                    if (!directive.isIsolateDirective() || directiveClassesFound.contains(directive.getClass())) {
                         continue;
                     }
 
