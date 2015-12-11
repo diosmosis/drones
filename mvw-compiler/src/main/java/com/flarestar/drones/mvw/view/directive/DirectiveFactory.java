@@ -1,6 +1,6 @@
 package com.flarestar.drones.mvw.view.directive;
 
-import com.flarestar.drones.mvw.GenerationContext;
+import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
@@ -17,6 +17,7 @@ import org.jsoup.parser.Parser;
 import org.jsoup.select.Elements;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
+import org.reflections.scanners.SubTypesScanner;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -34,38 +35,17 @@ public class DirectiveFactory {
     private final static AttributeMatcher attributeDirectiveMatcher = new AttributeMatcher();
 
     static {
-        Reflections reflections = new Reflections("", new ResourcesScanner());
-        Set<String> resources = reflections.getResources(new Predicate<String>() {
-            @Override
-            public boolean apply(@Nullable String s) {
-                return s != null && s.endsWith("directives.xml"); // TODO: there will probably naming collisions eventually
+        Reflections reflections = new Reflections("com.flarestar", new ResourcesScanner(), new SubTypesScanner());
+
+        Set<Class<? extends Directive>> directiveClasses = reflections.getSubTypesOf(Directive.class);
+        for (Class<? extends Directive> directiveClass : directiveClasses) {
+            try {
+                directiveClass = (Class<? extends Directive>) Class.forName(directiveClass.getName());
+            } catch (ClassNotFoundException e) {
+                throw new InvalidDirectiveClassException(e);
             }
-        });
 
-        ClassLoader classLoader = DirectiveFactory.class.getClassLoader();
-        try (InputStream stream = classLoader.getResourceAsStream("com.flarestar.drones.mvw.directives.xml")) {
-            resources.add(DirectiveFactory.readWholeInputStream(stream));
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to read the com.flarestar.drones.mvw.directives.xml resource.");
-        }
-
-        for (String resourceXml : resources) {
-            List<String> directiveClassNames = getDirectivesDefinedInXml(resourceXml);
-            for (String className : directiveClassNames) {
-                Class<?> directiveClass;
-                try {
-                    directiveClass = Class.forName(className);
-                } catch (ClassNotFoundException e) {
-                    throw new InvalidDirectiveClassException(e);
-                }
-
-                if (!Directive.class.isAssignableFrom(directiveClass)) {
-                    throw new InvalidDirectiveClassException("Directive class '" + className + "' does not extend '"
-                        + directiveClass.toString() + "'.");
-                }
-
-                registerDirective(directiveClass);
-            }
+            registerDirective(directiveClass);
         }
     }
 
