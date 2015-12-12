@@ -9,7 +9,7 @@ public abstract class RangeViewFactory<V> implements ViewFactory {
 
     public class Iterator implements ViewFactory.Iterator {
         private final java.util.Iterator<V> valueIterator;
-        private V currentValue = null;
+        private V currentValue = null; // TODO: if a null is in a collection, we can't use null as the sentinel value
         private int index = 0;
 
         public Iterator(java.util.Iterator<V> valueIterator) {
@@ -20,12 +20,10 @@ public abstract class RangeViewFactory<V> implements ViewFactory {
             }
         }
 
-        @Override
         public boolean hasNext() {
             return currentValue != null;
         }
 
-        @Override
         public void next() {
             if (valueIterator.hasNext()) {
                 currentValue = valueIterator.next();
@@ -36,8 +34,11 @@ public abstract class RangeViewFactory<V> implements ViewFactory {
             ++index;
         }
 
-        @Override
         public View makeView() {
+            if (currentValue == null) { // TODO: should be a debug build condition
+                throw new IllegalStateException("No value for the current view.");
+            }
+
             View view = RangeViewFactory.this.makeView(currentValue, index);
             if (startView == null) {
                 startView = view;

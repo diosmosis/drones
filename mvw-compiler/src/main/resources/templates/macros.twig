@@ -31,28 +31,31 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
 });
 {% endmacro %}
 
+{# TODO: use underscores for all internal variables #}
 {% macro make_view_function(view, directive, interpolator, styleProcessor, typeInferer) %}
-{% import _self as self %}
+    {% import _self as self %}
+
     {% if directive != null %}
     {% set functionName = "makeDirectiveView_" ~ directive.getDirectiveName() %}
-    {% set functionResult = "ViewFactory" %}
+    {% set functionResult = "View" %}
     {% set functionPrefix = " <P extends Scope<?>>" %}
     {% set parentScopeClass = "P" %}
     {% else %}
     {% set functionName = "makeView_" ~ view.id %}
+    {% if view.parent != null %}{% set functionResult = "ViewFactory" %}{% else %}{% set functionResult = "View" %}{% endif %}
 
     {% if view.parent != null %}
-    {% set functionResult = "ViewFactory" %}
-    {% else %}
-    {% set functionResult = "View" %}
-    {% endif %}
-
-    {% set functionPrefix = "" %}
     {% set parentScopeClass = view.parent.scopeDefinition.getScopeClassName() %}
     {% endif %}
+    {% endif %}
 
-{# TODO: no longer using isDynamic() or hasDynamicChild(), should remove if not needed #}
-    private{{ functionPrefix }} {{ functionResult }} {{ functionName }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ parentScopeClass }} _parentNodeScope{% endif %}) {
+    {% if directive == null %}
+    private {{ functionResult }} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ parentScopeClass }} _parentNodeScope{% endif %}) {
+    {% else %}
+    private <P extends Scope<?>> View makeDirectiveView_{{ directive.getDirectiveName() }}(final BaseScreen _screen, final DynamicViewGroup _parentView, final P _parentNodeScope
+        {% for property in directive.boundProperties() %}, final {{ property.type }} _{{ property.name }}{% endfor %}) {
+    {% endif %}
+
         {% if view.parent != null %}final {{ view.parent.scopeDefinition.getScopeClassName() }} scope = _parentNodeScope;
         {% if view.parent.scopeDefinition.getParentScope() != null %}final {{ view.parent.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
         {% for property in view.parent.scopeDefinition.allProperties() %}final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
@@ -69,7 +72,17 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
 
         {{ self.directive_hook(view, "beforeScopeCreated") }}
 
-        {# TODO: use underscores for all internal variables #}
+        {% if view.hasIsolateDirective() and view.parent != null %}
+
+        {# TODO: setting owner to parent view; danger of some sort of memory leak appearing #}
+        {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, _parentView{% if view.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
+        {{ self.directive_hook(view, "onCreatedNewScope") }}
+        {% if view.scopeDefinition.getParentScope() != null %}final {{ view.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
+        {% for property in view.scopeDefinition.ownProperties() %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
+        {% endfor %}{% endif %}
+
+        return makeDirectiveView_{{ view.isolateDirective.getDirectiveName() }}(_screen, _parentView, scope{% for property in view.isolateDirective.boundProperties() %}, {{ property.getInitialValueExpression(view) }}{% endfor %});
+        {% else %}
         return new ScopedViewFactory() {
             @Override
             public View make() {
@@ -78,6 +91,9 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
 
                 {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if view.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
                 {{ self.directive_hook(view, "onCreatedNewScope") }}
+                {% if directive != null %}{% for property in view.scopeDefinition.ownProperties() %}{% if property.hasBinding() %}
+                scope.{{ property.name }} = _{{ property.name }};
+                {% endif %}{% endfor %}{% endif %}
                 {% if view.scopeDefinition.getParentScope() != null %}final {{ view.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
                 {% for property in view.scopeDefinition.ownProperties() %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
                 {% endfor %}{% endif %}
@@ -101,7 +117,7 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
                 {% endfor %}
 
                 {% for child in view.children %}
-                result.addChildDefinition({{ child.getMakeViewFunctionName() }}(_screen, result, scope));
+                result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
                 {% endfor %}
                 {% if not view.children.isEmpty() %}
                 result.createChildren();
@@ -109,8 +125,8 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
 
                 {{ self.directive_hook(view, "afterChildrenAdded") }}
 
-                {% for directive in view.directives %}
-                {% for watcher in directive.watchers %}
+                {% for viewDirective in view.directives %}
+                {% for watcher in viewDirective.watchers %}
                 {% if not watcher.isOnParentScope() %}{{ self.watcher(watcher) }}{% endif %}
                 {% endfor %}
                 {% endfor %}
@@ -120,8 +136,9 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
                 return result;
             }
         }.make();
+        {% endif %}
 
-    {% if view.parent != null %}
+    {% if functionResult == 'ViewFactory' %}
     {% if view.hasDynamicDirective() %}
         {{ self.directive_hook(view, "endViewFactory") }}
     {% else %}
@@ -129,8 +146,8 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
         };
     {% endif %}
 
-    {% for directive in view.directives %}
-    {% for watcher in directive.watchers %}
+    {% for viewDirective in view.directives %}
+    {% for watcher in viewDirective.watchers %}
     {% if watcher.isOnParentScope() %}{{ self.watcher(watcher) }}{% endif %}
     {% endfor %}
     {% endfor %}
@@ -140,8 +157,6 @@ scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClas
     }
 
     {% for child in view.children %}
-    {% if not child.hasIsolateDirective() %}
     {{ self.make_view_function(child, null, interpolator, styleProcessor, typeInferer) }}
-    {% endif %}
     {% endfor %}
 {% endmacro %}

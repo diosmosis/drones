@@ -5,6 +5,7 @@ import com.asual.lesscss.LessException;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.DirectiveFactory;
 import com.google.common.collect.HashBasedTable;
@@ -54,8 +55,8 @@ public class LayoutProcessor {
         this.processingEnvironment = processingEnvironment;
     }
 
-    private ViewNode createViewTree(GenerationContext context, InputStream layoutInput, InputStream styleSheetInput)
-            throws LayoutFileException {
+    private ViewNode createViewTree(GenerationContext context, InputStream layoutInput, InputStream styleSheetInput,
+                                    Class<?> rootDirective) throws LayoutFileException {
         Document document = parseXmlDocument(layoutInput);
 
         Table<Element, String, String> stylesByElement = HashBasedTable.create();
@@ -65,7 +66,7 @@ public class LayoutProcessor {
             processStyleSheet(styleSheet, document, stylesByElement);
         }
 
-        return makeViewNode(document.children().first(), null, context, stylesByElement);
+        return makeViewNode(document.children().first(), null, context, stylesByElement, rootDirective);
     }
 
     private void processStyleSheet(CascadingStyleSheet styleSheet, Document document,
@@ -108,7 +109,7 @@ public class LayoutProcessor {
     }
 
     private ViewNode makeViewNode(Element node, ViewNode parent, GenerationContext context,
-                                  Table<Element, String, String> stylesByElement)
+                                  Table<Element, String, String> stylesByElement, Class<?> directiveClassToApply)
             throws LayoutFileException {
         String tagName = node.tagName();
 
@@ -119,8 +120,13 @@ public class LayoutProcessor {
 
         String text = node.ownText();
 
+        List<Directive> directives = directiveFactory.detectDirectives(node, context);
+        if (directiveClassToApply != null) {
+            directives.add(directiveFactory.make(context, directiveClassToApply));
+        }
+
         ViewNode viewNode = new ViewNode(tagName, id, text, parent, attributeMap(node), stylesByElement.row(node),
-            directiveFactory.detectDirectives(node, context));
+            directives);
         processNodeChildren(node, viewNode, context, stylesByElement);
         return viewNode;
     }
@@ -142,7 +148,7 @@ public class LayoutProcessor {
                                      Table<Element, String, String> stylesByElement)
             throws LayoutFileException {
         for (Element child : node.children()) {
-            ViewNode childViewNode = makeViewNode(child, viewNode, context, stylesByElement);
+            ViewNode childViewNode = makeViewNode(child, viewNode, context, stylesByElement, null);
             viewNode.children.add(childViewNode);
         }
     }
@@ -156,6 +162,11 @@ public class LayoutProcessor {
     }
 
     public ViewNode processTemplateAndLess(GenerationContext context, String template, String less) {
+        return processTemplateAndLess(context, template, less, null);
+    }
+
+    public ViewNode processTemplateAndLess(GenerationContext context, String template, String less,
+                                           Class<?> rootDirective) {
         FileObject templateFileObject = getResource(template);
 
         FileObject stylesheetFileObject = null;
@@ -166,7 +177,7 @@ public class LayoutProcessor {
         try (InputStream layoutInput = templateFileObject.openInputStream();
              InputStream stylesheetInput = stylesheetFileObject == null ? null : stylesheetFileObject.openInputStream()
         ) {
-            return createViewTree(context, layoutInput, stylesheetInput);
+            return createViewTree(context, layoutInput, stylesheetInput, rootDirective);
         } catch (LayoutFileException e) {
             throw new RuntimeException("Layout file " + template + " is malformed: " + e.getMessage(), e);
         } catch (IOException e) {

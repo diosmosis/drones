@@ -7,7 +7,11 @@ import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassE
 import com.flarestar.drones.mvw.view.scope.Event;
 import com.flarestar.drones.mvw.view.scope.Property;
 import com.flarestar.drones.mvw.view.scope.WatcherDefinition;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -122,5 +126,16 @@ public abstract class Directive {
 
     public boolean isIsolateDirective() {
         return getClass().getAnnotation(IsolateDirective.class) != null;
+    }
+
+    // TODO: bound properties should only be allowed on an IsolateDirective
+    public List<Property> boundProperties() {
+        // TODO: jtwig has a bug where it can't loop over iterables, should fix.
+        return Lists.newArrayList(Iterables.filter(properties, new Predicate<Property>() {
+            @Override
+            public boolean apply(@Nullable Property property) {
+                return property.hasBinding();
+            }
+        }));
     }
 }

@@ -48,7 +48,7 @@ public class IsolateDirectiveProcessor {
                 + directiveClass.getName() + " is not an isolate directive.");
         }
 
-        return processor.processTemplateAndLess(context, annotation.template(), annotation.less());
+        return processor.processTemplateAndLess(context, annotation.template(), annotation.less(), directiveClass);
     }
 
     public void processIsolateDirectives(ActivityGenerationContext context, ViewNode viewNode) {

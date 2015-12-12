@@ -5,6 +5,7 @@ import android.util.AttributeSet;
 import android.view.View;
 import com.flarestar.drones.views.ViewFactory;
 import com.flarestar.drones.views.scope.Scope;
+import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -25,11 +26,15 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
             }
         }
 
-        public boolean hasNext() {
-            return (this.current != null && current.hasNext()) || childDefinitionIterator.hasNext();
+        public boolean atEnd() {
+            return (current == null || !current.hasNext()) && !childDefinitionIterator.hasNext();
         }
 
         public void next() {
+            if (current != null) {
+                current.next();
+            }
+
             if (current == null || !current.hasNext()) {
                 while (true) {
                     if (!childDefinitionIterator.hasNext()) {
@@ -43,8 +48,6 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
                         break;
                     }
                 }
-            } else {
-                current.next();
             }
         }
 
@@ -89,7 +92,7 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
 
     public void createChildren() {
         ChildViewCreatorIterator it = viewCreationIterator();
-        for (; it.hasNext(); it.next()) {
+        for (; !it.atEnd(); it.next()) {
             View view = it.makeView();
             addView(view);
         }

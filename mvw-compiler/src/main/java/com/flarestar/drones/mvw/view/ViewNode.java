@@ -31,7 +31,7 @@ public class ViewNode {
     private String viewClass;
     private Boolean hasDynamicDirective = null;
     private Boolean hasDynamicChild = null;
-    private final Directive isolateDirective;
+    public final Directive isolateDirective;
 
     public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
                     Map<String, String> styles, List<Directive> directives) throws LayoutFileException {
@@ -50,14 +50,6 @@ public class ViewNode {
         scopeDefinition = createScopeDefinition();
         isolateDirective = findIsolateDirective();
         viewClass = findViewClass();
-    }
-
-    public String getMakeViewFunctionName() {
-        if (hasIsolateDirective()) {
-            return "makeDirectiveView_" + isolateDirective.getDirectiveName();
-        } else {
-            return "makeView_" + id;
-        }
     }
 
     private ScopeDefinition createScopeDefinition() throws LayoutFileException {
@@ -111,23 +103,6 @@ public class ViewNode {
         return hasDynamicDirective;
     }
 
-    public boolean hasDynamicChild() {
-        if (hasDynamicChild == null) {
-            hasDynamicChild = false;
-            for (ViewNode child : children) {
-                if (child.isDynamic()) {
-                    hasDynamicChild = true;
-                    break;
-                }
-            }
-        }
-        return hasDynamicChild;
-    }
-
-    public boolean isDynamic() {
-        return parent != null && (hasDynamicDirective() || hasScope());
-    }
-
     public void visit(Visitor visitor) {
         visitor.visit(this);
         for (ViewNode child : children) {
@@ -136,10 +111,6 @@ public class ViewNode {
     }
 
     private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {
-        if (hasIsolateDirective()) {
-            return null;
-        }
-
         String viewClass = null;
 
         for (Directive directive : directives) {
@@ -155,7 +126,7 @@ public class ViewNode {
             viewClass = directiveViewClass;
         }
 
-        if (viewClass == null) {
+        if (viewClass == null && !hasIsolateDirective()) {
             throw new NoViewClassForNode("Cannot find view class for node <" + tagName + " id = " + id + ">.");
         }
 

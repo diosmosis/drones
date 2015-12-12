@@ -55,24 +55,16 @@ public class LayoutBuilderWriter {
 
         model.add("generationContext", context);
         model.add("rootView", tree);
-        model.add("isolateDirectiveTrees", getIsolateDirectiveTrees(context, tree));
+
+        Map<Directive, ViewNode> isolateDirectiveTrees = getIsolateDirectiveTrees(context, tree);
+        model.add("isolateDirectiveTrees", isolateDirectiveTrees);
+        model.add("scopeDefinitions", getScopeDefinitions(tree, isolateDirectiveTrees.values()));
 
         model.add("package", context.getActivityPackage());
         model.add("applicationPackage", context.getApplicationPackage());
         model.add("className", context.getLayoutBuilderSimpleClassName());
         model.add("screenClassName", context.getActivityClassName());
         model.add("injectedProperties", context.getInjectedProperties());
-
-        final Set<ScopeDefinition> definitions = new HashSet<>();
-        tree.visit(new ViewNode.Visitor() {
-            @Override
-            public void visit(ViewNode node) {
-                if (node.hasScope()) {
-                    definitions.add(node.scopeDefinition);
-                }
-            }
-        });
-        model.add("scopeDefinitions", definitions);
 
         String rendered = template.render(model);
         rendered = rendered.replaceAll("\\n[\\s\\n]+\\n", "\n\n");
@@ -102,5 +94,24 @@ public class LayoutBuilderWriter {
         });
 
         return result;
+    }
+
+    public Set<ScopeDefinition> getScopeDefinitions(ViewNode tree, Collection<ViewNode> isolateDirectiveTrees) {
+        final Set<ScopeDefinition> definitions = new HashSet<>();
+        final ViewNode.Visitor scopeDefinitionCollector = new ViewNode.Visitor() {
+            @Override
+            public void visit(ViewNode node) {
+                if (node.hasScope()) {
+                    definitions.add(node.scopeDefinition);
+                }
+            }
+        };
+
+        tree.visit(scopeDefinitionCollector);
+        for (ViewNode isolateDirectiveTree : isolateDirectiveTrees) {
+            isolateDirectiveTree.visit(scopeDefinitionCollector);
+        }
+
+        return definitions;
     }
 }

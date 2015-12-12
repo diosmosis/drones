@@ -16,7 +16,7 @@ public abstract class SingleViewFactory implements ViewFactory {
 
         @Override
         public void next() {
-            throw new UnsupportedOperationException("next() should not be called in SingleViewFactory.Iterator");
+            // empty
         }
 
         @Override

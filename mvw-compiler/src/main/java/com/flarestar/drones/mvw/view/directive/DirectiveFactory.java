@@ -64,17 +64,7 @@ public class DirectiveFactory {
                 continue;
             }
 
-            Directive directive;
-            try {
-                directive = (Directive)directiveClass.getConstructor(GenerationContext.class).newInstance(context);
-            } catch (ReflectiveOperationException e) {
-                throw new InvalidDirectiveClassException("Could not create new instance of directive '"
-                    + directiveClass.getName() + "'.", e);
-            }
-
-            injector.injectMembers(directive);
-            directive.postConstruct();
-
+            Directive directive = make(context, directiveClass);
             directives.add(directive);
         }
         return directives;
@@ -131,5 +121,19 @@ public class DirectiveFactory {
     private static String readWholeInputStream(InputStream inputStream) {
         Scanner s = new Scanner(inputStream).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
+    }
+
+    public Directive make(GenerationContext context, Class<?> directiveClass) throws LayoutFileException {
+        Directive directive;
+        try {
+            directive = (Directive)directiveClass.getConstructor(GenerationContext.class).newInstance(context);
+        } catch (ReflectiveOperationException e) {
+            throw new InvalidDirectiveClassException("Could not create new instance of directive '"
+                + directiveClass.getName() + "'.", e);
+        }
+
+        injector.injectMembers(directive);
+        directive.postConstruct();
+        return directive;
     }
 }

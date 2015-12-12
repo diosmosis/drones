@@ -17,7 +17,7 @@ public class ScopeDefinition {
     private String scopeClassName;
     private final ViewNode owner;
     private final ScopeDefinition parentScope;
-    public final boolean isIsolateDirective;
+    public final boolean isIsolateScope;
     private final Map<String, Property> properties;
     private Boolean isPassthroughScope;
     private final Map<String, Property> ownProperties;
@@ -26,10 +26,10 @@ public class ScopeDefinition {
     // TODO: when calling apply() after an event, need to make sure only one apply ends up being scheduled
     public final List<Event> events = new ArrayList<>();
 
-    public ScopeDefinition(ViewNode node, boolean isIsolateDirective) throws LayoutFileException {
+    public ScopeDefinition(ViewNode node, boolean isIsolateScope) throws LayoutFileException {
         this.properties = new HashMap<>();
         this.owner = node;
-        this.isIsolateDirective = isIsolateDirective;
+        this.isIsolateScope = isIsolateScope;
 
         if (node.parent == null) {
             parentScope = null;
@@ -62,11 +62,7 @@ public class ScopeDefinition {
     }
 
     private void setScopeClassName(ViewNode node) {
-        if (properties.isEmpty()) {
-            this.scopeClassName = "Scope";
-        } else {
-            this.scopeClassName = node.id + "_Scope";
-        }
+        this.scopeClassName = node.id + "_Scope";
     }
 
     private void setScopeProperties(ViewNode node) throws LayoutFileException {
@@ -95,8 +91,7 @@ public class ScopeDefinition {
         return parentScope;
     }
 
-    private void processDirectiveProperties(Directive directive)
-            throws LayoutFileException {
+    private void processDirectiveProperties(Directive directive) throws LayoutFileException {
         List<Property> directiveProperties = directive.getScopeProperties();
         for (Property property : directiveProperties) {
             if (properties.containsKey(property.name)) {
@@ -111,7 +106,7 @@ public class ScopeDefinition {
 
     public boolean isPassthroughScope() {
         if (isPassthroughScope == null) {
-            if (isIsolateDirective) {
+            if (isIsolateScope) {
                 isPassthroughScope = false;
             } else {
                 isPassthroughScope = ownProperties().size() == 0 && events.size() == 0;

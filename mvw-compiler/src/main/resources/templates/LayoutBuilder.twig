@@ -51,7 +51,9 @@ public class {{ className }} implements Drone, LayoutBuilder {
             {% endfor %}
 
             {% for property in scope.ownProperties() %}
-            {% set initialValue = property.getInitialValueExpression() %}
+            {% if not property.hasBinding() %}
+            {% set initialValue = property.getInitialValueExpression(null) %}
+
             {% if initialValue != null %}
             this.{{ property.name }} = {% if property.hasBidirectionalBinding() %}parent.{% endif %}{{ initialValue }};
             {% endif %}
@@ -76,6 +78,8 @@ public class {{ className }} implements Drone, LayoutBuilder {
                     return parentValue;
                 }
             });
+            {% endif %}
+
             {% endif %}
             {% endfor %}
         }

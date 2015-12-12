@@ -26,6 +26,8 @@ import java.io.*;
 
 /**
  * TODO
+ *
+ * TODO: text nodes in viewgroup nodes should result in an error
  */
 @Singleton
 public class LayoutBuilderGenerator {

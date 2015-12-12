@@ -1,10 +1,13 @@
 package com.flarestar.drones.mvw.view.scope;
 
 import com.flarestar.drones.mvw.parser.exceptions.InvalidPropertyDescriptor;
+import com.flarestar.drones.mvw.parser.exceptions.MissingRequiredAttribute;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import org.json.JSONObject;
 
+import javax.annotation.Nonnull;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,7 +52,7 @@ public class Property {
     public Property(String name, String type, BindType bindType, String initialValueExpression, Directive source) {
         this.name = name;
         this.type = type;
-        this.bindType = bindType;
+        this.bindType = bindType == null ? BindType.NONE : bindType;
         this.initialValueExpression = initialValueExpression;
         this.source = source;
     }
@@ -74,7 +77,16 @@ public class Property {
         return new Property(m.group(2), m.group(1), bindType, m.group(4), directive);
     }
 
-    public String getInitialValueExpression(ViewNode node) {
+    public boolean hasBinding() {
+        return bindType != BindType.NONE;
+    }
+
+    public String getInitialValueExpression(ViewNode node) throws MissingRequiredAttribute {
+        if (node == null && bindType != BindType.NONE) {
+            throw new IllegalArgumentException("getInitialValueExpression cannot be called with null ViewNode for property '"
+                + type + " " + name + "' since it has a bind type of " + bindType.toString());
+        }
+
         switch (bindType) {
             case NONE:
                 return initialValueExpression;
