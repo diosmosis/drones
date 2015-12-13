@@ -7,4 +7,5 @@ import java.lang.annotation.RetentionPolicy;
 public @interface IsolateDirective {
     String template();
     String less() default "";
+    boolean transclude() default false;
 }

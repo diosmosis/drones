@@ -6,6 +6,7 @@ import com.flarestar.drones.mvw.compilerutilities.ProjectSniffer;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.parser.LayoutProcessor;
+import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.google.inject.Inject;
@@ -31,7 +32,8 @@ public class IsolateDirectiveProcessor {
         this.projectSniffer = projectSniffer;
     }
 
-    public ViewNode getDirectiveTree(ActivityGenerationContext context, Class<? extends Directive> directiveClass) {
+    public ViewNode getDirectiveTree(ActivityGenerationContext context, Class<? extends Directive> directiveClass)
+            throws LayoutFileException {
         ViewNode tree = directiveTrees.get(directiveClass);
         if (tree == null) {
             tree = processIsolateDirective(context, directiveClass);
@@ -41,7 +43,8 @@ public class IsolateDirectiveProcessor {
     }
 
     // TODO: should use separate generation context for directives (they should be stored in a different layout builder rather than replicated for each activity)
-    private ViewNode processIsolateDirective(ActivityGenerationContext context, Class<? extends Directive> directiveClass) {
+    private ViewNode processIsolateDirective(ActivityGenerationContext context, Class<? extends Directive> directiveClass)
+            throws LayoutFileException {
         IsolateDirective annotation = directiveClass.getAnnotation(IsolateDirective.class);
         if (annotation == null) {
             throw new IllegalArgumentException("Invalid directive supplied for 'directiveClass': "
@@ -51,7 +54,8 @@ public class IsolateDirectiveProcessor {
         return processor.processTemplateAndLess(context, annotation.template(), annotation.less(), directiveClass);
     }
 
-    public void processIsolateDirectives(ActivityGenerationContext context, ViewNode viewNode) {
+    public void processIsolateDirectives(ActivityGenerationContext context, ViewNode viewNode)
+            throws LayoutFileException {
         for (Directive directive : viewNode.directives) {
             if (directive.isIsolateDirective()) {
                 getDirectiveTree(context, directive.getClass());

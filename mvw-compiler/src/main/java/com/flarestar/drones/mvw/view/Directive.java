@@ -128,6 +128,10 @@ public abstract class Directive {
         return getClass().getAnnotation(IsolateDirective.class) != null;
     }
 
+    public boolean hasTransclude() {
+        return Directive.hasTransclude(getClass());
+    }
+
     // TODO: bound properties should only be allowed on an IsolateDirective
     public List<Property> boundProperties() {
         // TODO: jtwig has a bug where it can't loop over iterables, should fix.
@@ -137,5 +141,10 @@ public abstract class Directive {
                 return property.hasBinding();
             }
         }));
+    }
+
+    public static boolean hasTransclude(Class<?> klass) {
+        IsolateDirective annotation = klass.getAnnotation(IsolateDirective.class);
+        return annotation != null && annotation.transclude();
     }
 }

@@ -1,8 +1,10 @@
 package com.flarestar.drones.mvw.compilerutilities;
 
 import com.flarestar.drones.mvw.compilerutilities.exceptions.*;
+import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.scope.Property;
 import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
+import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -125,6 +127,11 @@ public class TypeInferer {
         }
 
         throw new CannotFindMethod(name, type, parameters);
+    }
+
+    public boolean isDynamicViewGroup(ViewNode node) {
+        String viewClass = node.getViewClassName();
+        return viewClass != null && isAssignable(viewClass, DynamicViewGroup.class.getName());
     }
 
     private boolean parametersMatch(ExecutableElement element, List<TypeMirror> requestedParameters) {

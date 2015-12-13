@@ -2,9 +2,9 @@ package com.flarestar.drones.mvw.parser;
 
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
-import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.parser.exceptions.MultipleElementsWithTransclude;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.DirectiveFactory;
@@ -161,12 +161,13 @@ public class LayoutProcessor {
         }
     }
 
-    public ViewNode processTemplateAndLess(GenerationContext context, String template, String less) {
+    public ViewNode processTemplateAndLess(GenerationContext context, String template, String less)
+            throws LayoutFileException {
         return processTemplateAndLess(context, template, less, null);
     }
 
     public ViewNode processTemplateAndLess(GenerationContext context, String template, String less,
-                                           Class<?> rootDirective) {
+                                           Class<?> rootDirective) throws LayoutFileException {
         FileObject templateFileObject = getResource(template);
 
         FileObject stylesheetFileObject = null;
@@ -174,14 +175,38 @@ public class LayoutProcessor {
             stylesheetFileObject = getResource(less);
         }
 
+        ViewNode result;
         try (InputStream layoutInput = templateFileObject.openInputStream();
              InputStream stylesheetInput = stylesheetFileObject == null ? null : stylesheetFileObject.openInputStream()
         ) {
-            return createViewTree(context, layoutInput, stylesheetInput, rootDirective);
+            result = createViewTree(context, layoutInput, stylesheetInput, rootDirective);
         } catch (LayoutFileException e) {
             throw new RuntimeException("Layout file " + template + " is malformed: " + e.getMessage(), e);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read " + template + " layout file.", e);
+        }
+
+        if (rootDirective != null && Directive.hasTransclude(rootDirective)) {
+            checkForSingleTranscludeChild(rootDirective, result);
+        }
+
+        return result;
+    }
+
+    private void checkForSingleTranscludeChild(Class<?> rootDirective, ViewNode result)
+            throws LayoutFileException {
+        final List<ViewNode> nodesWithTransclude = new ArrayList<>();
+        result.visit(new ViewNode.Visitor() {
+            @Override
+            public void visit(ViewNode node) {
+                if (node.hasTransclude()) {
+                    nodesWithTransclude.add(node);
+                }
+            }
+        });
+
+        if (nodesWithTransclude.size() > 1) {
+            throw new MultipleElementsWithTransclude(rootDirective, nodesWithTransclude);
         }
     }
 

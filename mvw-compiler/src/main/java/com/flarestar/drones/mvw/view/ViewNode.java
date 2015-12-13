@@ -82,6 +82,10 @@ public class ViewNode {
         return isolateDirective != null;
     }
 
+    public boolean hasTranscludeDirective() {
+        return isolateDirective != null && isolateDirective.hasTransclude();
+    }
+
     public boolean hasScope() {
         return scopeDefinition.getOwner() == this;
     }
@@ -108,6 +112,10 @@ public class ViewNode {
         for (ViewNode child : children) {
             child.visit(visitor);
         }
+    }
+
+    public boolean hasTransclude() {
+        return attributes.containsKey("ng-transclude");
     }
 
     private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {

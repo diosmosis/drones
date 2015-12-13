@@ -100,7 +100,11 @@ public class LayoutBuilderGenerator {
             @Override
             public void visit(ViewNode node) {
                 if (node.hasIsolateDirective()) {
-                    isolateDirectiveProcessor.processIsolateDirectives(context, node);
+                    try {
+                        isolateDirectiveProcessor.processIsolateDirectives(context, node);
+                    } catch (LayoutFileException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         });
@@ -112,7 +116,11 @@ public class LayoutBuilderGenerator {
         String layoutFilePath = annotation.value();
         String stylesheetFilePath = annotation.stylesheet();
 
-        return xmlProcessor.processTemplateAndLess(context, layoutFilePath, stylesheetFilePath);
+        try {
+            return xmlProcessor.processTemplateAndLess(context, layoutFilePath, stylesheetFilePath);
+        } catch (LayoutFileException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void generateLayoutBuilder(final ActivityGenerationContext context, ViewNode tree) {

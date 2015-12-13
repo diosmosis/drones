@@ -95,7 +95,11 @@ public class LayoutBuilderWriter {
                         continue;
                     }
 
-                    result.put(directive, isolateDirectiveProcessor.getDirectiveTree(context, directive.getClass()));
+                    try {
+                        result.put(directive, isolateDirectiveProcessor.getDirectiveTree(context, directive.getClass()));
+                    } catch (LayoutFileException e) {
+                        throw new RuntimeException(e); // TODO: shouldn't need to handle this here
+                    }
                     directiveClassesFound.add(directive.getClass());
                 }
             }

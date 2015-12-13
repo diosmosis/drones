@@ -1,4 +1,5 @@
 {% import "macros.twig" as macros %}
+{% set currentIsolateDirective = null %}
 package {{ package }};
 
 import com.flarestar.drones.base.Drone;
@@ -24,6 +25,8 @@ import {{ applicationPackage }}.R;
 
 @Singleton
 public class {{ className }} implements Drone, LayoutBuilder {
+
+    private ViewFactory[] _toTransclude;
 
     {% for property in injectedProperties %}
     @Inject
@@ -101,11 +104,14 @@ public class {{ className }} implements Drone, LayoutBuilder {
         final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ rootView.id }}(screen);
         rootView.getScope().apply();
         screen.setContentView(rootView);
+
+        _toTransclude = null;
     }
 
     {% include "_makeView.twig" with {'view': rootView, 'directive': null} %}
 
     {% for directive, directiveTree in isolateDirectiveTrees %}
+    {% set currentIsolateDirective = directive %}
     {% include "_makeView.twig" with {'view': directiveTree, 'directive': directive} %}
     {% endfor %}
 }
