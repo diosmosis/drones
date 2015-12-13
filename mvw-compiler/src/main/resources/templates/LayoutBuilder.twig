@@ -52,7 +52,7 @@ public class {{ className }} implements Drone, LayoutBuilder {
 
             {% for property in scope.ownProperties() %}
             {% if not property.hasBinding() %}
-            {% set initialValue = property.getInitialValueExpression(null) %}
+            {% set initialValue = scopePropertyValueDeducer.getInitialValueExpression(property, null) %}
 
             {% if initialValue != null %}
             this.{{ property.name }} = {% if property.hasBidirectionalBinding() %}parent.{% endif %}{{ initialValue }};
@@ -103,9 +103,9 @@ public class {{ className }} implements Drone, LayoutBuilder {
         screen.setContentView(rootView);
     }
 
-    {{ macros.make_view_function(rootView, null, interpolator, styleProcessor, typeInferer) }}
+    {% include "_makeView.twig" with {'view': rootView, 'directive': null} %}
 
     {% for directive, directiveTree in isolateDirectiveTrees %}
-    {{ macros.make_view_function(directiveTree, directive, interpolator, styleProcessor, typeInferer) }}
+    {% include "_makeView.twig" with {'view': directiveTree, 'directive': directive} %}
     {% endfor %}
 }

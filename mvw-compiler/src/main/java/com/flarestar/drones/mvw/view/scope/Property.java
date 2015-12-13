@@ -1,13 +1,8 @@
 package com.flarestar.drones.mvw.view.scope;
 
 import com.flarestar.drones.mvw.parser.exceptions.InvalidPropertyDescriptor;
-import com.flarestar.drones.mvw.parser.exceptions.MissingRequiredAttribute;
 import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
-import org.json.JSONObject;
 
-import javax.annotation.Nonnull;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,14 +41,14 @@ public class Property {
     public final String name;
     public final String type;
     public final BindType bindType;
-    protected final String initialValueExpression;
+    public final String initialValue;
     public final Directive source;
 
-    public Property(String name, String type, BindType bindType, String initialValueExpression, Directive source) {
+    public Property(String name, String type, BindType bindType, String initialValue, Directive source) {
         this.name = name;
         this.type = type;
         this.bindType = bindType == null ? BindType.NONE : bindType;
-        this.initialValueExpression = initialValueExpression;
+        this.initialValue = initialValue;
         this.source = source;
     }
 
@@ -81,69 +76,7 @@ public class Property {
         return bindType != BindType.NONE;
     }
 
-    public String getInitialValueExpression(ViewNode node) throws MissingRequiredAttribute {
-        if (node == null && bindType != BindType.NONE) {
-            throw new IllegalArgumentException("getInitialValueExpression cannot be called with null ViewNode for property '"
-                + type + " " + name + "' since it has a bind type of " + bindType.toString());
-        }
-
-        switch (bindType) {
-            case NONE:
-                return initialValueExpression;
-            case RAW_ATTR_VALUE:
-                return JSONObject.quote(node.attributes.get(initialValueExpression));
-            case EXPRESSION_VALUE:
-                return node.attributes.get(initialValueExpression);
-            case EXPRESSION_EVAL:
-                String code = node.attributes.get(initialValueExpression);
-                if (code ==  null) {
-                    return null;
-                }
-
-                // TODO: if return is in a string literal in the code, this will fail
-                if (code.contains("return")) {
-                    return generateCallable(code);
-                } else {
-                    return generateRunnable(code);
-                }
-        }
-
-        return null;
-    }
-
     public boolean hasBidirectionalBinding() {
         return bindType == BindType.EXPRESSION_VALUE;
-    }
-
-    private String generateRunnable(String code) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("new Runnable() {\n");
-        builder.append("    void run() {\n");
-
-        {
-            builder.append("        ");
-            builder.append(code);
-            builder.append('\n');
-        }
-
-        builder.append("    }\n");
-        builder.append("}\n");
-        return builder.toString();
-    }
-
-    private String generateCallable(String code) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("new Callable() {\n");
-        builder.append("    Object call() {\n");
-
-        {
-            builder.append("        return");
-            builder.append(code);
-            builder.append('\n');
-        }
-
-        builder.append("    }\n");
-        builder.append("}\n");
-        return builder.toString();
     }
 }

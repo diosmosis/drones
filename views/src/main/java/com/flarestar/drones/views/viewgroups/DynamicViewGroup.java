@@ -4,8 +4,6 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import com.flarestar.drones.views.ViewFactory;
-import com.flarestar.drones.views.scope.Scope;
-import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;

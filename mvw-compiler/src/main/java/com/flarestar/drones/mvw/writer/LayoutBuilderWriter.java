@@ -32,10 +32,12 @@ public class LayoutBuilderWriter {
     private final Interpolator interpolator;
     private final TypeInferer typeInferer;
     private final IsolateDirectiveProcessor isolateDirectiveProcessor;
+    private final ScopePropertyValueDeducer scopePropertyValueDeducer;
 
     @Inject
     public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator, TypeInferer typeInferer,
-                               IsolateDirectiveProcessor isolateDirectiveProcessor) {
+                               IsolateDirectiveProcessor isolateDirectiveProcessor,
+                               ScopePropertyValueDeducer scopePropertyValueDeducer) {
         Loader.Resource resource = new ClasspathLoader.ClasspathResource("templates/LayoutBuilder.twig");
         JtwigConfiguration jtwigConfig = JtwigConfigurationBuilder.newConfiguration().build();
         template = new JtwigTemplate(resource, jtwigConfig);
@@ -44,14 +46,13 @@ public class LayoutBuilderWriter {
         this.interpolator = interpolator;
         this.typeInferer = typeInferer;
         this.isolateDirectiveProcessor = isolateDirectiveProcessor;
+        this.scopePropertyValueDeducer = scopePropertyValueDeducer;
     }
 
     public void writeLayoutBuilder(ActivityGenerationContext context, ViewNode tree, OutputStream output)
             throws JtwigException, LayoutFileException {
         JtwigModelMap model = new JtwigModelMap();
-        model.add("styleProcessor", styleProcessor);
-        model.add("interpolator", interpolator);
-        model.add("typeInferer", typeInferer);
+        addServicesToModel(model);
 
         model.add("generationContext", context);
         model.add("rootView", tree);
@@ -73,6 +74,13 @@ public class LayoutBuilderWriter {
         } catch (IOException e) {
             throw new LayoutFileException("Unable to write to output stream.", e);
         }
+    }
+
+    private void addServicesToModel(JtwigModelMap model) {
+        model.add("styleProcessor", styleProcessor);
+        model.add("interpolator", interpolator);
+        model.add("typeInferer", typeInferer);
+        model.add("scopePropertyValueDeducer", scopePropertyValueDeducer);
     }
 
     private Map<Directive, ViewNode> getIsolateDirectiveTrees(final ActivityGenerationContext context, ViewNode tree) {
