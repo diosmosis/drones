@@ -21,7 +21,7 @@ public class Controller extends Directive {
         }
     }
 
-    private final static Pattern controllerAttributeRegex = Pattern.compile("(#)?(\\w+)\\s+as\\s+(\\w+)");
+    private final static Pattern controllerAttributeRegex = Pattern.compile("(#)?([\\w.$]+)\\s+as\\s+(\\w+)");
 
     private String controllerClass;
     private String controllerScopeProperty;
@@ -43,10 +43,11 @@ public class Controller extends Directive {
         controllerClass = match.group(2);
         controllerScopeProperty = match.group(3);
 
-        context.addInjectedProperty(controllerClass, controllerScopeProperty);
-
         if (isInjected) {
-            initialValue = context.getLayoutBuilderSimpleClassName() + ".this." + controllerScopeProperty;
+            String injectedPropertyName = "_" + node.id + "_" + controllerScopeProperty;
+            context.addInjectedProperty(controllerClass, injectedPropertyName);
+
+            initialValue = context.getLayoutBuilderSimpleClassName() + ".this." + injectedPropertyName;
         } else {
             initialValue = "new " + controllerClass + "(owner.getContext())";
         }
