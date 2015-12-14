@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.flarestar.drones</groupId>
-    <artifactId>mvw</artifactId>
+    <artifactId>routing</artifactId>
     <version>0.1.0</version>
     <packaging>jar</packaging>
-    <name>mvw</name>
+    <name>routing</name>
 
     <parent>
         <groupId>com.flarestar.drones</groupId>
@@ -30,19 +30,10 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.google.dagger</groupId>
-            <artifactId>dagger</artifactId>
-            <version>2.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.flarestar.drones</groupId>
-            <artifactId>views</artifactId>
+            <artifactId>base</artifactId>
             <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.flarestar.drones</groupId>
-            <artifactId>routing</artifactId>
-            <version>0.1.0</version>
+            <type>jar</type>
         </dependency>
     </dependencies>
 
@@ -55,7 +46,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <sdk>
-                        <platform>19</platform>
+                        <platform>22</platform>
                         <path>/home/runic/Android/Sdk</path>
                     </sdk>
                 </configuration>

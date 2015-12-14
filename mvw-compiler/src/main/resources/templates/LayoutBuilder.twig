@@ -16,6 +16,7 @@ import com.flarestar.drones.views.scope.Listener;
 import com.flarestar.drones.views.scope.Watcher;
 import com.flarestar.drones.views.LayoutBuilder;
 import com.flarestar.drones.views.aspect.ScrollingAspect;
+import com.flarestar.drones.routing.ActivityRouter;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
@@ -28,6 +29,9 @@ import {{ applicationPackage }}.R;
 public class {{ className }} implements Drone, LayoutBuilder {
 
     private ViewFactory[] _toTransclude;
+
+    @Inject
+    ActivityRouter $location;
 
     {% for property in injectedProperties %}
     @Inject

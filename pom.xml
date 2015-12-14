@@ -14,6 +14,7 @@
         <module>mvw</module>
         <module>mvw-compiler</module>
         <module>views</module>
+        <module>routing</module>
     </modules>
 
 </project>
