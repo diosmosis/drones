@@ -1,0 +1,8 @@
+interface DirectiveScope_{{ directive.getDirectiveName() }} {
+    {% for property in directive.getScopeProperties() %}
+    {% if property.hasBidirectionalBinding() %}
+    {{ property.type }} get_{{ property.name }}();
+    void set_{{ property.name }}({{ property.type }} value);
+    {% endif %}
+    {% endfor %}
+}

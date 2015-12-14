@@ -1,6 +1,7 @@
 package com.flarestar.drones.mvw.view;
 
 import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
+import com.flarestar.drones.mvw.parser.exceptions.ControllerInDirectiveTemplateNotAllowed;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.parser.exceptions.NoViewClassForNode;
@@ -27,14 +28,15 @@ public class ViewNode {
     public final ViewNode parent;
     public final List<ViewNode> children = new ArrayList<>();
     public final ScopeDefinition scopeDefinition;
+    public final boolean isDirectiveRoot;
 
     private String viewClass;
     private Boolean hasDynamicDirective = null;
-    private Boolean hasDynamicChild = null;
     public final Directive isolateDirective;
 
     public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
-                    Map<String, String> styles, List<Directive> directives) throws LayoutFileException {
+                    Map<String, String> styles, List<Directive> directives, boolean isDirectiveRoot)
+            throws LayoutFileException {
         this.tagName = tagName;
         this.id = id;
         this.text = text;
@@ -42,6 +44,7 @@ public class ViewNode {
         this.attributes = attributes;
         this.styles = styles;
         this.directives = directives;
+        this.isDirectiveRoot = isDirectiveRoot;
 
         for (Directive directive : directives) {
             directive.manipulateViewNode(this);

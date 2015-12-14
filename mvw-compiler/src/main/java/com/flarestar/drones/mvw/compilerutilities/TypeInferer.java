@@ -37,15 +37,7 @@ public class TypeInferer {
     }
 
     public TypeMirror getTypeMirrorFor(String type) {
-        if (type.indexOf('.') == -1) {
-            type = basePackage + '.' + type;
-        }
-
-        TypeElement result = processingEnvironment.getElementUtils().getTypeElement(type);
-        if (result == null) {
-            throw new CannotFindTypeMirror(type);
-        }
-        return result.asType();
+        return getTypeElementFor(type).asType();
     }
 
     public TypeMirror getTypeOfExpression(TypeMirror type, String expression, ScopeDefinition currentScope)
@@ -200,5 +192,17 @@ public class TypeInferer {
 
     public boolean isAssignable(String type, String baseType) {
         return processingEnvironment.getTypeUtils().isAssignable(getTypeMirrorFor(type), getTypeMirrorFor(baseType));
+    }
+
+    public TypeElement getTypeElementFor(String type) {
+        if (type.indexOf('.') == -1) {
+            type = basePackage + '.' + type;
+        }
+
+        TypeElement result = processingEnvironment.getElementUtils().getTypeElement(type);
+        if (result == null) {
+            throw new CannotFindTypeMirror(type);
+        }
+        return result;
     }
 }

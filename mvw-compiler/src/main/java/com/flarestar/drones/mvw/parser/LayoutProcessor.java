@@ -3,11 +3,13 @@ package com.flarestar.drones.mvw.parser;
 import com.asual.lesscss.LessEngine;
 import com.asual.lesscss.LessException;
 import com.flarestar.drones.mvw.context.GenerationContext;
+import com.flarestar.drones.mvw.parser.exceptions.ControllerInDirectiveTemplateNotAllowed;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.parser.exceptions.MultipleElementsWithTransclude;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.DirectiveFactory;
+import com.flarestar.drones.mvw.view.visitors.AttributeCountVisitor;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.inject.Inject;
@@ -120,13 +122,18 @@ public class LayoutProcessor {
 
         String text = node.ownText();
 
+        boolean isDirectiveRoot = false;
+
         List<Directive> directives = directiveFactory.detectDirectives(node, context);
         if (directiveClassToApply != null) {
-            directives.add(directiveFactory.make(context, directiveClassToApply));
+            Directive directive = directiveFactory.makeRootDirective(context, directiveClassToApply);
+            directives.add(directive);
+
+            isDirectiveRoot = true;
         }
 
         ViewNode viewNode = new ViewNode(tagName, id, text, parent, attributeMap(node), stylesByElement.row(node),
-            directives);
+            directives, isDirectiveRoot);
         processNodeChildren(node, viewNode, context, stylesByElement);
         return viewNode;
     }
@@ -186,17 +193,32 @@ public class LayoutProcessor {
             throw new RuntimeException("Failed to read " + template + " layout file.", e);
         }
 
-        if (rootDirective != null && Directive.hasTransclude(rootDirective)) {
-            checkForSingleTranscludeChild(rootDirective, result);
+        if (rootDirective != null) {
+            if (Directive.hasTransclude(rootDirective)) {
+                checkForSingleTranscludeChild(rootDirective, result);
+            }
+
+            checkTreeDoesNotUseNgController(rootDirective, result);
         }
 
         return result;
     }
 
-    private void checkForSingleTranscludeChild(Class<?> rootDirective, ViewNode result)
+
+    private void checkTreeDoesNotUseNgController(final Class<?> directive, ViewNode tree)
+            throws ControllerInDirectiveTemplateNotAllowed {
+        AttributeCountVisitor visitor = new AttributeCountVisitor();
+        tree.visit(visitor);
+
+        if (visitor.count > 0) {
+            throw new ControllerInDirectiveTemplateNotAllowed(directive);
+        }
+    }
+
+    private void checkForSingleTranscludeChild(Class<?> rootDirective, ViewNode tree)
             throws LayoutFileException {
         final List<ViewNode> nodesWithTransclude = new ArrayList<>();
-        result.visit(new ViewNode.Visitor() {
+        tree.visit(new ViewNode.Visitor() {
             @Override
             public void visit(ViewNode node) {
                 if (node.hasTransclude()) {

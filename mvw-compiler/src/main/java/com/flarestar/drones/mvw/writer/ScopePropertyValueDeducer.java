@@ -20,13 +20,17 @@ public class ScopePropertyValueDeducer {
 
 
     public String getInitialValueExpression(Property property, ViewNode node) throws MissingRequiredAttribute {
-        if (node == null && property.bindType != Property.BindType.NONE) {
+        if (node == null
+            && property.bindType != Property.BindType.NONE
+            && property.bindType != Property.BindType.PARENT_CHILD
+        ) {
             throw new IllegalArgumentException("getInitialValueExpression cannot be called with null ViewNode for property '"
                 + property.type + " " + property.name + "' since it has a bind type of " + property.bindType.toString());
         }
 
         switch (property.bindType) {
             case NONE:
+            case PARENT_CHILD:
                 return property.initialValue;
             case RAW_ATTR_VALUE:
                 String value = node.attributes.get(property.initialValue);

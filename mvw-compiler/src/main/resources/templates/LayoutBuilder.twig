@@ -13,6 +13,7 @@ import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
 import com.flarestar.drones.views.viewgroups.dynamic.SingleViewFactory;
 import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
 import com.flarestar.drones.views.scope.Listener;
+import com.flarestar.drones.views.scope.Watcher;
 import com.flarestar.drones.views.LayoutBuilder;
 import com.flarestar.drones.views.aspect.ScrollingAspect;
 import android.view.View;
@@ -33,60 +34,12 @@ public class {{ className }} implements Drone, LayoutBuilder {
     {{ property.type }} {{ property.name }};
     {% endfor %}
 
+    {% for directive, directiveTree in isolateDirectiveTrees %}
+    {% include "_directiveScopeInterface.twig" with {'directive': directive} %}
+    {% endfor %}
+
     {% for scope in scopeDefinitions %}
-    public class {{ scope.getScopeClassName() }} extends Scope<{% if scope.getParentScope() != null %}{{ scope.getParentScope().getScopeClassName() }}{% else %}Scope{% endif %}> {
-        {% for property in scope.ownProperties() %}
-        public {{ property.type }} {{ property.name }};
-        {% endfor %}
-
-        {% if scope.getParentScope() == null %}
-        public {{ scope.getScopeClassName() }}(Handler handler, View owner) {
-            super(handler, owner);
-        {% else %}
-        public {{ scope.getScopeClassName() }}(Handler handler, View owner, {{ scope.getParentScope().getScopeClassName() }} parent) {
-            super(handler, owner, parent);
-        {% endif %}
-
-            final {{ scope.getScopeClassName() }} _self = this;
-
-            {% for property in view.parent.scopeDefinition.inheritedProperties() %}
-            final {{ property.type }} {{ property.name }} = {{ property.accessCode() }};
-            {% endfor %}
-
-            {% for property in scope.ownProperties() %}
-            {% if not property.hasBinding() %}
-            {% set initialValue = scopePropertyValueDeducer.getInitialValueExpression(property, null) %}
-
-            {% if initialValue != null %}
-            this.{{ property.name }} = {% if property.hasBidirectionalBinding() %}parent.{% endif %}{{ initialValue }};
-            {% endif %}
-            {% if property.hasBidirectionalBinding() %}
-            watch(new Watcher() { // bidirectional binding watch
-                @Override
-                public Object getWatchValue(Scope<?> _scope) {
-                    final {{ property.type }} _parentValue = parent.{{ initialValue }};
-
-                    // if parent value != new value, set parent value
-                    // what if parent value changes, how do we sync new value?
-                    if (_self.{{ property.name }} == _parentValue) {
-                        return _parentValue;
-                    }
-
-                    if (parentValue != lastValue) { // parent value has changed, sync w/ this value
-                        _self.{{ property.name }} = _parentValue;
-                    } else { // current scope value changed, sync w/ parent
-                        parent.{{ initialValue }} = _self.{{ property.name }};
-                    }
-
-                    return parentValue;
-                }
-            });
-            {% endif %}
-
-            {% endif %}
-            {% endfor %}
-        }
-    }
+    {% include "_scopeDefinition.twig" with {'scope': scope} %}
     {% endfor %}
 
     private Handler _handler;

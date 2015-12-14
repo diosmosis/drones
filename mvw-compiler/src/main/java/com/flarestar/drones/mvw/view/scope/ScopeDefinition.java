@@ -96,8 +96,10 @@ public class ScopeDefinition {
         for (Property property : directiveProperties) {
             if (properties.containsKey(property.name)) {
                 Property originalProperty = properties.get(property.name);
-                throw new ScopePropertyAlreadyDefined(property.name, originalProperty.source.getDirectiveName(),
-                    directive.getDirectiveName());
+                if (!(originalProperty instanceof InheritedProperty)) {
+                    throw new ScopePropertyAlreadyDefined(property.name, originalProperty.source.getDirectiveName(),
+                        directive.getDirectiveName());
+                }
             }
 
             properties.put(property.name, property);

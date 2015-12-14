@@ -18,7 +18,7 @@
 {% if directive == null %}
 private {{ functionResult }} makeView_{{ view.id }}(final BaseScreen _screen{% if view.parent != null %}, final DynamicViewGroup _parentView, final {{ parentScopeClass }} _parentNodeScope{% endif %}) {
 {% else %}
-private <P extends Scope<?>> View makeDirectiveView_{{ directive.getDirectiveName() }}(final BaseScreen _screen, final DynamicViewGroup _parentView, final P _parentNodeScope
+private <P extends Scope<?> & DirectiveScope_{{ directive.getDirectiveName() }}> View makeDirectiveView_{{ directive.getDirectiveName() }}(final BaseScreen _screen, final DynamicViewGroup _parentView, final P _parentNodeScope
     {% for property in directive.boundProperties() %}, final {{ property.type }} _{{ property.name }}{% endfor %}) {
 {% endif %}
 
@@ -62,13 +62,13 @@ private <P extends Scope<?>> View makeDirectiveView_{{ directive.getDirectiveNam
 
             final {{ view.getViewClassName() }} result = new {{ view.getViewClassName() }}(_screen);
 
-            {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() or directive != null %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if view.parent != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
+            {% if view.hasScope() %}final {{ view.scopeDefinition.getScopeClassName() }} scope = {% if not view.scopeDefinition.isPassthroughScope() or directive != null %}new {{ view.scopeDefinition.getScopeClassName() }}(_handler, result{% if view.parent != null or directive != null %}, _parentNodeScope{% endif %}){% else %}({{ view.scopeDefinition.getScopeClassName() }})_parentNodeScope{% endif %};
             {{ macros.directive_hook(view, "onCreatedNewScope") }}
             {% if directive != null %}
             scope._parent = _parentNodeScope;
-            {% for property in view.scopeDefinition.ownProperties() %}{% if property.hasBinding() %}
+            {% for property in view.scopeDefinition.ownProperties() %}
             scope.{{ property.name }} = _{{ property.name }};
-            {% endif %}{% endfor %}{% endif %}
+            {% endfor %}{% endif %}
             {% if view.scopeDefinition.getParentScope() != null %}final {{ view.scopeDefinition.getParentScope().getScopeClassName() }} _parent = scope._parent;{% endif %}
             {% for property in view.scopeDefinition.ownProperties() %}final {{ property.type }} {{ property.name }} = scope.{{ property.name }};
             {% endfor %}{% endif %}

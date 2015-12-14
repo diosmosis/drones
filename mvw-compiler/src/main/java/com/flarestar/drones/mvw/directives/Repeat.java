@@ -34,9 +34,6 @@ public class Repeat extends Directive {
     private TypeMirror iterableType;
     private TypeMirror iterationScopeVariableType;
 
-    @Inject
-    private TypeInferer typeInferer;
-
     public Repeat(GenerationContext context) throws LayoutFileException {
         super(context);
     }

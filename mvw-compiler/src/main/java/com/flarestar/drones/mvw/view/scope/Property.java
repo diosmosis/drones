@@ -13,7 +13,7 @@ public class Property {
         RAW_ATTR_VALUE,
         EXPRESSION_VALUE,
         EXPRESSION_EVAL,
-        ;
+        PARENT_CHILD;
 
         public static BindType fromStr(String bindType) {
             if (bindType == null) {
@@ -38,10 +38,10 @@ public class Property {
     private static final Pattern PROPERTY_DESCRIPTOR_REGEX =
         Pattern.compile("([.\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*([=@&]?)(.+))?");
 
-    public final String name;
-    public final String type;
-    public final BindType bindType;
-    public final String initialValue;
+    public String name;
+    public String type;
+    public BindType bindType;
+    public String initialValue;
     public final Directive source;
 
     public Property(String name, String type, BindType bindType, String initialValue, Directive source) {
@@ -74,6 +74,10 @@ public class Property {
 
     public boolean hasBinding() {
         return bindType != BindType.NONE;
+    }
+
+    public boolean canInitializeInScopeConstructor(boolean isDirectiveRoot) {
+        return bindType == BindType.NONE || (bindType == BindType.PARENT_CHILD && !isDirectiveRoot);
     }
 
     public boolean hasBidirectionalBinding() {

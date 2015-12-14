@@ -1,18 +1,13 @@
 package com.flarestar.drones.mvw.parser;
 
-import com.flarestar.drones.mvw.android.exceptions.InvalidManifestException;
 import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
-import com.flarestar.drones.mvw.compilerutilities.ProjectSniffer;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
-import com.flarestar.drones.mvw.context.GenerationContext;
-import com.flarestar.drones.mvw.parser.LayoutProcessor;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,13 +18,11 @@ import java.util.Map;
 public class IsolateDirectiveProcessor {
 
     private LayoutProcessor processor;
-    private ProjectSniffer projectSniffer;
     private Map<Class<? extends Directive>, ViewNode> directiveTrees = new HashMap<>();
 
     @Inject
-    public IsolateDirectiveProcessor(LayoutProcessor processor, ProjectSniffer projectSniffer) {
+    public IsolateDirectiveProcessor(LayoutProcessor processor) {
         this.processor = processor;
-        this.projectSniffer = projectSniffer;
     }
 
     public ViewNode getDirectiveTree(ActivityGenerationContext context, Class<? extends Directive> directiveClass)

@@ -1,7 +1,9 @@
 package com.flarestar.drones.mvw.view;
 
+import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
 import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.annotations.directive.*;
+import com.flarestar.drones.mvw.directives.Controller;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
 import com.flarestar.drones.mvw.view.scope.Event;
@@ -10,11 +12,15 @@ import com.flarestar.drones.mvw.view.scope.WatcherDefinition;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
-import javax.annotation.Nullable;
+import javax.annotation.Nonnull;
+import javax.inject.Singleton;
+import javax.lang.model.element.TypeElement;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -26,6 +32,9 @@ public abstract class Directive {
     protected final List<Property> properties = new ArrayList<>();
     protected final List<Event> events = new ArrayList<>();
     protected final List<WatcherDefinition> watchers = new ArrayList<>();
+
+    @Inject
+    protected TypeInferer typeInferer;
 
     public Directive(GenerationContext context) throws LayoutFileException {
         this.context = context;
@@ -108,7 +117,36 @@ public abstract class Directive {
     }
 
     public void manipulateViewNode(ViewNode viewNode) throws LayoutFileException {
-        // empty
+        addPropertyIfDirectiveControllerUsed(viewNode);
+    }
+
+    private void addPropertyIfDirectiveControllerUsed(ViewNode viewNode) throws LayoutFileException {
+        if (!isIsolateDirective()) {
+            return;
+        }
+
+        DirectiveController annotation = getClass().getAnnotation(DirectiveController.class);
+        if (annotation == null) {
+            return;
+        }
+
+        Controller.AttributeProcessor processor = new Controller.AttributeProcessor(context, this);
+
+        Controller.AttributeProcessor.ParseResult result = processor.parse(annotation.value());
+        if (viewNode.isDirectiveRoot) {
+            result.setIsInjected(false);
+        }
+
+        if (result.isInjected()) {
+            TypeElement controllerClass = typeInferer.getTypeElementFor(result.getControllerClass());
+            if (controllerClass.getAnnotation(Singleton.class) != null) {
+                throw new Controller.InvalidControllerAttribute(getDirectiveName() + ": injected directive controller '"
+                    + result.getControllerClass() + "' should not be marked as @Singleton since a new controller must "
+                    + "be created each time the directie is used.");
+            }
+        }
+
+        processor.process(result, viewNode);
     }
 
     public String getDirectiveName() {
@@ -137,7 +175,7 @@ public abstract class Directive {
         // TODO: jtwig has a bug where it can't loop over iterables, should fix.
         return Lists.newArrayList(Iterables.filter(properties, new Predicate<Property>() {
             @Override
-            public boolean apply(@Nullable Property property) {
+            public boolean apply(@Nonnull Property property) {
                 return property.hasBinding();
             }
         }));
@@ -146,5 +184,19 @@ public abstract class Directive {
     public static boolean hasTransclude(Class<?> klass) {
         IsolateDirective annotation = klass.getAnnotation(IsolateDirective.class);
         return annotation != null && annotation.transclude();
+    }
+
+    public void addProperty(Property property) {
+        properties.add(property);
+    }
+
+    public void removePropertiesIf(Predicate<Property> predicate) {
+        Iterator<Property> iterator = properties.iterator();
+        while (iterator.hasNext()) {
+            Property prop = iterator.next();
+            if (predicate.apply(prop)) {
+                iterator.remove();
+            }
+        }
     }
 }
