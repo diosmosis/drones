@@ -36,7 +36,7 @@ The following features have been implemented:
 * support for event directives (eg, ng-click)
 * simple easy to use ViewGroups with an easy to use box model (based on the CSS box modeL). instead of a multitude of
   Layout classes and strange concepts like view gravity & weight, there are three ViewGroups defined that can be
-  combined to any effect: <row>, <column>, <container>. Nesting them will probably be less efficient than using something like
+  combined to any effect: `<row>`, `<column>`, `<container>`. Nesting them will probably be less efficient than using something like
   RelativeLayout, but it should be much easier to code and maintain.
 * the ability to change activities through simple URLs instead of having to manually create Intents (in other words, routing)
 
