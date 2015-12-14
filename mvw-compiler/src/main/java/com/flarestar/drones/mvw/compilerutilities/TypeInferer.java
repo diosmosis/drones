@@ -1,5 +1,6 @@
 package com.flarestar.drones.mvw.compilerutilities;
 
+import com.flarestar.drones.mvw.annotations.Function;
 import com.flarestar.drones.mvw.compilerutilities.exceptions.*;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.scope.Property;
@@ -9,11 +10,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.*;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -29,11 +32,13 @@ public class TypeInferer {
     private static final Pattern EXPRESSION_START_REGEX = Pattern.compile("([a-zA-Z0-9_$]+)(.*)");
 
     private ProcessingEnvironment processingEnvironment;
+    private RoundEnvironment roundEnvironment;
     private String basePackage = "";
 
     @Inject
-    public TypeInferer(ProcessingEnvironment processingEnvironment) {
+    public TypeInferer(ProcessingEnvironment processingEnvironment, RoundEnvironment roundEnvironment) {
         this.processingEnvironment = processingEnvironment;
+        this.roundEnvironment = roundEnvironment;
     }
 
     public TypeMirror getTypeMirrorFor(String type) {
@@ -204,5 +209,9 @@ public class TypeInferer {
             throw new CannotFindTypeMirror(type);
         }
         return result;
+    }
+
+    public Set<? extends Element> getAllTypesWithAnnotation(Class<? extends Annotation> annotationClass) {
+        return roundEnvironment.getElementsAnnotatedWith(annotationClass);
     }
 }

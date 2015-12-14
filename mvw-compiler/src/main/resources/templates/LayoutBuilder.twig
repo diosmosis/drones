@@ -34,6 +34,15 @@ public class {{ className }} implements Drone, LayoutBuilder {
     {{ property.type }} {{ property.name }};
     {% endfor %}
 
+    {% for function in userFunctions %}
+    {% if function.isInjected() %}
+    @Inject
+    {{ function.getFunctionClassName() }} _function_{{ function.getName() }};
+    {% else %}
+    {{ function.getFunctionClassName() }} _function_{{ function.getName() }} = new {{ function.getFunctionClassName() }}();
+    {% endif %}
+    {% endfor %}
+
     {% for directive, directiveTree in isolateDirectiveTrees %}
     {% include "_directiveScopeInterface.twig" with {'directive': directive} %}
     {% endfor %}
@@ -66,5 +75,11 @@ public class {{ className }} implements Drone, LayoutBuilder {
     {% for directive, directiveTree in isolateDirectiveTrees %}
     {% set currentIsolateDirective = directive %}
     {% include "_makeView.twig" with {'view': directiveTree, 'directive': directive} %}
+    {% endfor %}
+
+    {% for function in userFunctions %}
+    private {{ function.getResultType() }} {{ function.getName() }}({% for argument in function.getParameters() %}{% if not loop.first %}, {% endif %}{{ argument.getType() }} {{ argument.getName() }}{% endfor %}) {
+        {% if function.getResultType() != "void" %}return {% endif %}_function_{{ function.getName() }}.invoke({% for argument in function.getParameters() %}{% if not loop.first %}, {% endif %} {{ argument.getName() }}{% endfor %});
+    }
     {% endfor %}
 }

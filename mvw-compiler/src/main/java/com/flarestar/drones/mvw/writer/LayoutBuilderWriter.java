@@ -1,5 +1,7 @@
 package com.flarestar.drones.mvw.writer;
 
+import com.flarestar.drones.mvw.function.FunctionSniffer;
+import com.flarestar.drones.mvw.function.exceptions.InvalidUserFunctionClass;
 import com.flarestar.drones.mvw.parser.IsolateDirectiveProcessor;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
@@ -33,11 +35,12 @@ public class LayoutBuilderWriter {
     private final TypeInferer typeInferer;
     private final IsolateDirectiveProcessor isolateDirectiveProcessor;
     private final ScopePropertyValueDeducer scopePropertyValueDeducer;
+    private final FunctionSniffer functionSniffer;
 
     @Inject
     public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator, TypeInferer typeInferer,
                                IsolateDirectiveProcessor isolateDirectiveProcessor,
-                               ScopePropertyValueDeducer scopePropertyValueDeducer) {
+                               ScopePropertyValueDeducer scopePropertyValueDeducer, FunctionSniffer functionSniffer) {
         Loader.Resource resource = new ClasspathLoader.ClasspathResource("templates/LayoutBuilder.twig");
         JtwigConfiguration jtwigConfig = JtwigConfigurationBuilder.newConfiguration().build();
         template = new JtwigTemplate(resource, jtwigConfig);
@@ -47,10 +50,11 @@ public class LayoutBuilderWriter {
         this.typeInferer = typeInferer;
         this.isolateDirectiveProcessor = isolateDirectiveProcessor;
         this.scopePropertyValueDeducer = scopePropertyValueDeducer;
+        this.functionSniffer = functionSniffer;
     }
 
     public void writeLayoutBuilder(ActivityGenerationContext context, ViewNode tree, OutputStream output)
-            throws JtwigException, LayoutFileException {
+            throws JtwigException, LayoutFileException, InvalidUserFunctionClass {
         JtwigModelMap model = new JtwigModelMap();
         addServicesToModel(model);
 
@@ -60,6 +64,7 @@ public class LayoutBuilderWriter {
         Map<Directive, ViewNode> isolateDirectiveTrees = getIsolateDirectiveTrees(context, tree);
         model.add("isolateDirectiveTrees", isolateDirectiveTrees);
         model.add("scopeDefinitions", getScopeDefinitions(tree, isolateDirectiveTrees.values()));
+        model.add("userFunctions", functionSniffer.detectUserFunctions());
 
         model.add("package", context.getActivityPackage());
         model.add("applicationPackage", context.getApplicationPackage());

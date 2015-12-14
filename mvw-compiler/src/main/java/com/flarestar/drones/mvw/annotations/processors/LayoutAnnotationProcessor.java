@@ -19,20 +19,13 @@ import com.google.inject.Injector;
 @SupportedAnnotationTypes({"com.flarestar.drones.mvw.annotations.Layout"})
 public class LayoutAnnotationProcessor extends AbstractProcessor {
 
-    private Injector injector;
-    private LayoutBuilderGenerator layoutBuilderGenerator;
-
-    @Override
-    public synchronized void init(ProcessingEnvironment processingEnv) {
-        super.init(processingEnv);
-
-        DroneModule module = new DroneModule(processingEnv);
-        injector = Guice.createInjector(module);
-        layoutBuilderGenerator = injector.getInstance(LayoutBuilderGenerator.class);
-    }
-
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
+        DroneModule module = new DroneModule(processingEnv, roundEnvironment);
+
+        Injector injector = Guice.createInjector(module);
+        LayoutBuilderGenerator layoutBuilderGenerator = injector.getInstance(LayoutBuilderGenerator.class);
+
         processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, "Start processing of @Layout");
 
         Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(Layout.class);
