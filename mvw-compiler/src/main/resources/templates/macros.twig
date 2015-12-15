@@ -17,6 +17,7 @@ scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
 {% endmacro %}
 
 {% macro event(event) %}
+{#{% render event %}#}
 scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClass.getName() }}>() {
     @Override
     public boolean invoke({{ event.eventClass.getName() }} event) {

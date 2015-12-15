@@ -1,15 +1,15 @@
-package {{ package }};
+package {{ module.getGeneratedPackage() }};
 
 import dagger.Module;
 import dagger.Provides;
 import android.app.Activity;
 
 @Module
-class {{ moduleClassName }} {
+class {{ module.getGeneratedClassName() }} {
 
     private Activity activity;
 
-    {{ moduleClassName }}(Activity activity) {
+    {{ module.getGeneratedClassName() }}(Activity activity) {
         this.activity = activity;
     }
 

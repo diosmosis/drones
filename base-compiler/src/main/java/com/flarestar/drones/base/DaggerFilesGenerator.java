@@ -1,5 +1,8 @@
 package com.flarestar.drones.base;
 
+import com.flarestar.drones.base.generation.Generator;
+import com.flarestar.drones.base.renderables.ActivityComponent;
+import com.flarestar.drones.base.renderables.ActivityModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.jtwig.exception.JtwigException;
@@ -10,25 +13,24 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 
 @Singleton
 public class DaggerFilesGenerator {
 
     private ProcessingEnvironment processingEnvironment;
-    private ActivityModuleFileGenerator activityModuleFileGenerator;
-    private ComponentFileGenerator componentFileGenerator;
     private TypeMirror screenType;
+    private Generator generator;
+    private ScreenDroneSniffer screenDroneSniffer;
 
     @Inject
     DaggerFilesGenerator(ProcessingEnvironment processingEnvironment,
-                         ActivityModuleFileGenerator activityModuleFileGenerator,
-                         ComponentFileGenerator componentFileGenerator) {
+                         Generator generator, ScreenDroneSniffer screenDroneSniffer) {
         this.processingEnvironment = processingEnvironment;
-        this.activityModuleFileGenerator = activityModuleFileGenerator;
-        this.componentFileGenerator = componentFileGenerator;
+        this.generator = generator;
+        this.screenDroneSniffer = screenDroneSniffer;
 
         TypeElement screenTypeElement = processingEnvironment.getElementUtils().getTypeElement(BaseScreen.class.getName());
         if (screenTypeElement == null) {
@@ -65,37 +67,22 @@ public class DaggerFilesGenerator {
     }
 
     public void generateDaggerFilesFor(TypeElement activityClassElement) {
-        String activityClassName = activityClassElement.getQualifiedName().toString();
-
         // generate ..ActivityModule.java file
-        String activityModuleClassName = activityModuleFileGenerator.getGeneratedClassName(activityClassElement);
-        try (OutputStream output = openNewSourceFile(activityClassName, activityModuleClassName)) {
-            activityModuleFileGenerator.generate(activityClassElement, output);
+        ActivityModule module = new ActivityModule(activityClassElement);
+        try {
+            generator.renderClass(module);
         } catch (IOException | JtwigException e) {
             throw new RuntimeException(e);
         }
 
         // generate ..ActivityComponent.java file
-        String activityComponentClassName = componentFileGenerator.getGeneratedClassName(activityClassElement);
-        try (OutputStream output = openNewSourceFile(activityClassName, activityComponentClassName)) {
-            componentFileGenerator.generate(activityClassElement, output);
+        List<ScreenDroneSniffer.DroneInformation> drones = screenDroneSniffer.getDroneInformationList(activityClassElement);
+
+        ActivityComponent component = new ActivityComponent(activityClassElement, module, drones);
+        try {
+            generator.renderClass(component);
         } catch (IOException | JtwigException e) {
             throw new RuntimeException(e);
-        }
-    }
-
-    private OutputStream openNewSourceFile(String activityClassName, String newClassName) {
-        JavaFileObject newObject;
-        try {
-            newObject = processingEnvironment.getFiler().createSourceFile(newClassName);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to generate LayoutBuilder for '" + activityClassName + "'.", e);
-        }
-
-        try {
-            return newObject.openOutputStream();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to open new class file '" + newClassName + ".", e);
         }
     }
 }

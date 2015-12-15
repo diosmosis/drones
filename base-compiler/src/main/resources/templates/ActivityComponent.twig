@@ -1,4 +1,4 @@
-package {{ package }};
+package {{ component.getGeneratedPackage() }};
 
 import dagger.Component;
 import javax.inject.Inject;
@@ -8,22 +8,22 @@ import com.flarestar.drones.base.DroneCollection;
 import android.app.Activity;
 
 @Singleton
-@Component(modules = { {{ activityModuleClass }}.class })
-abstract class {{ moduleClassName }} implements DroneCollection {
+@Component(modules = { {{ component.getModule().getGeneratedClassName() }}.class })
+abstract class {{ component.getGeneratedClassName() }} implements DroneCollection {
 
-    {% for drone in drones %}
+    {% for drone in component.getDrones() %}
     public abstract {{ drone.getClassName() }} make{{ drone.getSimpleClassName() }}();
     {% endfor %}
 
     public Drone[] getDrones() {
         return new Drone[] {
-            {% for drone in drones %}
+            {% for drone in component.getDrones() %}
             make{{ drone.getSimpleClassName() }}(),
             {% endfor %}
         };
     }
 
     public static DroneCollection build(Activity activity) {
-        return Dagger{{ moduleClassName }}.builder().{{ activityModuleClassLc }}(new {{ activityModuleClass }}(activity)).build();
+        return Dagger{{ component.getGeneratedClassName() }}.builder().{{ component.getModule().getGeneratedClassNameLc() }}(new {{ component.getModule().getGeneratedClassName() }}(activity)).build();
     }
 }

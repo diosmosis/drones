@@ -3,7 +3,7 @@
 **drones** is a set of Java libraries that implements AngularJS features in Java for use in Android applications.
 
 drones uses annotation processors extensively to do as much work at compile time as possible. For example, you can use
-Angular-like XML templates (with embedded code & dynamic directives) to layout activites, but drones will not parse
+Angular-like XML templates (with embedded code & dynamic directives) to specify activity layouts, but drones will not parse
 the XML while your application runs.
 
 Instead, the XML template will be parsed and compiled into a Java class that sets up the layout and behavior. This
