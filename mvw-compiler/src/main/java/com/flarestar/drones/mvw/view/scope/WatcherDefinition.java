@@ -1,11 +1,12 @@
 package com.flarestar.drones.mvw.view.scope;
 
+import com.flarestar.drones.base.generation.Renderable;
 import com.flarestar.drones.views.scope.Watcher;
 
 /**
  * TODO
  */
-public class WatcherDefinition {
+public class WatcherDefinition implements Renderable {
     private final Class<? extends Watcher> watcherClass;
     protected final String getWatchValueCode;
     protected final String onValueChangedCode;
@@ -41,5 +42,15 @@ public class WatcherDefinition {
 
     public boolean isOnParentScope() {
         return isOnParentScope;
+    }
+
+    @Override
+    public String getTemplate() {
+        return "templates/watcher.twig";
+    }
+
+    @Override
+    public String getModelAttribute() {
+        return "watcher";
     }
 }

@@ -111,7 +111,7 @@ return new ScopedViewFactory() {
 
         {% for viewDirective in view.directives %}
         {% for watcher in viewDirective.watchers %}
-        {% if not watcher.isOnParentScope() %}{{ macros.watcher(watcher) }}{% endif %}
+        {% if not watcher.isOnParentScope() %}{% render watcher %}{% endrender %}{% endif %}
         {% endfor %}
         {% endfor %}
 
@@ -132,7 +132,7 @@ return new ScopedViewFactory() {
 
 {% for viewDirective in view.directives %}
 {% for watcher in viewDirective.watchers %}
-{% if watcher.isOnParentScope() %}{{ macros.watcher(watcher) }}{% endif %}
+{% if watcher.isOnParentScope() %}{% render watcher %}{% endrender %}{% endif %}
 {% endfor %}
 {% endfor %}
 

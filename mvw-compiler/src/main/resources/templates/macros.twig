@@ -2,18 +2,4 @@
 {% for directive in view.directives %}{{ directive.getHookCode(hookName, view) }}{% endfor %}
 {% endmacro %}
 
-{% macro watcher(watcher) %}
-scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
-    @Override
-    public Object getWatchValue(Scope<?> _scope) {
-        {{ watcher.getCodeForGetWatchValue() }}
-    }
-
-    @Override
-    public void onValueChanged(Object newValue, Object oldValue, Scope<?> _scope) {
-        {{ watcher.getCodeForOnValueChanged() }}
-    }
-});
-{% endmacro %}
-
 {# TODO: use underscores for all internal variables #}
