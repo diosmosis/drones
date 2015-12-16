@@ -40,9 +40,9 @@ public class LayoutBuilderWriter {
     @Inject
     public LayoutBuilderWriter(StyleProcessor styleProcessor, Interpolator interpolator, TypeInferer typeInferer,
                                IsolateDirectiveProcessor isolateDirectiveProcessor,
-                               ScopePropertyValueDeducer scopePropertyValueDeducer, FunctionSniffer functionSniffer) {
+                               ScopePropertyValueDeducer scopePropertyValueDeducer, FunctionSniffer functionSniffer,
+                               JtwigConfiguration jtwigConfig) {
         Loader.Resource resource = new ClasspathLoader.ClasspathResource("templates/LayoutBuilder.twig");
-        JtwigConfiguration jtwigConfig = JtwigConfigurationBuilder.newConfiguration().build();
         template = new JtwigTemplate(resource, jtwigConfig);
 
         this.styleProcessor = styleProcessor;

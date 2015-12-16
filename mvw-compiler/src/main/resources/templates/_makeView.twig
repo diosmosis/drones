@@ -88,7 +88,7 @@ return new ScopedViewFactory() {
         {{ macros.directive_hook(view, "afterViewCreated") }}
 
         {% for event in view.scopeDefinition.events %}
-        {{ macros.event(event) }}
+        {% render event %}{% endrender %}
         {% endfor %}
 
         {% for child in view.children %}

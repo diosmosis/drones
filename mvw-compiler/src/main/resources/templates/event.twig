@@ -1,0 +1,12 @@
+scope.on({{ event.getEventClass().getName() }}.class, new Listener<{{ event.getEventClass().getName() }}>() {
+    @Override
+    public boolean invoke({{ event.getEventClass().getName() }} event) {
+        try {
+            {{ event.getExpression() }};
+            scope.apply();
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException("Unexpected error when invoking event handler.", e);
+        }
+    }
+});

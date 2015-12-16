@@ -16,20 +16,4 @@ scope.watch(new {{ watcher.getWatcherClass().getName() }}() {
 });
 {% endmacro %}
 
-{% macro event(event) %}
-{#{% render event %}#}
-scope.on({{ event.eventClass.getName() }}.class, new Listener<{{ event.eventClass.getName() }}>() {
-    @Override
-    public boolean invoke({{ event.eventClass.getName() }} event) {
-        try {
-            {{ event.expression }};
-            scope.apply();
-            return true;
-        } catch (Exception e) {
-            throw new RuntimeException("Unexpected error when invoking event handler.", e);
-        }
-    }
-});
-{% endmacro %}
-
 {# TODO: use underscores for all internal variables #}

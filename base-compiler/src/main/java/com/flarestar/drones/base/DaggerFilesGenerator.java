@@ -67,19 +67,13 @@ public class DaggerFilesGenerator {
     }
 
     public void generateDaggerFilesFor(TypeElement activityClassElement) {
-        // generate ..ActivityModule.java file
-        ActivityModule module = new ActivityModule(activityClassElement);
-        try {
-            generator.renderClass(module);
-        } catch (IOException | JtwigException e) {
-            throw new RuntimeException(e);
-        }
-
-        // generate ..ActivityComponent.java file
         List<ScreenDroneSniffer.DroneInformation> drones = screenDroneSniffer.getDroneInformationList(activityClassElement);
 
+        ActivityModule module = new ActivityModule(activityClassElement);
         ActivityComponent component = new ActivityComponent(activityClassElement, module, drones);
+
         try {
+            generator.renderClass(module);
             generator.renderClass(component);
         } catch (IOException | JtwigException e) {
             throw new RuntimeException(e);
