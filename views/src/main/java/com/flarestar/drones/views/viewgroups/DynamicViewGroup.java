@@ -14,46 +14,6 @@ import java.util.List;
  */
 public abstract class DynamicViewGroup extends BaseDroneViewGroup {
 
-    protected class ChildViewCreatorIterator {
-        private Iterator<ViewFactory> childDefinitionIterator = DynamicViewGroup.this.childDefinitions.iterator();
-        private ViewFactory.Iterator current = null;
-
-        public ChildViewCreatorIterator() {
-            if (childDefinitionIterator.hasNext()) {
-                current = childDefinitionIterator.next().iterator(DynamicViewGroup.this);
-            }
-        }
-
-        public boolean atEnd() {
-            return (current == null || !current.hasNext()) && !childDefinitionIterator.hasNext();
-        }
-
-        public void next() {
-            if (current != null) {
-                current.next();
-            }
-
-            if (current == null || !current.hasNext()) {
-                while (true) {
-                    if (!childDefinitionIterator.hasNext()) {
-                        current = null;
-                        break;
-                    }
-
-                    current = childDefinitionIterator.next().iterator(DynamicViewGroup.this);
-
-                    if (current.hasNext()) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        public View makeView() {
-            return current.makeView();
-        }
-    }
-
     /**
      * TODO
      */
@@ -89,14 +49,8 @@ public abstract class DynamicViewGroup extends BaseDroneViewGroup {
     }
 
     public void createChildren() {
-        ChildViewCreatorIterator it = viewCreationIterator();
-        for (; !it.atEnd(); it.next()) {
-            View view = it.makeView();
-            addView(view);
+        for (ViewFactory factory : childDefinitions) {
+            factory.makeViews(this);
         }
-    }
-
-    protected ChildViewCreatorIterator viewCreationIterator() {
-        return new ChildViewCreatorIterator();
     }
 }

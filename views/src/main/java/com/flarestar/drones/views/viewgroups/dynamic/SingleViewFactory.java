@@ -6,35 +6,11 @@ import com.flarestar.drones.views.ViewFactory;
 
 public abstract class SingleViewFactory implements ViewFactory {
 
-    public class Iterator implements ViewFactory.Iterator {
-        private boolean created = false;
-
-        @Override
-        public boolean hasNext() {
-            return !created;
-        }
-
-        @Override
-        public void next() {
-            // empty
-        }
-
-        @Override
-        public View makeView() {
-            if (created) {
-                throw new IllegalStateException("view has already been created");
-            }
-
-            created = true;
-
-            return SingleViewFactory.this.makeView();
-        }
-    }
-
     public abstract View makeView();
 
     @Override
-    public ViewFactory.Iterator iterator(ViewGroup parent) {
-        return new Iterator();
+    public void makeViews(ViewGroup parent) {
+        View view = makeView();
+        parent.addView(view);
     }
 }

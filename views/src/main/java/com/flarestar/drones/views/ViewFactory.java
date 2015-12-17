@@ -6,13 +6,6 @@ import android.view.ViewGroup;
 // TODO: ViewFactory is not a very accurate name
 public interface ViewFactory {
 
-    interface Iterator {
-        boolean hasNext();
+    void makeViews(ViewGroup parent);
 
-        void next();
-
-        View makeView();
-    }
-
-    ViewFactory.Iterator iterator(ViewGroup parent);
 }
