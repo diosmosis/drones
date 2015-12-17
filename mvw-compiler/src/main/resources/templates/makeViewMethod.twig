@@ -1,0 +1,29 @@
+{% if method.isRootDirectiveMethod() %}
+private <P extends Scope<?> & DirectiveScope_{{ method.getDirective().getDirectiveName() }}> {{ method.getResultType() }} makeDirectiveView_{{ method.getDirective().getDirectiveName() }}(final BaseScreen _screen, final DynamicViewGroup _parentView, final P _parentNodeScope
+{% for property in method.getDirective().boundProperties() %}, final {{ property.type }} _{{ property.name }}{% endfor %}) {
+{% else %}
+private {{ method.getResultType() }} makeView_{{ method.getView().id }}(final BaseScreen _screen{% if method.getView().parent != null %}, final DynamicViewGroup _parentView, final {{ method.getView().parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+{% endif %}
+    {% if method.getView().parent != null %}
+    final {{ method.getParentViewScope().getScopeClassName() }} scope = _parentNodeScope;
+    {% render method.getParentScopeLocals() %}{% endrender %}
+    {% endif %}
+
+    {% if method.hasViewFactory() %}
+    final ViewFactory _viewFactory = {% render method.getViewFactory() %}{% endrender %};
+
+    {% for viewDirective in method.getView().directives %}
+    {% for watcher in viewDirective.watchers %}
+    {% if watcher.isOnParentScope() %}{% render watcher %}{% endrender %}{% endif %}
+    {% endfor %}
+    {% endfor %}
+
+    return _viewFactory;
+    {% else %}
+    {% render method.getViewFactory() %}{% endrender %}
+    {% endif %}
+}
+
+{% for childMakeViewMethod in method.getChildrenMakeViewMethods() %}
+{% render childMakeViewMethod %}{% endrender %}
+{% endfor %}

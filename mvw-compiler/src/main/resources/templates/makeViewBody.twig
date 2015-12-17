@@ -1,0 +1,45 @@
+return new ScopedViewFactory() {
+    @Override
+    public View make() {
+        {% render body.getViewCreationCode() %}{% endrender %}
+
+        {% if body.hasOwnScope() %}
+        {% render body.getScopeCreationCode() %}{% endrender %}
+        {% endif %}
+
+        {% if body.isViewScopeView(typeInferer) %}
+        ((BaseDroneViewGroup)result).setScope(scope);
+        {% endif %}
+
+        {% if body.getView().text != null and not body.getView().text.isEmpty() %}result.setText({{ interpolator.interpolate(body.getView().text) }});{% endif %}
+        {{ styleProcessor.process(body.getView()) }}
+
+        {% for event in body.getView().scopeDefinition.events %}
+        {% render event %}{% endrender %}
+        {% endfor %}
+
+        {% for child in body.getView().children %}result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
+        {% endfor %}
+
+        {% if body.hasTransclude() %}
+        if (_toTransclude != null) {
+            for (ViewFactory child : _toTransclude) {
+                result.addChildDefinition(child);
+            }
+
+            _toTransclude = null;
+        }
+        {% endif %}
+        {% if typeInferer.isDynamicViewGroup(body.getView()) %}result.createChildren();{% endif %}
+
+        {% for viewDirective in body.getView().directives %}
+        {% for watcher in viewDirective.watchers %}
+        {% if not watcher.isOnParentScope() %}{% render watcher %}{% endrender %}{% endif %}
+        {% endfor %}
+        {% endfor %}
+
+        {{ macros.directive_hook(view, "beforeReturnResult") }}
+
+        return result;
+    }
+}.make();

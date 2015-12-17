@@ -1,4 +1,4 @@
-package com.flarestar.drones.mvw.view.scope;
+package com.flarestar.drones.mvw.renderables.scope;
 
 import com.flarestar.drones.base.generation.Renderable;
 import com.flarestar.drones.views.scope.Watcher;

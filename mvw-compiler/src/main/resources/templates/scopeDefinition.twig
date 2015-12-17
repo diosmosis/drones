@@ -1,0 +1,74 @@
+{% if not scope.getDefinition().owner.isDirectiveRoot %}
+public class {{ scope.getDefinition().getScopeClassName() }} extends Scope<{% if scope.getDefinition().getParentScope() != null %}{{ scope.getDefinition().getParentScope().getScopeClassName() }}{% else %}Scope{% endif %}>{% if scope.getDefinition().owner.hasIsolateDirective() %} implements DirectiveScope_{{ scope.getDefinition().owner.isolateDirective.getDirectiveName() }}{% endif %} {
+{% else %}
+public class {{ scope.getDefinition().getScopeClassName() }}<P extends Scope & DirectiveScope_{{ scope.getDefinition().owner.isolateDirective.getDirectiveName() }}> extends Scope<P> {
+{% endif %}
+    {% for property in scope.getDefinition().ownProperties() %}
+    public {{ property.type }} {{ property.name }};
+    {% endfor %}
+
+    {% if scope.getDefinition().getParentScope() == null and not scope.getDefinition().owner.isDirectiveRoot %}
+    public {{ scope.getDefinition().getScopeClassName() }}(Handler handler, View owner) {
+        super(handler, owner);
+    {% else %}
+    public {{ scope.getDefinition().getScopeClassName() }}(Handler handler, View owner, {% if scope.getDefinition().owner.isDirectiveRoot %}P{% else %}{{ scope.getDefinition().getParentScope().getScopeClassName() }}{% endif %} parent) {
+        super(handler, owner, parent);
+    {% endif %}
+
+        final {{ scope.getDefinition().getScopeClassName() }} _self = this;
+
+        {% for property in scope.getDefinition().inheritedProperties() %}
+        final {{ property.type }} {{ property.name }} = _parent.{{ property.name }};
+        {% endfor %}
+
+        {% for property in scope.getDefinition().ownProperties() %}
+        {% if property.canInitializeInScopeConstructor(scope.getDefinition().owner.isDirectiveRoot) %}
+        {% set initialValue = scopePropertyValueDeducer.getInitialValueExpression(property, null) %}
+
+        {% if initialValue != null %}
+        this.{{ property.name }} = {{ initialValue }};
+        {% endif %}
+        {% endif %}
+        {% if property.hasBidirectionalBinding() %}
+        watch(new Watcher() { // bidirectional binding watch
+            @Override
+            public Object getWatchValue(Scope<?> _scope) {
+                final {{ property.type }} _parentValue = _parent.get_{{ property.name }}();
+
+                // if parent value != new value, set parent value
+                if (_self.{{ property.name }} == _parentValue) {
+                    return _parentValue;
+                }
+
+                if (_parentValue != lastValue) { // parent value has changed, sync w/ this value
+                    _self.{{ property.name }} = _parentValue;
+                } else { // current scope value changed, sync w/ parent
+                    _parent.set_{{ property.name }}(_self.{{ property.name }});
+                }
+
+                return _parentValue;
+            }
+        });
+        {% endif %}
+
+        {% endfor %}
+    }
+
+    {% if scope.getDefinition().owner.hasIsolateDirective() and not scope.getDefinition().owner.isDirectiveRoot %}
+
+    {% for property in scope.getDefinition().owner.isolateDirective.getScopeProperties() %}
+    {% if property.hasBidirectionalBinding() %}
+    @Override
+    public {{ property.type }} get_{{ property.name }}() {
+        return this.{{ property.name }};
+    }
+
+    @Override
+    public void set_{{ property.name }}({{ property.type }} value) {
+        this.{{ property.name }} = value;
+    }
+    {% endif %}
+    {% endfor %}
+
+    {% endif %}
+}

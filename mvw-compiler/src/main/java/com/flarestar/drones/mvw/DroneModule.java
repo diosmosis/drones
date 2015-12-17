@@ -3,6 +3,7 @@ package com.flarestar.drones.mvw;
 import com.asual.lesscss.LessEngine;
 import com.flarestar.drones.base.generation.jtwig.RenderAddon;
 import com.flarestar.drones.base.generation.jtwig.SymbolsHack;
+import com.flarestar.drones.mvw.writer.Generator;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.helger.css.ECSSVersion;
@@ -29,6 +30,7 @@ public class DroneModule extends AbstractModule {
         bind(RoundEnvironment.class).toInstance(roundEnvironment);
         bind(CSSWriterSettings.class).toInstance(new CSSWriterSettings(ECSSVersion.CSS30));
         bind(LessEngine.class).toInstance(new LessEngine());
+        bind(com.flarestar.drones.base.generation.Generator.class).to(Generator.class);
     }
 
     // TODO: code redundancy w/ base-compiler DroneModule

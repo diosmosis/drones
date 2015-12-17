@@ -65,7 +65,9 @@ public class RenderAddon extends Addon {
             try {
                 generator.render(renderContext, renderable);
             } catch (JtwigException | IOException e) {
-                throw new RenderException(e);
+                throw new RenderException("Failed to render " + renderable.getClass().getName() + ": " + e.getMessage());
+            } catch (RuntimeException e) {
+                throw new RuntimeException("Failed to render " + renderable.getClass().getName(), e);
             }
         }
     }
@@ -100,7 +102,7 @@ public class RenderAddon extends Addon {
     public Rule startRule() {
         return mandatory(
             Sequence(
-                expressionParser().variable(),
+                expressionParser().expression(),
                 push(new Model(currentPosition(), expressionParser().pop()))
             ),
             new ParseException("render tag must have renderable variable")

@@ -1,5 +1,0 @@
-{% macro directive_hook(view, hookName) %}
-{% for directive in view.directives %}{{ directive.getHookCode(hookName, view) }}{% endfor %}
-{% endmacro %}
-
-{# TODO: use underscores for all internal variables #}

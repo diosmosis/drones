@@ -5,10 +5,11 @@ import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.annotations.directive.*;
 import com.flarestar.drones.mvw.directives.Controller;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
-import com.flarestar.drones.mvw.view.scope.Event;
+import com.flarestar.drones.mvw.renderables.scope.ScopeEventListener;
 import com.flarestar.drones.mvw.view.scope.Property;
-import com.flarestar.drones.mvw.view.scope.WatcherDefinition;
+import com.flarestar.drones.mvw.renderables.scope.WatcherDefinition;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -30,8 +31,9 @@ public abstract class Directive {
 
     protected final GenerationContext context;
     protected final List<Property> properties = new ArrayList<>();
-    protected final List<Event> events = new ArrayList<>();
+    protected final List<ScopeEventListener> events = new ArrayList<>();
     protected final List<WatcherDefinition> watchers = new ArrayList<>();
+    protected final List<ViewProperty> viewProperties = new ArrayList<>();
 
     @Inject
     protected TypeInferer typeInferer;
@@ -60,7 +62,7 @@ public abstract class Directive {
         return watchers;
     }
 
-    public List<Event> getEvents() {
+    public List<ScopeEventListener> getEvents() {
         return events;
     }
 
@@ -82,38 +84,6 @@ public abstract class Directive {
     public boolean isDynamic() {
         DynamicDirective annotation = getClass().getAnnotation(DynamicDirective.class);
         return annotation != null;
-    }
-
-    public String afterViewCreated(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
-    public String beforeScopeCreated(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
-    public String beforeViewCreated(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
-    public String afterChildrenAdded(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
-    public String beforeReturnResult(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
-    public String beginViewFactory(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
-    public String endViewFactory(ViewNode node) throws LayoutFileException {
-        return "";
-    }
-
-    public String onCreatedNewScope(ViewNode node) throws LayoutFileException {
-        return "";
     }
 
     public void manipulateViewNode(ViewNode viewNode) throws LayoutFileException {
@@ -198,5 +168,13 @@ public abstract class Directive {
                 iterator.remove();
             }
         }
+    }
+
+    public ViewFactory getViewFactoryToUse(ViewNode view, Directive directiveRoot) {
+        return null;
+    }
+
+    public List<ViewProperty> getViewProperties() {
+        return viewProperties;
     }
 }

@@ -7,7 +7,7 @@ import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.matchers.AttributeMatcher;
-import com.flarestar.drones.mvw.view.scope.Event;
+import com.flarestar.drones.mvw.renderables.scope.ScopeEventListener;
 
 /**
  * TODO
@@ -22,7 +22,7 @@ public class Click extends Directive {
 
     @Override
     public void manipulateViewNode(ViewNode node) throws LayoutFileException {
-        events.add(new Event(com.flarestar.drones.views.scope.events.Click.class, node.attributes.get("ng-click")));
+        events.add(new ScopeEventListener(com.flarestar.drones.views.scope.events.Click.class, node.attributes.get("ng-click")));
     }
 
     @Override

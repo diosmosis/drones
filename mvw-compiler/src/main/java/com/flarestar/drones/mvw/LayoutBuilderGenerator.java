@@ -7,6 +7,7 @@ import com.flarestar.drones.mvw.compilerutilities.ProjectSniffer;
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.context.GenerationContext;
+import com.flarestar.drones.mvw.function.exceptions.InvalidUserFunctionClass;
 import com.flarestar.drones.mvw.parser.IsolateDirectiveProcessor;
 import com.flarestar.drones.mvw.parser.LayoutProcessor;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
@@ -15,6 +16,7 @@ import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.writer.LayoutBuilderWriter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import org.jtwig.exception.JtwigException;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
@@ -142,17 +144,10 @@ public class LayoutBuilderGenerator {
             }
         });
 
-        JavaFileObject newObject;
         try {
-            newObject = processingEnvironment.getFiler().createSourceFile(layoutBuilderClassName);
-        } catch (IOException e) {
+            layoutBuilderWriter.writeLayoutBuilder(context, tree);
+        } catch (LayoutFileException | InvalidUserFunctionClass | IOException | JtwigException e) {
             throw new RuntimeException("Failed to generate LayoutBuilder for '" + screenClassName + "'.", e);
-        }
-
-        try (OutputStream output = newObject.openOutputStream()) {
-            layoutBuilderWriter.writeLayoutBuilder(context, tree, output);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate LayoutBuilder for '"+ screenClassName + "'.", e);
         }
     }
 }

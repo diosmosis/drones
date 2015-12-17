@@ -10,6 +10,7 @@ import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.parser.exceptions.MissingLayoutAttributeValue;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.view.ViewProperty;
 import com.flarestar.drones.mvw.view.attributeprocessors.Helper;
 import com.flarestar.drones.mvw.view.directive.matchers.TagMatcher;
 
@@ -22,7 +23,7 @@ public class Img extends Directive {
     }
 
     @Override
-    public String afterViewCreated(ViewNode node) throws LayoutFileException {
+    public void manipulateViewNode(ViewNode node) throws LayoutFileException {
         String attributeValue = node.attributes.get("src");
         if (attributeValue == null) {
             throw new MissingLayoutAttributeValue("src");
@@ -33,6 +34,6 @@ public class Img extends Directive {
             throw new InvalidLayoutAttributeValue("Invalid resource URI: " + attributeValue);
         }
 
-        return "result.setImageResource(" + resourceCode + ");\n";
+        viewProperties.add(new ViewProperty("setImageResource", resourceCode));
     }
 }

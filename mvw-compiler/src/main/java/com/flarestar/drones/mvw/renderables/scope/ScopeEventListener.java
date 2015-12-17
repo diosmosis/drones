@@ -1,13 +1,13 @@
-package com.flarestar.drones.mvw.view.scope;
+package com.flarestar.drones.mvw.renderables.scope;
 
 import com.flarestar.drones.base.generation.Renderable;
 
-public class Event implements Renderable {
+public class ScopeEventListener implements Renderable {
 
     private final Class<? extends com.flarestar.drones.views.scope.Event> eventClass;
     private final String expression;
 
-    public Event(Class<? extends com.flarestar.drones.views.scope.Event> eventClass, String expression) {
+    public ScopeEventListener(Class<? extends com.flarestar.drones.views.scope.Event> eventClass, String expression) {
         this.eventClass = eventClass;
         this.expression = expression;
     }

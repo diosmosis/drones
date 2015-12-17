@@ -1,0 +1,10 @@
+{# TODO: here we set owner = parentView for the new scope; this may cause memory leaks, need to check #}
+{% render body.getScopeCreationCode() %}{% endrender %}
+
+{% if body.getView().hasTranscludeDirective() %}
+_toTransclude = new ViewFactory[]{
+    {% for child in body.getView().children %}makeView_{{ child.id }}(_screen, null, scope),
+    {% endfor %}};
+{% endif %}
+
+return makeDirectiveView_{{ body.getView().isolateDirective.getDirectiveName() }}(_screen, _parentView, scope{% for property in body.getView().isolateDirective.boundProperties() %}, {{ scopePropertyValueDeducer.getInitialValueExpression(property, body.getView()) }}{% endfor %});

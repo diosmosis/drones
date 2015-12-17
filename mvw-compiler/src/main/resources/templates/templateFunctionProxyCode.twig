@@ -1,0 +1,10 @@
+{% if proxy.getFunction().isInjected() %}
+@Inject
+{{ proxy.getFunction().getFunctionClassName() }} _function_{{ proxy.getFunction().getName() }};
+{% else %}
+{{ proxy.getFunction().getFunctionClassName() }} _function_{{ proxy.getFunction().getName() }} = new {{ proxy.getFunction().getFunctionClassName() }}();
+{% endif %}
+
+private {{ proxy.getFunction().getResultType() }} {{ proxy.getFunction().getName() }}({% for argument in proxy.getFunction().getParameters() %}{% if not loop.first %}, {% endif %}{{ argument.getType() }} {{ argument.getName() }}{% endfor %}) {
+    {% if proxy.getFunction().getResultType() != "void" %}return {% endif %}_function_{{ proxy.getFunction().getName() }}.invoke({% for argument in proxy.getFunction().getParameters() %}{% if not loop.first %}, {% endif %} {{ argument.getName() }}{% endfor %});
+}

@@ -1,0 +1,23 @@
+new RangeViewFactory<{{ factory.getValueType().toString() }}>() {
+    @Override
+    public Iterable<{{ factory.getValueType().toString() }}> getCollection() {
+        {{ factory.getGetCollectionCode() }}
+    }
+
+    @Override
+    public {{ factory.getValueType().toString() }} getItem(Scope<?> scope) {
+        {{ factory.getGetItemCode() }}
+    }
+
+    @Override
+    public void setScopeProperties(Scope<?> scope, int index) {
+        {{ factory.getSetScopePropertiesCode() }}
+    }
+
+    @Override
+    public View makeView(final {{ factory.getValueType().toString() }} _item, final int _index) {
+        final RangeViewFactory<{{ factory.getValueType().toString() }}> _viewFactory = this;
+
+        {% render factory.getMakeViewBody() %}{% endrender %}
+    }
+}

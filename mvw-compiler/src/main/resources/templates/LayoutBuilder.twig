@@ -1,6 +1,5 @@
-{% import "macros.twig" as macros %}
-{% set currentIsolateDirective = null %}
-package {{ package }};
+{# TODO: use underscores for all internal variables #}
+package {{ builder.getContext().getActivityPackage() }};
 
 import com.flarestar.drones.base.Drone;
 import com.flarestar.drones.base.BaseScreen;
@@ -23,67 +22,55 @@ import android.os.Handler;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.concurrent.Callable;
-import {{ applicationPackage }}.R;
+import {{ builder.getContext().getApplicationPackage() }}.R;
 
 @Singleton
-public class {{ className }} implements Drone, LayoutBuilder {
+public class {{ builder.getContext().getLayoutBuilderSimpleClassName() }} implements Drone, LayoutBuilder {
 
     private ViewFactory[] _toTransclude;
 
     @Inject
     ActivityRouter $location;
 
-    {% for property in injectedProperties %}
+    {% for property in builder.getInjectedProperties() %}
     @Inject
     {{ property.type }} {{ property.name }};
     {% endfor %}
 
-    {% for function in userFunctions %}
-    {% if function.isInjected() %}
-    @Inject
-    {{ function.getFunctionClassName() }} _function_{{ function.getName() }};
-    {% else %}
-    {{ function.getFunctionClassName() }} _function_{{ function.getName() }} = new {{ function.getFunctionClassName() }}();
-    {% endif %}
+    {% for directiveTree in builder.getIsolateDirectiveTrees() %}
+    {% render directiveTree.getScopeInterface() %}{% endrender %}
     {% endfor %}
 
-    {% for directive, directiveTree in isolateDirectiveTrees %}
-    {% include "_directiveScopeInterface.twig" with {'directive': directive} %}
-    {% endfor %}
-
-    {% for scope in scopeDefinitions %}
-    {% include "_scopeDefinition.twig" with {'scope': scope} %}
+    {% for definition in builder.getScopeDefinitions() %}
+    {% render definition %}{% endrender %}
     {% endfor %}
 
     private Handler _handler;
 
     @Inject
-    public {{ className }}() {
+    public {{ builder.getContext().getLayoutBuilderSimpleClassName() }}() {
         _handler = new Handler();
     }
 
     public void setUpDrone(final BaseScreen screen) {
-        if (!(screen instanceof {{ screenClassName }})) {
+        if (!(screen instanceof {{ builder.getContext().getActivityClassName }})) {
             return;
         }
 
-        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ rootView.id }}(screen);
+        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ builder.getRootView().id }}(screen);
         rootView.getScope().apply();
         screen.setContentView(rootView);
 
         _toTransclude = null;
     }
 
-    {% include "_makeView.twig" with {'view': rootView, 'directive': null} %}
+    {% render builder.getRootMakeViewMethod() %}{% endrender %}
 
-    {% for directive, directiveTree in isolateDirectiveTrees %}
-    {% set currentIsolateDirective = directive %}
-    {% include "_makeView.twig" with {'view': directiveTree, 'directive': directive} %}
+    {% for directiveTree in builder.getIsolateDirectiveTrees() %}
+    {% render directiveTree.getDirectiveMakeView() %}{% endrender %}
     {% endfor %}
 
-    {% for function in userFunctions %}
-    private {{ function.getResultType() }} {{ function.getName() }}({% for argument in function.getParameters() %}{% if not loop.first %}, {% endif %}{{ argument.getType() }} {{ argument.getName() }}{% endfor %}) {
-        {% if function.getResultType() != "void" %}return {% endif %}_function_{{ function.getName() }}.invoke({% for argument in function.getParameters() %}{% if not loop.first %}, {% endif %} {{ argument.getName() }}{% endfor %});
-    }
+    {% for function in builder.getUserFunctions() %}
+    {% render function %}{% endrender %}
     {% endfor %}
 }

@@ -41,7 +41,7 @@ public class Generator {
         output.write(renderedBytes);
     }
 
-    private JtwigModelMap getModel(Renderable renderable) {
+    protected JtwigModelMap getModel(Renderable renderable) {
         JtwigModelMap model = new JtwigModelMap();
         model.add(renderable.getModelAttribute(), renderable);
         return model;

@@ -1,12 +1,16 @@
 package com.flarestar.drones.mvw.view;
 
 import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
-import com.flarestar.drones.mvw.parser.exceptions.ControllerInDirectiveTemplateNotAllowed;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.parser.exceptions.NoViewClassForNode;
+import com.flarestar.drones.mvw.renderables.makeview.DirectiveMakeViewBody;
+import com.flarestar.drones.mvw.renderables.makeview.MakeViewBody;
+import com.flarestar.drones.mvw.renderables.viewfactory.SingleViewFactory;
+import com.flarestar.drones.mvw.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +19,7 @@ import java.util.Map;
  * TODO
  */
 public class ViewNode {
+
     public interface Visitor {
         void visit(ViewNode node);
     }
@@ -33,6 +38,7 @@ public class ViewNode {
     private String viewClass;
     private Boolean hasDynamicDirective = null;
     public final Directive isolateDirective;
+    private ViewFactory viewFactoryRenderable;
 
     public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
                     Map<String, String> styles, List<Directive> directives, boolean isDirectiveRoot)
@@ -121,6 +127,36 @@ public class ViewNode {
         return attributes.containsKey("ng-transclude");
     }
 
+    // TODO: this method shouldn't throw LayoutFileException
+    public ViewFactory getViewFactoryRenderable(@Nullable Directive directiveRoot) throws LayoutFileException {
+        if (viewFactoryRenderable == null) {
+            viewFactoryRenderable = createViewFactoryRenderable(this, directiveRoot);
+
+            if (viewFactoryRenderable == null) {
+                viewFactoryRenderable = new SingleViewFactory(this.createMakeViewBodyRenderable(directiveRoot, null));
+            }
+        }
+        return viewFactoryRenderable;
+    }
+
+    private ViewFactory createViewFactoryRenderable(ViewNode viewNode, Directive directiveRoot) throws LayoutFileException {
+        ViewFactory renderable = null;
+
+        for (Directive directive : directives) {
+            ViewFactory renderableFromDirective = directive.getViewFactoryToUse(viewNode, directiveRoot);
+            if (renderableFromDirective != null) {
+                if (renderable != null) {
+                    throw new LayoutFileException("Multiple view factory types defined by directives on <" + tagName
+                        + " id='" + id + "'>.");
+                }
+
+                renderable = renderableFromDirective;
+            }
+        }
+
+        return renderable;
+    }
+
     private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {
         String viewClass = null;
 
@@ -143,6 +179,15 @@ public class ViewNode {
 
         return viewClass;
     }
+
+    public MakeViewBody createMakeViewBodyRenderable(Directive directiveRoot, String afterScopeCreatedCode) {
+        if (hasIsolateDirective() && parent != null) {
+            return new DirectiveMakeViewBody(this, directiveRoot, afterScopeCreatedCode);
+        } else {
+            return new MakeViewBody(this, directiveRoot, afterScopeCreatedCode);
+        }
+    }
 }
+
 
 // TODO: all node types should have an associated directive w/ tagmatcher, so if no directive found for a tag, should throw

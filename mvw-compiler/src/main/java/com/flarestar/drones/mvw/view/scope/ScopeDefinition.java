@@ -2,6 +2,7 @@ package com.flarestar.drones.mvw.view.scope;
 
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.parser.exceptions.ScopePropertyAlreadyDefined;
+import com.flarestar.drones.mvw.renderables.scope.ScopeEventListener;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.google.common.base.Predicate;
@@ -24,7 +25,7 @@ public class ScopeDefinition {
     private final Map<String, Property> inheritedProperties;
 
     // TODO: when calling apply() after an event, need to make sure only one apply ends up being scheduled
-    public final List<Event> events = new ArrayList<>();
+    public final List<ScopeEventListener> events = new ArrayList<>();
 
     public ScopeDefinition(ViewNode node, boolean isIsolateScope) throws LayoutFileException {
         this.properties = new HashMap<>();
@@ -73,7 +74,7 @@ public class ScopeDefinition {
 
     private void setScopeEvents(ViewNode node) {
         for (Directive directive : node.directives) {
-            for (Event event : directive.getEvents()) {
+            for (ScopeEventListener event : directive.getEvents()) {
                 events.add(event);
             }
         }
