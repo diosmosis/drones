@@ -1,4 +1,4 @@
-return new ScopedViewFactory() {
+return new ScopedViewFactory() { {# TODO: it is probably not required to create ScopedViewFactory's, should try to remove #}
     @Override
     public View make() {
         {% render body.getViewCreationCode() %}{% endrender %}

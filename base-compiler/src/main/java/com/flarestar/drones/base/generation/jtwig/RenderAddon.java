@@ -62,12 +62,16 @@ public class RenderAddon extends Addon {
             com.flarestar.drones.base.generation.Renderable renderable =
                 (com.flarestar.drones.base.generation.Renderable)value;
 
+            IndentAwareOutputStream stream = (IndentAwareOutputStream)renderContext.renderStream().getOuputStream();
             try {
+                stream.pushIndent();
                 generator.render(renderContext, renderable);
             } catch (JtwigException | IOException e) {
                 throw new RenderException("Failed to render " + renderable.getClass().getName() + ": " + e.getMessage());
             } catch (RuntimeException e) {
                 throw new RuntimeException("Failed to render " + renderable.getClass().getName(), e);
+            } finally {
+                stream.popIndent();
             }
         }
     }

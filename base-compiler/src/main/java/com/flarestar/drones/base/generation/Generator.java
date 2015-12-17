@@ -1,18 +1,23 @@
 package com.flarestar.drones.base.generation;
 
+import com.flarestar.drones.base.generation.jtwig.IndentAwareOutputStream;
 import com.flarestar.drones.base.renderables.ActivityModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.jtwig.JtwigModelMap;
 import org.jtwig.JtwigTemplate;
 import org.jtwig.configuration.JtwigConfiguration;
+import org.jtwig.exception.CompileException;
 import org.jtwig.exception.JtwigException;
+import org.jtwig.exception.ParseException;
+import org.jtwig.exception.ResourceException;
 import org.jtwig.loader.Loader;
 import org.jtwig.loader.impl.ClasspathLoader;
 import org.jtwig.render.RenderContext;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaFileObject;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
@@ -32,8 +37,7 @@ public class Generator {
     }
 
     public void render(RenderContext renderContext, Renderable renderable) throws JtwigException, IOException {
-        byte[] renderedBytes = renderTemplate(renderable);
-        renderContext.write(renderedBytes);
+        renderTemplate(renderable, renderContext.renderStream().getOuputStream());
     }
 
     public void render(Renderable renderable, OutputStream output) throws JtwigException, IOException {
@@ -68,9 +72,23 @@ public class Generator {
         JtwigTemplate template = getTemplate(renderable);
         JtwigModelMap model = getModel(renderable);
 
-        String rendered = template.render(model);
+        String rendered = renderTemplate(template, model);
         rendered = rendered.replaceAll("\\n[\\s\\n]+\\n", "\n\n");
 
         return rendered.getBytes(Charset.forName("UTF-8"));
+    }
+
+    private String renderTemplate(JtwigTemplate template, JtwigModelMap model)
+            throws JtwigException {
+        ByteArrayOutputStream output = new IndentAwareOutputStream();
+        template.render(model, output);
+        return output.toString();
+    }
+
+    private void renderTemplate(Renderable renderable, OutputStream outputStream) throws JtwigException {
+        JtwigTemplate template = getTemplate(renderable);
+        JtwigModelMap model = getModel(renderable);
+
+        template.render(model, outputStream);
     }
 }
