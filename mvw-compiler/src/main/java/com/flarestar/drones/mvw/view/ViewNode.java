@@ -1,9 +1,9 @@
 package com.flarestar.drones.mvw.view;
 
 import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
-import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
-import com.flarestar.drones.mvw.parser.exceptions.MultipleViewClassesException;
-import com.flarestar.drones.mvw.parser.exceptions.NoViewClassForNode;
+import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.processing.parser.exceptions.MultipleViewClassesException;
+import com.flarestar.drones.mvw.processing.parser.exceptions.NoViewClassForNode;
 import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
 import org.jsoup.nodes.Element;
 
@@ -32,8 +32,8 @@ public class ViewNode {
     private String viewClass;
     public final Directive isolateDirective;
 
-    public ViewNode(Element element, ViewNode parent,
-                    Map<String, String> styles, List<Directive> directives, boolean isDirectiveRoot)
+    public ViewNode(Element element, ViewNode parent, Map<String, String> styles, List<Directive> directives,
+                    boolean isDirectiveRoot)
             throws LayoutFileException {
         this.element = element;
 

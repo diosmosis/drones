@@ -3,7 +3,7 @@ package com.flarestar.drones.mvw;
 import com.asual.lesscss.LessEngine;
 import com.flarestar.drones.base.generation.jtwig.RenderAddon;
 import com.flarestar.drones.base.generation.jtwig.SymbolsHack;
-import com.flarestar.drones.mvw.writer.Generator;
+import com.flarestar.drones.mvw.processing.writer.Generator;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.helger.css.ECSSVersion;

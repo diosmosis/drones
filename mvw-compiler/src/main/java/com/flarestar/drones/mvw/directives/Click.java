@@ -3,11 +3,11 @@ package com.flarestar.drones.mvw.directives;
 import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.mvw.annotations.directive.DirectiveName;
-import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.matchers.AttributeMatcher;
-import com.flarestar.drones.mvw.renderables.scope.ScopeEventListener;
+import com.flarestar.drones.mvw.processing.renderables.scope.ScopeEventListener;
 
 /**
  * TODO

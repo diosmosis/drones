@@ -1,8 +1,7 @@
 package com.flarestar.drones.mvw.view.directive;
 
 import com.flarestar.drones.mvw.context.GenerationContext;
-import com.flarestar.drones.mvw.directives.Controller;
-import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
 import com.flarestar.drones.mvw.view.directive.matchers.AttributeMatcher;
@@ -22,7 +21,6 @@ import org.reflections.scanners.ResourcesScanner;
 import org.reflections.scanners.SubTypesScanner;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;

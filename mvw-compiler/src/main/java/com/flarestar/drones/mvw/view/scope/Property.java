@@ -1,6 +1,6 @@
 package com.flarestar.drones.mvw.view.scope;
 
-import com.flarestar.drones.mvw.parser.exceptions.InvalidPropertyDescriptor;
+import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidPropertyDescriptor;
 import com.flarestar.drones.mvw.view.Directive;
 
 import java.util.regex.Matcher;

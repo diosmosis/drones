@@ -1,6 +1,6 @@
 package com.flarestar.drones.mvw.view.styleprocessors;
 
-import com.flarestar.drones.mvw.parser.exceptions.InvalidStyleValue;
+import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidStyleValue;
 import com.flarestar.drones.mvw.view.Style;
 import com.flarestar.drones.mvw.view.ViewNode;
 
