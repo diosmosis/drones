@@ -1,11 +1,9 @@
 package com.flarestar.drones.mvw.processing.renderables.makeview;
 
 import com.flarestar.drones.base.generation.Renderable;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
-import com.flarestar.drones.mvw.view.ViewProperty;
+import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.model.ViewProperty;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

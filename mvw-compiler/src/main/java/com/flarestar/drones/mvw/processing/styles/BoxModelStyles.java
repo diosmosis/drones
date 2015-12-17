@@ -1,9 +1,9 @@
-package com.flarestar.drones.mvw.view.styles;
+package com.flarestar.drones.mvw.processing.styles;
 
 import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidStyleValue;
-import com.flarestar.drones.mvw.view.Style;
-import com.flarestar.drones.mvw.view.ViewNode;
-import com.flarestar.drones.mvw.view.ViewProperty;
+import com.flarestar.drones.mvw.processing.Style;
+import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.model.ViewProperty;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

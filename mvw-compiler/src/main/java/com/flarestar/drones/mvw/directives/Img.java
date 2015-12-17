@@ -8,10 +8,10 @@ import com.flarestar.drones.mvw.annotations.directive.DirectiveView;
 import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidLayoutAttributeValue;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.parser.exceptions.MissingLayoutAttributeValue;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
-import com.flarestar.drones.mvw.view.ViewProperty;
-import com.flarestar.drones.mvw.view.directive.matchers.TagMatcher;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.model.ViewProperty;
+import com.flarestar.drones.mvw.processing.parser.directive.matchers.TagMatcher;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

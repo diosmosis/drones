@@ -5,8 +5,8 @@ import com.flarestar.drones.mvw.annotations.directive.DirectiveMatcher;
 import com.flarestar.drones.mvw.annotations.directive.DirectiveName;
 import com.flarestar.drones.mvw.annotations.directive.DirectiveView;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.directive.matchers.TagMatcher;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.processing.parser.directive.matchers.TagMatcher;
 
 @DirectiveName("row")
 @DirectiveView(view = com.flarestar.drones.views.viewgroups.Row.class)

@@ -1,12 +1,12 @@
-package com.flarestar.drones.mvw.view.directive;
+package com.flarestar.drones.mvw.processing.parser.directive;
 
 import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
-import com.flarestar.drones.mvw.view.directive.matchers.AttributeMatcher;
-import com.flarestar.drones.mvw.view.directive.matchers.TagMatcher;
-import com.flarestar.drones.mvw.view.scope.Property;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.processing.parser.directive.exceptions.InvalidDirectiveClassException;
+import com.flarestar.drones.mvw.processing.parser.directive.matchers.AttributeMatcher;
+import com.flarestar.drones.mvw.processing.parser.directive.matchers.TagMatcher;
+import com.flarestar.drones.mvw.model.scope.Property;
 import com.google.common.base.Predicate;
 import com.google.inject.Inject;
 import com.google.inject.Injector;

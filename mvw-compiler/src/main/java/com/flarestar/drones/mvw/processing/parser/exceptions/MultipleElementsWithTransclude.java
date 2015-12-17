@@ -1,7 +1,7 @@
 package com.flarestar.drones.mvw.processing.parser.exceptions;
 
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.model.ViewNode;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package com.flarestar.drones.mvw.view;
+package com.flarestar.drones.mvw.model;
 
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
 import com.flarestar.drones.mvw.context.GenerationContext;
@@ -7,9 +7,9 @@ import com.flarestar.drones.mvw.directives.Controller;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.renderables.makeview.MakeViewBody;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
-import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
+import com.flarestar.drones.mvw.processing.parser.directive.exceptions.InvalidDirectiveClassException;
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeEventListener;
-import com.flarestar.drones.mvw.view.scope.Property;
+import com.flarestar.drones.mvw.model.scope.Property;
 import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;

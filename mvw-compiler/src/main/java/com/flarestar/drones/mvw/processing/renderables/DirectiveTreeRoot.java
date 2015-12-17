@@ -2,8 +2,8 @@ package com.flarestar.drones.mvw.processing.renderables;
 
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.renderables.makeview.MakeViewMethod;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.model.ViewNode;
 
 /**
  * TODO

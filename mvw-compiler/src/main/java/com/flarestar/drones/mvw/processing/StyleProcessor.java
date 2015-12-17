@@ -1,8 +1,9 @@
-package com.flarestar.drones.mvw.view;
+package com.flarestar.drones.mvw.processing;
 
 import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidStyleValue;
-import com.flarestar.drones.mvw.view.styles.BoxModelStyles;
-import com.flarestar.drones.mvw.view.styles.OverflowStyles;
+import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.processing.styles.BoxModelStyles;
+import com.flarestar.drones.mvw.processing.styles.OverflowStyles;
 import com.google.inject.Singleton;
 
 /**

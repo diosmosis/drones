@@ -7,9 +7,9 @@ import com.flarestar.drones.base.generation.Renderable;
  */
 public class ScopeDefinition implements Renderable {
 
-    private com.flarestar.drones.mvw.view.scope.ScopeDefinition definition;
+    private com.flarestar.drones.mvw.model.scope.ScopeDefinition definition;
 
-    public ScopeDefinition(com.flarestar.drones.mvw.view.scope.ScopeDefinition definition) {
+    public ScopeDefinition(com.flarestar.drones.mvw.model.scope.ScopeDefinition definition) {
         this.definition = definition;
     }
 
@@ -23,7 +23,7 @@ public class ScopeDefinition implements Renderable {
         return "scope";
     }
 
-    public com.flarestar.drones.mvw.view.scope.ScopeDefinition getDefinition() {
+    public com.flarestar.drones.mvw.model.scope.ScopeDefinition getDefinition() {
         return definition;
     }
 }

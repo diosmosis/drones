@@ -1,10 +1,10 @@
-package com.flarestar.drones.mvw.view.scope;
+package com.flarestar.drones.mvw.model.scope;
 
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.parser.exceptions.ScopePropertyAlreadyDefined;
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeEventListener;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.model.ViewNode;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 

@@ -1,6 +1,6 @@
-package com.flarestar.drones.mvw.view.visitors;
+package com.flarestar.drones.mvw.model.visitors;
 
-import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.model.ViewNode;
 
 /**
  * TODO

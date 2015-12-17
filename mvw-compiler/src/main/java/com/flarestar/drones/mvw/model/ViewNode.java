@@ -1,10 +1,10 @@
-package com.flarestar.drones.mvw.view;
+package com.flarestar.drones.mvw.model;
 
 import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.processing.parser.exceptions.NoViewClassForNode;
-import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
+import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;

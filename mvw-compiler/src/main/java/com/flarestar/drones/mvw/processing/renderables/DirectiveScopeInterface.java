@@ -1,7 +1,7 @@
 package com.flarestar.drones.mvw.processing.renderables;
 
 import com.flarestar.drones.base.generation.Renderable;
-import com.flarestar.drones.mvw.view.Directive;
+import com.flarestar.drones.mvw.model.Directive;
 
 /**
  * TODO

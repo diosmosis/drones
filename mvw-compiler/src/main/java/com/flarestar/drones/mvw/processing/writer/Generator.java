@@ -2,7 +2,7 @@ package com.flarestar.drones.mvw.processing.writer;
 
 import com.flarestar.drones.base.generation.Renderable;
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
-import com.flarestar.drones.mvw.view.StyleProcessor;
+import com.flarestar.drones.mvw.processing.StyleProcessor;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import org.jtwig.JtwigModelMap;

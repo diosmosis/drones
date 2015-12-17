@@ -6,7 +6,7 @@ import com.flarestar.drones.mvw.processing.parser.IsolateDirectiveProcessor;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.renderables.LayoutBuilder;
-import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.model.ViewNode;
 import com.google.inject.Inject;
 import org.jtwig.exception.JtwigException;
 

@@ -1,7 +1,7 @@
 package com.flarestar.drones.mvw.processing.renderables.scope;
 
 import com.flarestar.drones.base.generation.Renderable;
-import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
+import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
 
 /**
  * TODO

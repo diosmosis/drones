@@ -1,4 +1,4 @@
-package com.flarestar.drones.mvw.view.directive.exceptions;
+package com.flarestar.drones.mvw.processing.parser.directive.exceptions;
 
 public class InvalidDirectiveClassException extends RuntimeException {
     public InvalidDirectiveClassException(String message) {

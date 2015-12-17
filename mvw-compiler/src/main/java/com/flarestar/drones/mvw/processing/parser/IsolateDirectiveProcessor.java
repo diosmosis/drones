@@ -3,8 +3,8 @@ package com.flarestar.drones.mvw.processing.parser;
 import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.model.ViewNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 

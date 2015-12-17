@@ -1,10 +1,9 @@
 package com.flarestar.drones.mvw.compilerutilities;
 
-import com.flarestar.drones.mvw.annotations.Function;
 import com.flarestar.drones.mvw.compilerutilities.exceptions.*;
-import com.flarestar.drones.mvw.view.ViewNode;
-import com.flarestar.drones.mvw.view.scope.Property;
-import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
+import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.model.scope.Property;
+import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
 import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

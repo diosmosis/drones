@@ -1,4 +1,4 @@
-package com.flarestar.drones.mvw.view.directive;
+package com.flarestar.drones.mvw.processing.parser.directive;
 
 import org.jsoup.nodes.Element;
 

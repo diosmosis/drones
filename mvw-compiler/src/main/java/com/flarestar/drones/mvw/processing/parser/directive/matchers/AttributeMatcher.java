@@ -1,7 +1,7 @@
-package com.flarestar.drones.mvw.view.directive.matchers;
+package com.flarestar.drones.mvw.processing.parser.directive.matchers;
 
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.directive.DirectiveMatcher;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.processing.parser.directive.DirectiveMatcher;
 import org.jsoup.nodes.Element;
 
 /**

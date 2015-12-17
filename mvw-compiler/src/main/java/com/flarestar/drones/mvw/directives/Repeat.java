@@ -11,10 +11,10 @@ import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException
 import com.flarestar.drones.mvw.processing.renderables.makeview.MakeViewBody;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.RangeViewFactory;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
-import com.flarestar.drones.mvw.view.directive.matchers.AttributeMatcher;
-import com.flarestar.drones.mvw.view.scope.Property;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.processing.parser.directive.matchers.AttributeMatcher;
+import com.flarestar.drones.mvw.model.scope.Property;
 import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
 import com.flarestar.drones.views.scope.CollectionWatcher;
 

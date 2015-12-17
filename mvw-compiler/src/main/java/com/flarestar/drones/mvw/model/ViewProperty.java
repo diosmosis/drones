@@ -1,4 +1,4 @@
-package com.flarestar.drones.mvw.view;
+package com.flarestar.drones.mvw.model;
 
 import com.flarestar.drones.base.generation.Renderable;
 

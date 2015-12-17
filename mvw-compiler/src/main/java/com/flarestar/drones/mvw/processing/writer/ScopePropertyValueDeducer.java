@@ -1,8 +1,8 @@
 package com.flarestar.drones.mvw.processing.writer;
 
 import com.flarestar.drones.mvw.processing.parser.exceptions.MissingRequiredAttribute;
-import com.flarestar.drones.mvw.view.ViewNode;
-import com.flarestar.drones.mvw.view.scope.Property;
+import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.model.scope.Property;
 import com.google.inject.Inject;
 import org.json.JSONObject;
 

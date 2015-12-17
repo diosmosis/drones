@@ -1,7 +1,7 @@
 package com.flarestar.drones.mvw.compilerutilities;
 
 import com.flarestar.drones.mvw.compilerutilities.exceptions.*;
-import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
+import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;

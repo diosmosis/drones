@@ -3,8 +3,8 @@ package com.flarestar.drones.mvw.processing.renderables.makeview;
 import com.flarestar.drones.base.generation.Renderable;
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeCreationCode;
-import com.flarestar.drones.mvw.view.Directive;
-import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.model.Directive;
+import com.flarestar.drones.mvw.model.ViewNode;
 import com.flarestar.drones.views.viewgroups.BaseDroneViewGroup;
 
 /**

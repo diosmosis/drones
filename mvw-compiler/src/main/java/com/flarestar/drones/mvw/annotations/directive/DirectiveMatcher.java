@@ -9,5 +9,5 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DirectiveMatcher {
 
-    Class<? extends com.flarestar.drones.mvw.view.directive.DirectiveMatcher> value();
+    Class<? extends com.flarestar.drones.mvw.processing.parser.directive.DirectiveMatcher> value();
 }

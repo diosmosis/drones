@@ -1,4 +1,4 @@
-package com.flarestar.drones.mvw.view.scope;
+package com.flarestar.drones.mvw.model.scope;
 
 public class InheritedProperty extends Property {
     public final ScopeDefinition origin;
