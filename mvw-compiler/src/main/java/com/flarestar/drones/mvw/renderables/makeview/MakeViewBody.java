@@ -64,6 +64,11 @@ public class MakeViewBody implements Renderable {
         return view.hasScope();
     }
 
+    public boolean hasText() {
+        String text = view.element.ownText();
+        return text != null && !text.isEmpty();
+    }
+
     protected static ScopeCreationCode makeScopeCreationCode(ViewNode view, String afterScopeCreatedCode, Directive directiveRoot) {
         boolean isInMakeDirectiveMethod = view.parent == null && directiveRoot != null;
         return new ScopeCreationCode(view.scopeDefinition, isInMakeDirectiveMethod, view.hasIsolateDirective(),

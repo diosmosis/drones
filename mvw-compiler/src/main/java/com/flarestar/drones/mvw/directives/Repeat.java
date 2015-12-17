@@ -40,7 +40,7 @@ public class Repeat extends Directive {
 
     @Override
     public void manipulateViewNode(ViewNode node) throws LayoutFileException {
-        Matcher m = REPEAT_ATTRIBUTE_REGEX.matcher(node.attributes.get("ng-repeat"));
+        Matcher m = REPEAT_ATTRIBUTE_REGEX.matcher(node.element.attr("ng-repeat"));
         if (!m.matches()) {
             throw new InvalidLayoutAttributeValue(
                 "ng-repeat expects input like 'var in expr' where expr evaluates to an iterable.");

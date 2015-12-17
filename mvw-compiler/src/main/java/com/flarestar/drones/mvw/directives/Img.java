@@ -11,29 +11,43 @@ import com.flarestar.drones.mvw.parser.exceptions.MissingLayoutAttributeValue;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.ViewProperty;
-import com.flarestar.drones.mvw.view.attributeprocessors.Helper;
 import com.flarestar.drones.mvw.view.directive.matchers.TagMatcher;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @DirectiveName("img")
 @DirectiveView(view = ImageView.class)
 @DirectiveMatcher(TagMatcher.class)
 public class Img extends Directive {
+    private static Pattern resourceUriPattern = Pattern.compile("resource://([a-zA-Z0-9_]+)/([a-zA-Z0-9_]+)");
+
     public Img(GenerationContext context) throws LayoutFileException {
         super(context);
     }
 
     @Override
     public void manipulateViewNode(ViewNode node) throws LayoutFileException {
-        String attributeValue = node.attributes.get("src");
+        String attributeValue = node.element.attr("src");
         if (attributeValue == null) {
             throw new MissingLayoutAttributeValue("src");
         }
 
-        String resourceCode = Helper.getResourceCode(attributeValue);
+        String resourceCode = getResourceCode(attributeValue);
         if (resourceCode == null) {
             throw new InvalidLayoutAttributeValue("Invalid resource URI: " + attributeValue);
         }
 
         viewProperties.add(new ViewProperty("setImageResource", resourceCode));
+    }
+
+    public static String getResourceCode(String resourceUrl) {
+        Matcher m = resourceUriPattern.matcher(resourceUrl);
+        if (!m.matches()) {
+            return null;
+        }
+
+        String type = m.group(1), name = m.group(2);
+        return "R." + type + "." + name;
     }
 }

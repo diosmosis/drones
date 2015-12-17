@@ -22,7 +22,7 @@ public class Click extends Directive {
 
     @Override
     public void manipulateViewNode(ViewNode node) throws LayoutFileException {
-        events.add(new ScopeEventListener(com.flarestar.drones.views.scope.events.Click.class, node.attributes.get("ng-click")));
+        events.add(new ScopeEventListener(com.flarestar.drones.views.scope.events.Click.class, node.element.attr("ng-click")));
     }
 
     @Override

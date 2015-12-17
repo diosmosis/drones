@@ -105,7 +105,7 @@ public class Controller extends Directive {
     public void manipulateViewNode(ViewNode node) throws LayoutFileException {
         super.manipulateViewNode(node);
 
-        String attributeValue = node.attributes.get("ng-controller");
+        String attributeValue = node.element.attr("ng-controller");
 
         AttributeProcessor processor = new AttributeProcessor(context, this);
         AttributeProcessor.ParseResult result = processor.parse(attributeValue);

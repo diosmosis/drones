@@ -33,13 +33,13 @@ public class ScopePropertyValueDeducer {
             case PARENT_CHILD:
                 return property.initialValue;
             case RAW_ATTR_VALUE:
-                String value = node.attributes.get(property.initialValue);
+                String value = node.element.attr(property.initialValue);
                 value = interpolator.interpolate(value);
                 return JSONObject.quote(value);
             case EXPRESSION_VALUE:
-                return node.attributes.get(property.initialValue);
+                return node.element.attr(property.initialValue);
             case EXPRESSION_EVAL:
-                String code = node.attributes.get(property.initialValue);
+                String code = node.element.attr(property.initialValue);
                 if (code ==  null) {
                     return null;
                 }

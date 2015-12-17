@@ -6,11 +6,10 @@ import com.flarestar.drones.mvw.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.parser.exceptions.NoViewClassForNode;
 import com.flarestar.drones.mvw.renderables.makeview.DirectiveMakeViewBody;
 import com.flarestar.drones.mvw.renderables.makeview.MakeViewBody;
-import com.flarestar.drones.mvw.renderables.viewfactory.SingleViewFactory;
 import com.flarestar.drones.mvw.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
+import org.jsoup.nodes.Element;
 
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,11 +23,9 @@ public class ViewNode {
         void visit(ViewNode node);
     }
 
+    public final Element element;
     public final String id;
-    public final String text;
-    public final Map<String, String> attributes;
     public final Map<String, String> styles;
-    public final String tagName;
     public final List<Directive> directives;
     public final ViewNode parent;
     public final List<ViewNode> children = new ArrayList<>();
@@ -36,18 +33,18 @@ public class ViewNode {
     public final boolean isDirectiveRoot;
 
     private String viewClass;
-    private Boolean hasDynamicDirective = null;
     public final Directive isolateDirective;
     private ViewFactory viewFactoryRenderable;
 
-    public ViewNode(String tagName, String id, String text, ViewNode parent, Map<String, String> attributes,
+    public ViewNode(Element element, ViewNode parent,
                     Map<String, String> styles, List<Directive> directives, boolean isDirectiveRoot)
             throws LayoutFileException {
-        this.tagName = tagName;
-        this.id = id;
-        this.text = text;
+        this.element = element;
+
+        String id = element.attr("id");
+        this.id = (id == null || id.isEmpty()) ? ("view" + hashCode()) : id;
+
         this.parent = parent;
-        this.attributes = attributes;
         this.styles = styles;
         this.directives = directives;
         this.isDirectiveRoot = isDirectiveRoot;
@@ -103,19 +100,6 @@ public class ViewNode {
         return viewClass;
     }
 
-    public boolean hasDynamicDirective() {
-        if (hasDynamicDirective == null) {
-            hasDynamicDirective = false;
-            for (Directive directive : directives) {
-                if (directive.isDynamic()) {
-                    hasDynamicDirective = true;
-                    break;
-                }
-            }
-        }
-        return hasDynamicDirective;
-    }
-
     public void visit(Visitor visitor) {
         visitor.visit(this);
         for (ViewNode child : children) {
@@ -124,37 +108,7 @@ public class ViewNode {
     }
 
     public boolean hasTransclude() {
-        return attributes.containsKey("ng-transclude");
-    }
-
-    // TODO: this method shouldn't throw LayoutFileException
-    public ViewFactory getViewFactoryRenderable(@Nullable Directive directiveRoot) throws LayoutFileException {
-        if (viewFactoryRenderable == null) {
-            viewFactoryRenderable = createViewFactoryRenderable(this, directiveRoot);
-
-            if (viewFactoryRenderable == null) {
-                viewFactoryRenderable = new SingleViewFactory(this.createMakeViewBodyRenderable(directiveRoot, null));
-            }
-        }
-        return viewFactoryRenderable;
-    }
-
-    private ViewFactory createViewFactoryRenderable(ViewNode viewNode, Directive directiveRoot) throws LayoutFileException {
-        ViewFactory renderable = null;
-
-        for (Directive directive : directives) {
-            ViewFactory renderableFromDirective = directive.getViewFactoryToUse(viewNode, directiveRoot);
-            if (renderableFromDirective != null) {
-                if (renderable != null) {
-                    throw new LayoutFileException("Multiple view factory types defined by directives on <" + tagName
-                        + " id='" + id + "'>.");
-                }
-
-                renderable = renderableFromDirective;
-            }
-        }
-
-        return renderable;
+        return element.hasAttr("ng-transclude");
     }
 
     private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {
@@ -174,7 +128,7 @@ public class ViewNode {
         }
 
         if (viewClass == null && !hasIsolateDirective()) {
-            throw new NoViewClassForNode("Cannot find view class for node <" + tagName + " id = " + id + ">.");
+            throw new NoViewClassForNode("Cannot find view class for node <" + element.tagName() + " id = " + id + ">.");
         }
 
         return viewClass;

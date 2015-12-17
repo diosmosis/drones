@@ -11,7 +11,7 @@ return new ScopedViewFactory() { {# TODO: it is probably not required to create 
         ((BaseDroneViewGroup)result).setScope(scope);
         {% endif %}
 
-        {% if body.getView().text != null and not body.getView().text.isEmpty() %}result.setText({{ interpolator.interpolate(body.getView().text) }});{% endif %}
+        {% if body.hasText() %}result.setText({{ interpolator.interpolate(body.getView().element.ownText()) }});{% endif %}
         {{ styleProcessor.process(body.getView()) }}
 
         {% for event in body.getView().scopeDefinition.events %}

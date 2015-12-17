@@ -29,7 +29,6 @@ public class IndentAwareOutputStream extends ByteArrayOutputStream {
         spaceBuffer = initSpaceBuffer();
     }
 
-    // TODO: so how do we do this? not sure.
     @Override
     public synchronized void write(byte[] bytes, final int startOffset, final int length) {
         final int endOffset = startOffset + length;
@@ -118,11 +117,3 @@ public class IndentAwareOutputStream extends ByteArrayOutputStream {
         }
     }
 }
-/*
-- so instead, we keep track of the current indent here
-  - while there is still data
-    - if at line start, count indent until non space char, write spaces, then set atLineStart = false
-    - if not at line start (at this point), write chars until newline found (including newline), write current indent, then set atLineStart = true & currentIndent = 0
-- on {% render}, we push/pop
-
- */

@@ -4,6 +4,7 @@ import com.flarestar.drones.base.generation.Renderable;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.renderables.scope.ScopeLocals;
 import com.flarestar.drones.mvw.renderables.viewfactory.NullViewFactory;
+import com.flarestar.drones.mvw.renderables.viewfactory.SingleViewFactory;
 import com.flarestar.drones.mvw.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.view.Directive;
 import com.flarestar.drones.mvw.view.ViewNode;
@@ -29,13 +30,7 @@ public class MakeViewMethod implements Renderable {
         this.view = view;
         this.directive = directiveRoot;
 
-        // if this is the root of a layout or directive tree, we use a NullViewFactory, since the method will return
-        // a View instead of a ViewFactory
-        if (view.parent == null) {
-            this.viewFactory = new NullViewFactory(new MakeViewBody(view, directiveRoot));
-        } else {
-            this.viewFactory = view.getViewFactoryRenderable(directiveRoot);
-        }
+        this.viewFactory = createViewFactoryRenderable();
 
         if (view.parent != null) {
             this.parentScopeLocals = new ScopeLocals(view.parent.scopeDefinition);
@@ -96,5 +91,34 @@ public class MakeViewMethod implements Renderable {
 
     public boolean isRootDirectiveMethod() {
         return directive != null && view.parent == null;
+    }
+
+    // TODO: shouldn't throw layout file exception here, should be done during parsing.
+    private ViewFactory createViewFactoryRenderable() throws LayoutFileException {
+        // if this is the root of a layout or directive tree, we use a NullViewFactory, since the method will return
+        // a View instead of a ViewFactory
+        if (view.parent == null) {
+            return new NullViewFactory(new MakeViewBody(view, directive));
+        }
+
+        ViewFactory result = null;
+
+        for (Directive viewDirective : view.directives) {
+            ViewFactory renderableFromDirective = viewDirective.getViewFactoryToUse(view, directive);
+            if (renderableFromDirective != null) {
+                if (result != null) {
+                    throw new LayoutFileException("Multiple view factory types defined by directives on <" + view.element.tagName()
+                        + " id='" + view.id + "'>.");
+                }
+
+                result = renderableFromDirective;
+            }
+        }
+
+        if (result == null) {
+            result = new SingleViewFactory(view.createMakeViewBodyRenderable(directive, null));
+        }
+
+        return result;
     }
 }

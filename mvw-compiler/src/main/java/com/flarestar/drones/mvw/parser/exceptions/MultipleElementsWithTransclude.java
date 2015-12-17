@@ -28,7 +28,7 @@ public class MultipleElementsWithTransclude extends LayoutFileException {
             }
 
             result.append("<");
-            result.append(node.tagName);
+            result.append(node.element.tagName());
             result.append(" id='");
             result.append(node.id);
             result.append("'>");

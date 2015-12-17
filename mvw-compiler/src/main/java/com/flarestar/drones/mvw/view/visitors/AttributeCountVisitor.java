@@ -11,7 +11,7 @@ public class AttributeCountVisitor implements ViewNode.Visitor {
 
     @Override
     public void visit(ViewNode node) {
-        if (node.attributes.get("ng-controller") != null) {
+        if (node.element.hasAttr("ng-controller")) {
             ++count;
         }
     }

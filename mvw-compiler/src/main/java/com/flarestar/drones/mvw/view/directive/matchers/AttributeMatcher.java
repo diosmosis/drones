@@ -11,6 +11,6 @@ public class AttributeMatcher implements DirectiveMatcher {
 
     @Override
     public boolean matches(Element node, Class<?> directiveClass) {
-        return node.attributes().hasKey(Directive.getDirectiveName(directiveClass));
+        return node.hasAttr(Directive.getDirectiveName(directiveClass));
     }
 }

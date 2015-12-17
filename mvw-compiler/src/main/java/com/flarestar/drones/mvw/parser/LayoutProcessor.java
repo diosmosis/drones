@@ -113,15 +113,6 @@ public class LayoutProcessor {
     private ViewNode makeViewNode(Element node, ViewNode parent, GenerationContext context,
                                   Table<Element, String, String> stylesByElement, Class<?> directiveClassToApply)
             throws LayoutFileException {
-        String tagName = node.tagName();
-
-        String id = node.attr("id");
-        if (id == null || id.isEmpty()) {
-            id = generateViewId();
-        }
-
-        String text = node.ownText();
-
         boolean isDirectiveRoot = false;
 
         List<Directive> directives = directiveFactory.detectDirectives(node, context);
@@ -132,18 +123,9 @@ public class LayoutProcessor {
             isDirectiveRoot = true;
         }
 
-        ViewNode viewNode = new ViewNode(tagName, id, text, parent, attributeMap(node), stylesByElement.row(node),
-            directives, isDirectiveRoot);
+        ViewNode viewNode = new ViewNode(node, parent, stylesByElement.row(node), directives, isDirectiveRoot);
         processNodeChildren(node, viewNode, context, stylesByElement);
         return viewNode;
-    }
-
-    private Map<String, String> attributeMap(Element node) {
-        Map<String, String> result = new HashMap<>();
-        for (Attribute attribute : node.attributes()) {
-            result.put(attribute.getKey(), attribute.getValue());
-        }
-        return result;
     }
 
     private String generateViewId() {
