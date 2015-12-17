@@ -7,6 +7,7 @@ import com.flarestar.drones.mvw.processing.parser.exceptions.ControllerInDirecti
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.parser.exceptions.MultipleElementsWithTransclude;
 import com.flarestar.drones.mvw.view.Directive;
+import com.flarestar.drones.mvw.view.StyleProcessor;
 import com.flarestar.drones.mvw.view.ViewNode;
 import com.flarestar.drones.mvw.view.directive.DirectiveFactory;
 import com.flarestar.drones.mvw.view.visitors.AttributeCountVisitor;
@@ -45,15 +46,17 @@ public class LayoutProcessor {
     private DirectiveFactory directiveFactory;
     private LessEngine lessEngine;
     private ProcessingEnvironment processingEnvironment;
+    private StyleProcessor styleProcessor;
     private int lastGeneratedId = 0;
 
     @Inject
     public LayoutProcessor(DirectiveFactory directiveFactory, CSSWriterSettings cssWriterSettings, LessEngine lessEngine,
-                           ProcessingEnvironment processingEnvironment) {
+                           ProcessingEnvironment processingEnvironment, StyleProcessor styleProcessor) {
         this.cssWriterSettings = cssWriterSettings;
         this.directiveFactory = directiveFactory;
         this.lessEngine = lessEngine;
         this.processingEnvironment = processingEnvironment;
+        this.styleProcessor = styleProcessor;
     }
 
     private ViewNode createViewTree(GenerationContext context, InputStream layoutInput, InputStream styleSheetInput,
@@ -123,6 +126,8 @@ public class LayoutProcessor {
         }
 
         ViewNode viewNode = new ViewNode(node, parent, stylesByElement.row(node), directives, isDirectiveRoot);
+        styleProcessor.process(viewNode);
+
         processNodeChildren(node, viewNode, context, stylesByElement);
         return viewNode;
     }

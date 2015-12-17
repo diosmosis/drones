@@ -1,9 +1,11 @@
 package com.flarestar.drones.mvw.view;
 
+import com.flarestar.drones.base.generation.Renderable;
+
 /**
  * TODO
  */
-public class ViewProperty {
+public class ViewProperty implements Renderable {
     private String viewMethodName;
     private String[] viewMethodArgs;
 
@@ -18,5 +20,15 @@ public class ViewProperty {
 
     public String getViewMethodName() {
         return viewMethodName;
+    }
+
+    @Override
+    public String getTemplate() {
+        return "templates/viewProperty.twig";
+    }
+
+    @Override
+    public String getModelAttribute() {
+        return "property";
     }
 }

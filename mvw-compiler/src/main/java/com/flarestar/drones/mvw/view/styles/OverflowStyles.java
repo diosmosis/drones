@@ -1,8 +1,9 @@
-package com.flarestar.drones.mvw.view.styleprocessors;
+package com.flarestar.drones.mvw.view.styles;
 
 import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidStyleValue;
 import com.flarestar.drones.mvw.view.Style;
 import com.flarestar.drones.mvw.view.ViewNode;
+import com.flarestar.drones.mvw.view.ViewProperty;
 
 public class OverflowStyles implements Style {
     private static final String OVERFLOW_X_STYLE = "overflow-x";
@@ -11,25 +12,25 @@ public class OverflowStyles implements Style {
     private static final String HIDDEN = "hidden";
 
     @Override
-    public void toCode(ViewNode node, StringBuilder result) throws InvalidStyleValue {
+    public void process(ViewNode node) throws InvalidStyleValue {
         String overflowX = getOverflowConstant(node, OVERFLOW_X_STYLE);
         String overflowY = getOverflowConstant(node, OVERFLOW_Y_STYLE);
 
         boolean hasScrolling = false;
         if (overflowX != null && overflowX.equals(SCROLL)) {
-            result.append("result.setHorizontalScrollBarEnabled(true);\n");
+            node.viewProperties.add(new ViewProperty("setHorizontalScrollBarEnabled", "true"));
 
             hasScrolling = true;
         }
 
         if (overflowY != null && overflowY.equals(SCROLL)) {
-            result.append("result.setVerticalScrollBarEnabled(true);\n");
+            node.viewProperties.add(new ViewProperty("setVerticalScrollBarEnabled", "true"));
 
             hasScrolling = true;
         }
 
         if (hasScrolling) {
-            result.append("result.addAspect(new ScrollingAspect(result));\n");
+            node.viewProperties.add(new ViewProperty("addAspect", "new ScrollingAspect(result)"));
         }
     }
 

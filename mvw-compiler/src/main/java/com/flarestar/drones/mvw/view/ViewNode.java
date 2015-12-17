@@ -28,6 +28,7 @@ public class ViewNode {
     public final List<ViewNode> children = new ArrayList<>();
     public final ScopeDefinition scopeDefinition;
     public final boolean isDirectiveRoot;
+    public final List<ViewProperty> viewProperties;
 
     private String viewClass;
     public final Directive isolateDirective;
@@ -49,9 +50,18 @@ public class ViewNode {
             directive.manipulateViewNode(this);
         }
 
+        viewProperties = findViewProperties();
         scopeDefinition = createScopeDefinition();
         isolateDirective = findIsolateDirective();
         viewClass = findViewClass();
+    }
+
+    private List<ViewProperty> findViewProperties() {
+        List<ViewProperty> result = new ArrayList<>();
+        for (Directive directive : directives) {
+            result.addAll(directive.getViewProperties());
+        };
+        return result;
     }
 
     private ScopeDefinition createScopeDefinition() throws LayoutFileException {

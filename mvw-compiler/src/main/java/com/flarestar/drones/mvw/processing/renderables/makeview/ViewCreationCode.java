@@ -17,11 +17,7 @@ public class ViewCreationCode implements Renderable {
 
     public ViewCreationCode(ViewNode node) {
         this.viewClassName = node.getViewClassName();
-
-        this.viewProperties = new ArrayList<>();
-        for (Directive directive : node.directives) {
-            viewProperties.addAll(directive.getViewProperties());
-        }
+        this.viewProperties = node.viewProperties;
     }
 
     @Override

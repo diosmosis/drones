@@ -1,0 +1,12 @@
+BoxModelNode.LayoutParams layoutParams = new BoxModelNode.LayoutParams();
+{% if property.getBoxWidth() != null %}layoutParams.boxWidth = new BoxModelNode.Size({{ property.getBoxWidth().amount }}, {{ property.getBoxWidth().context }});
+{% endif %}{% if property.getBoxHeight() != null %}layoutParams.boxHeight = new BoxModelNode.Size({{ property.getBoxHeight().amount }}, {{ property.getBoxHeight().context }});
+{% endif %}{% if property.getMarginTop() != null %}layoutParams.marginTop = new BoxModelNode.Size({{ property.getMarginTop().amount }}, {{ property.getMarginTop().context }});
+{% endif %}{% if property.getMarginBottom() != null %}layoutParams.marginBottom = new BoxModelNode.Size({{ property.getMarginBottom().amount }}, {{ property.getMarginBottom().context }});
+{% endif %}{% if property.getMarginLeft() != null %}layoutParams.marginLeft = new BoxModelNode.Size({{ property.getMarginLeft().amount }}, {{ property.getMarginLeft().context }});
+{% endif %}{% if property.getMarginRight() != null %}layoutParams.marginRight = new BoxModelNode.Size({{ property.getMarginRight().amount }}, {{ property.getMarginRight().context }});
+{% endif %}{% if property.getPaddingTop() != null %}layoutParams.paddingTop = new BoxModelNode.Size({{ property.getPaddingTop().amount }}, {{ property.getPaddingTop().context }});
+{% endif %}{% if property.getPaddingBottom() != null %}layoutParams.paddingBottom = new BoxModelNode.Size({{ property.getPaddingBottom().amount }}, {{ property.getPaddingBottom().context }});
+{% endif %}{% if property.getPaddingLeft() != null %}layoutParams.paddingLeft = new BoxModelNode.Size({{ property.getPaddingLeft().amount }}, {{ property.getPaddingLeft().context }});
+{% endif %}{% if property.getPaddingRight() != null %}layoutParams.paddingRight = new BoxModelNode.Size({{ property.getPaddingRight().amount }}, {{ property.getPaddingRight().context }});
+{% endif %}result.setLayoutParams(layoutParams);

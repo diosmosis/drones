@@ -1,4 +1,4 @@
 final {{ code.getViewClassName() }} result = new {{ code.getViewClassName() }}(_screen);
 result.setVisibility(View.VISIBLE);
-{% for property in code.getViewProperties() %}result.{{ property.getViewMethodName() }}({% for argument in property.getViewMethodArgs() %}{{ argument }}{% endfor %});
+{% for property in code.getViewProperties() %}{% render property %}{% endrender %}
 {% endfor %}

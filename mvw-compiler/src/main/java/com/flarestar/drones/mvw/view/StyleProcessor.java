@@ -1,8 +1,8 @@
 package com.flarestar.drones.mvw.view;
 
 import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidStyleValue;
-import com.flarestar.drones.mvw.view.styleprocessors.BoxModelStyles;
-import com.flarestar.drones.mvw.view.styleprocessors.OverflowStyles;
+import com.flarestar.drones.mvw.view.styles.BoxModelStyles;
+import com.flarestar.drones.mvw.view.styles.OverflowStyles;
 import com.google.inject.Singleton;
 
 /**
@@ -15,11 +15,9 @@ public class StyleProcessor {
         new OverflowStyles(),
     };
 
-    public String process(ViewNode node) throws InvalidStyleValue {
-        StringBuilder result = new StringBuilder();
+    public void process(ViewNode node) throws InvalidStyleValue {
         for (Style style : STYLES) {
-            style.toCode(node, result);
+            style.process(node);
         }
-        return result.toString();
     }
 }
