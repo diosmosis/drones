@@ -5,6 +5,7 @@ import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.annotations.directive.*;
 import com.flarestar.drones.mvw.directives.Controller;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.renderables.makeview.MakeViewBody;
 import com.flarestar.drones.mvw.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.view.directive.exceptions.InvalidDirectiveClassException;
 import com.flarestar.drones.mvw.renderables.scope.ScopeEventListener;
@@ -170,7 +171,7 @@ public abstract class Directive {
         }
     }
 
-    public ViewFactory getViewFactoryToUse(ViewNode view, Directive directiveRoot) {
+    public ViewFactory getViewFactoryToUse(ViewNode view, Directive directiveRoot, MakeViewBody makeViewBody) {
         return null;
     }
 

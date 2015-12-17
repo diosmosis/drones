@@ -4,9 +4,6 @@ import com.flarestar.drones.mvw.annotations.directive.IsolateDirective;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.parser.exceptions.NoViewClassForNode;
-import com.flarestar.drones.mvw.renderables.makeview.DirectiveMakeViewBody;
-import com.flarestar.drones.mvw.renderables.makeview.MakeViewBody;
-import com.flarestar.drones.mvw.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.view.scope.ScopeDefinition;
 import org.jsoup.nodes.Element;
 
@@ -34,7 +31,6 @@ public class ViewNode {
 
     private String viewClass;
     public final Directive isolateDirective;
-    private ViewFactory viewFactoryRenderable;
 
     public ViewNode(Element element, ViewNode parent,
                     Map<String, String> styles, List<Directive> directives, boolean isDirectiveRoot)
@@ -132,14 +128,6 @@ public class ViewNode {
         }
 
         return viewClass;
-    }
-
-    public MakeViewBody createMakeViewBodyRenderable(Directive directiveRoot, String afterScopeCreatedCode) {
-        if (hasIsolateDirective() && parent != null) {
-            return new DirectiveMakeViewBody(this, directiveRoot, afterScopeCreatedCode);
-        } else {
-            return new MakeViewBody(this, directiveRoot, afterScopeCreatedCode);
-        }
     }
 }
 

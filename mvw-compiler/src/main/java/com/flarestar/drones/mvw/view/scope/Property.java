@@ -13,7 +13,8 @@ public class Property {
         RAW_ATTR_VALUE,
         EXPRESSION_VALUE,
         EXPRESSION_EVAL,
-        PARENT_CHILD;
+        PARENT_CHILD,
+        LOCAL_VAR;
 
         public static BindType fromStr(String bindType) {
             if (bindType == null) {
@@ -27,6 +28,8 @@ public class Property {
                     return RAW_ATTR_VALUE;
                 case "&":
                     return EXPRESSION_EVAL;
+                case "/":
+                    return LOCAL_VAR;
                 default:
                     return NONE;
             }
@@ -36,7 +39,7 @@ public class Property {
     // TODO: support required/optional attribute binding
     // TODO: handle collection watches when binding attributes?
     private static final Pattern PROPERTY_DESCRIPTOR_REGEX =
-        Pattern.compile("([.\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*([=@&]?)(.+))?");
+        Pattern.compile("([.\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*([=@&/]?)(.+))?");
 
     public String name;
     public String type;
@@ -82,5 +85,9 @@ public class Property {
 
     public boolean hasBidirectionalBinding() {
         return bindType == BindType.EXPRESSION_VALUE;
+    }
+
+    public boolean initializeToLocalValue() {
+        return bindType == BindType.LOCAL_VAR;
     }
 }

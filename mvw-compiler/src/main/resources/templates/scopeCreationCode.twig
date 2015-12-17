@@ -1,5 +1,6 @@
 final {{ definition.getScope().getScopeClassName() }} scope = {% if definition.shouldCreateNewScopeInstance() %}new {{ definition.getScope().getScopeClassName() }}(_handler, {% if definition.isViewHasIsolateDirective() %}_parentView{% else %}result{% endif %}{% if definition.hasParentScope() %}, _parentNodeScope{% endif %}){% else %}({{ definition.getScope().getScopeClassName() }})_parentNodeScope{% endif %};
-{{ definition.getAfterScopeCreatedCode() }}
+{% for property in definition.getScope().ownProperties() %}{% if property.initializeToLocalValue() %}scope.{{ property.name }} = {{ property.initialValue }};
+{% endif %}{% endfor %}
 
 {% if definition.isInMakeDirectiveViewMethod() %}
 scope._parent = _parentNodeScope;

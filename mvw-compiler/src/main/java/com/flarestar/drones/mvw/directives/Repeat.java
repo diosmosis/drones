@@ -8,6 +8,7 @@ import com.flarestar.drones.mvw.annotations.directive.ScopeProperties;
 import com.flarestar.drones.mvw.compilerutilities.exceptions.BaseExpressionException;
 import com.flarestar.drones.mvw.parser.exceptions.InvalidLayoutAttributeValue;
 import com.flarestar.drones.mvw.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.renderables.makeview.MakeViewBody;
 import com.flarestar.drones.mvw.renderables.viewfactory.RangeViewFactory;
 import com.flarestar.drones.mvw.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.view.Directive;
@@ -25,7 +26,7 @@ import java.util.regex.Pattern;
 @DirectiveName("ng-repeat")
 @DirectiveMatcher(AttributeMatcher.class)
 @DynamicDirective
-@ScopeProperties({"int $index = -1"})
+@ScopeProperties({"int $index = /_index"})
 public class Repeat extends Directive {
     private static final Pattern REPEAT_ATTRIBUTE_REGEX = Pattern.compile("(\\w+)\\s+in\\s+(.+)");
 
@@ -68,14 +69,15 @@ public class Repeat extends Directive {
             true
         ));
 
-        node.scopeDefinition.addProperty(new Property(iterationScopeVariable, iterationScopeVariableType.toString(), null, null, this));
+        node.scopeDefinition.addProperty(new Property(iterationScopeVariable, iterationScopeVariableType.toString(),
+            Property.BindType.LOCAL_VAR, "_item", this));
     }
 
     @Override
-    public ViewFactory getViewFactoryToUse(ViewNode view, Directive directiveRoot) {
+    public ViewFactory getViewFactoryToUse(ViewNode view, Directive directiveRoot, MakeViewBody makeViewBody) {
         String scopeClassName = view.scopeDefinition.getScopeClassName();
         return new RangeViewFactory(
-            view.createMakeViewBodyRenderable(directiveRoot, "scope." + iterationScopeVariable + " = _item;\nscope.$index = _index;"),
+            makeViewBody,
             iterationScopeVariableType,
             "return " + iterableExpression + ";",
             "return ((" + scopeClassName + ")scope)." + iterationScopeVariable + ";",

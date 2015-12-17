@@ -18,8 +18,8 @@ public class MakeViewBody implements Renderable {
 
     // TODO: instead of 'afterScopeCreatedCode', should create a way to specify a scope varialbe should be initialized
     //       after creating a new instance, instead of in the constructor.
-    public MakeViewBody(ViewNode view, Directive currentIsolateDirective, String afterScopeCreatedCode) {
-        this(view, currentIsolateDirective, makeScopeCreationCode(view, afterScopeCreatedCode, currentIsolateDirective));
+    public MakeViewBody(ViewNode view, Directive currentIsolateDirective) {
+        this(view, currentIsolateDirective, makeScopeCreationCode(view, currentIsolateDirective));
     }
 
     public MakeViewBody(ViewNode view, Directive currentIsolateDirective, ScopeCreationCode scopeCreationCode) {
@@ -27,10 +27,6 @@ public class MakeViewBody implements Renderable {
         this.currentIsolateDirective = currentIsolateDirective;
         this.scopeCreationCode = scopeCreationCode;
         this.viewCreationCode = new ViewCreationCode(view);
-    }
-
-    public MakeViewBody(ViewNode view, Directive currentIsolateDirective) {
-        this(view, currentIsolateDirective, "");
     }
 
     @Override
@@ -69,10 +65,9 @@ public class MakeViewBody implements Renderable {
         return text != null && !text.isEmpty();
     }
 
-    protected static ScopeCreationCode makeScopeCreationCode(ViewNode view, String afterScopeCreatedCode, Directive directiveRoot) {
+    protected static ScopeCreationCode makeScopeCreationCode(ViewNode view, Directive directiveRoot) {
         boolean isInMakeDirectiveMethod = view.parent == null && directiveRoot != null;
-        return new ScopeCreationCode(view.scopeDefinition, isInMakeDirectiveMethod, view.hasIsolateDirective(),
-            afterScopeCreatedCode);
+        return new ScopeCreationCode(view.scopeDefinition, isInMakeDirectiveMethod, view.hasIsolateDirective());
     }
 
     public ViewCreationCode getViewCreationCode() {

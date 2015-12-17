@@ -10,14 +10,12 @@ public class ScopeCreationCode implements Renderable {
     private ScopeLocals scopeLocals;
     private boolean isInMakeDirectiveViewMethod;
     private boolean isViewHasIsolateDirective;
-    private String afterScopeCreatedCode;
 
     public ScopeCreationCode(com.flarestar.drones.mvw.view.scope.ScopeDefinition definition, boolean isInMakeDirectiveViewMethod,
-                             boolean isViewHasIsolateDirective, String afterScopeCreatedCode) {
+                             boolean isViewHasIsolateDirective) {
         this.definition = definition;
         this.isInMakeDirectiveViewMethod = isInMakeDirectiveViewMethod;
         this.isViewHasIsolateDirective = isViewHasIsolateDirective;
-        this.afterScopeCreatedCode = afterScopeCreatedCode;
         this.scopeLocals = new ScopeLocals(definition);
     }
 
@@ -54,9 +52,5 @@ public class ScopeCreationCode implements Renderable {
 
     public boolean isViewHasIsolateDirective() {
         return isViewHasIsolateDirective;
-    }
-
-    public String getAfterScopeCreatedCode() {
-        return afterScopeCreatedCode;
     }
 }

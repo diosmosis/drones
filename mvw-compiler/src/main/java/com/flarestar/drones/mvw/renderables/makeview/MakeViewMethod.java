@@ -95,16 +95,18 @@ public class MakeViewMethod implements Renderable {
 
     // TODO: shouldn't throw layout file exception here, should be done during parsing.
     private ViewFactory createViewFactoryRenderable() throws LayoutFileException {
+        MakeViewBody body = createMakeViewBodyRenderable();
+
         // if this is the root of a layout or directive tree, we use a NullViewFactory, since the method will return
         // a View instead of a ViewFactory
         if (view.parent == null) {
-            return new NullViewFactory(new MakeViewBody(view, directive));
+            return new NullViewFactory(body);
         }
 
         ViewFactory result = null;
 
         for (Directive viewDirective : view.directives) {
-            ViewFactory renderableFromDirective = viewDirective.getViewFactoryToUse(view, directive);
+            ViewFactory renderableFromDirective = viewDirective.getViewFactoryToUse(view, directive, body);
             if (renderableFromDirective != null) {
                 if (result != null) {
                     throw new LayoutFileException("Multiple view factory types defined by directives on <" + view.element.tagName()
@@ -116,9 +118,17 @@ public class MakeViewMethod implements Renderable {
         }
 
         if (result == null) {
-            result = new SingleViewFactory(view.createMakeViewBodyRenderable(directive, null));
+            result = new SingleViewFactory(body);
         }
 
         return result;
+    }
+
+    private MakeViewBody createMakeViewBodyRenderable() {
+        if (view.hasIsolateDirective() && view.parent != null) {
+            return new DirectiveMakeViewBody(view, directive);
+        } else {
+            return new MakeViewBody(view, directive);
+        }
     }
 }

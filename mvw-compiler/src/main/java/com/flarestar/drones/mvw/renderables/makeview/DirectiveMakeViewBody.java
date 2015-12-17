@@ -8,11 +8,7 @@ import com.flarestar.drones.mvw.view.ViewNode;
  */
 public class DirectiveMakeViewBody extends MakeViewBody {
     public DirectiveMakeViewBody(ViewNode view, Directive currentIsolateDirective) {
-        this(view, currentIsolateDirective, null);
-    }
-
-    public DirectiveMakeViewBody(ViewNode view, Directive directiveRoot, String afterScopeCreatedCode) {
-        super(view, directiveRoot, afterScopeCreatedCode);
+        super(view, currentIsolateDirective);
     }
 
     @Override

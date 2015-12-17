@@ -37,6 +37,7 @@ public class ScopePropertyValueDeducer {
                 value = interpolator.interpolate(value);
                 return JSONObject.quote(value);
             case EXPRESSION_VALUE:
+            case LOCAL_VAR:
                 return node.element.attr(property.initialValue);
             case EXPRESSION_EVAL:
                 String code = node.element.attr(property.initialValue);
