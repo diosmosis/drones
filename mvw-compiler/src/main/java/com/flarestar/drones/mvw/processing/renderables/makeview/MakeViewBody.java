@@ -5,28 +5,49 @@ import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeCreationCode;
 import com.flarestar.drones.mvw.model.Directive;
 import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.processing.renderables.scope.ScopeEventListener;
+import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
+import com.flarestar.drones.views.scope.Event;
 import com.flarestar.drones.views.viewgroups.BaseDroneViewGroup;
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
+
+import javax.annotation.Nullable;
+import java.util.Collection;
 
 /**
  * TODO
+ *
+ * TODO:
+ * - remove Directive list from ViewNode
  */
 public class MakeViewBody implements Renderable {
-    private ViewNode view;
-    private Directive currentIsolateDirective;
     private ScopeCreationCode scopeCreationCode;
     private ViewCreationCode viewCreationCode;
+    private String text;
+    private Collection<ScopeEventListener> events;
+    private Collection<String> childViewIds;
+    private boolean isDynamicViewGroup;
+    private boolean isViewScopeView;
+    private boolean hasTransclude;
+    private boolean hasOwnScope;
+    private Collection<WatcherDefinition> thisScopeWatchers;
 
-    // TODO: instead of 'afterScopeCreatedCode', should create a way to specify a scope varialbe should be initialized
-    //       after creating a new instance, instead of in the constructor.
-    public MakeViewBody(ViewNode view, Directive currentIsolateDirective) {
-        this(view, currentIsolateDirective, makeScopeCreationCode(view, currentIsolateDirective));
-    }
-
-    public MakeViewBody(ViewNode view, Directive currentIsolateDirective, ScopeCreationCode scopeCreationCode) {
-        this.view = view;
-        this.currentIsolateDirective = currentIsolateDirective;
+    public MakeViewBody(ViewCreationCode viewCreationCode, String elementText, Collection<ScopeEventListener> events,
+                        Collection<String> childViewIds, boolean isDynamicViewGroup, boolean isViewScopeView,
+                        boolean hasTransclude, boolean hasOwnScope, ScopeCreationCode scopeCreationCode,
+                        Collection<WatcherDefinition> thisScopeWatchers) {
         this.scopeCreationCode = scopeCreationCode;
-        this.viewCreationCode = new ViewCreationCode(view);
+        this.viewCreationCode = viewCreationCode;
+        this.text = elementText;
+        this.events = events;
+        this.childViewIds = childViewIds;
+
+        this.isDynamicViewGroup = isDynamicViewGroup;
+        this.isViewScopeView = isViewScopeView;
+        this.hasTransclude = hasTransclude;
+        this.hasOwnScope = hasOwnScope;
+        this.thisScopeWatchers = thisScopeWatchers;
     }
 
     @Override
@@ -39,17 +60,12 @@ public class MakeViewBody implements Renderable {
         return "body";
     }
 
-    public boolean isViewScopeView(TypeInferer inferer) {
-        ViewNode view = getView();
-        return view.getViewClassName() != null && inferer.isAssignable(view.getViewClassName(), BaseDroneViewGroup.class.getName());
-    }
-
-    public ViewNode getView() {
-        return view;
+    public boolean isViewScopeView() {
+        return isViewScopeView;
     }
 
     public boolean hasTransclude() {
-        return view.hasTransclude() && currentIsolateDirective != null && currentIsolateDirective.hasTransclude();
+        return hasTransclude;
     }
 
     public ScopeCreationCode getScopeCreationCode() {
@@ -57,20 +73,34 @@ public class MakeViewBody implements Renderable {
     }
 
     public boolean hasOwnScope() {
-        return view.hasScope();
+        return hasOwnScope;
     }
 
     public boolean hasText() {
-        String text = view.element.ownText();
         return text != null && !text.isEmpty();
-    }
-
-    protected static ScopeCreationCode makeScopeCreationCode(ViewNode view, Directive directiveRoot) {
-        boolean isInMakeDirectiveMethod = view.parent == null && directiveRoot != null;
-        return new ScopeCreationCode(view.scopeDefinition, isInMakeDirectiveMethod, view.hasIsolateDirective());
     }
 
     public ViewCreationCode getViewCreationCode() {
         return viewCreationCode;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public Collection<ScopeEventListener> getEvents() {
+        return events;
+    }
+
+    public Collection<String> getChildViewIds() {
+        return childViewIds;
+    }
+
+    public boolean isDynamicViewGroup() {
+        return isDynamicViewGroup;
+    }
+
+    public Collection<WatcherDefinition> getThisScopeWatchers() {
+        return thisScopeWatchers;
     }
 }

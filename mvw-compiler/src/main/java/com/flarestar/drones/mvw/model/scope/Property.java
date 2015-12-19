@@ -1,5 +1,6 @@
 package com.flarestar.drones.mvw.model.scope;
 
+import com.flarestar.drones.mvw.model.ViewNode;
 import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidPropertyDescriptor;
 import com.flarestar.drones.mvw.model.Directive;
 
@@ -55,24 +56,9 @@ public class Property {
         this.source = source;
     }
 
+    // TODO: removed this a while back, perhaps it should be put in.
     public String accessCode() {
         return "scope." + name;
-    }
-
-    public static Property makeFromDescriptor(String propertyDescriptor, Directive directive)
-        throws InvalidPropertyDescriptor {
-        Matcher m = PROPERTY_DESCRIPTOR_REGEX.matcher(propertyDescriptor);
-        if (!m.matches()) {
-            throw new InvalidPropertyDescriptor(propertyDescriptor, directive.getDirectiveName());
-        }
-
-        BindType bindType = BindType.fromStr(m.group(3));
-        if (bindType != BindType.NONE && m.group(4) == null) {
-            throw new InvalidPropertyDescriptor(propertyDescriptor, directive.getDirectiveName(),
-                "Property binding specified without initial value");
-        }
-
-        return new Property(m.group(2), m.group(1), bindType, m.group(4), directive);
     }
 
     public boolean hasBinding() {
@@ -89,5 +75,21 @@ public class Property {
 
     public boolean initializeToLocalValue() {
         return bindType == BindType.LOCAL_VAR;
+    }
+
+    public static Property makeFromDescriptor(String propertyDescriptor, Directive directive)
+        throws InvalidPropertyDescriptor {
+        Matcher m = PROPERTY_DESCRIPTOR_REGEX.matcher(propertyDescriptor);
+        if (!m.matches()) {
+            throw new InvalidPropertyDescriptor(propertyDescriptor, directive.getDirectiveName());
+        }
+
+        BindType bindType = BindType.fromStr(m.group(3));
+        if (bindType != BindType.NONE && m.group(4) == null) {
+            throw new InvalidPropertyDescriptor(propertyDescriptor, directive.getDirectiveName(),
+                "Property binding specified without initial value");
+        }
+
+        return new Property(m.group(2), m.group(1), bindType, m.group(4), directive);
     }
 }

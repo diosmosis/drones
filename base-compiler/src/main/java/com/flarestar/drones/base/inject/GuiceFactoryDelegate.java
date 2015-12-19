@@ -23,11 +23,11 @@ public class GuiceFactoryDelegate {
                 "' is not annotated w/ @InstanceFactory, so we can't create an instance of it by class.");
         }
 
-        Class<? extends GenericInstanceFactory<?,?>> factoryClass = annotation.value();
+        Class<? extends GenericInstanceFactory<?>> factoryClass = annotation.value();
 
         Key<? extends GenericInstanceFactory> key = Key.get(factoryClass, Names.named(target.getName()));
         GenericInstanceFactory factory = injector.getInstance(key);
 
-        return (T)factory.make(args[0]);
+        return (T)factory.make(args);
     }
 }

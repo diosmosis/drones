@@ -10,5 +10,5 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface InstanceFactory {
-    Class<? extends GenericInstanceFactory<?,?>> value();
+    Class<? extends GenericInstanceFactory<?>> value();
 }

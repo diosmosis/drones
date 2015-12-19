@@ -57,7 +57,7 @@ public class {{ builder.getContext().getLayoutBuilderSimpleClassName() }} implem
             return;
         }
 
-        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ builder.getRootView().id }}(screen);
+        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ builder.getRootViewId() }}(screen);
         rootView.getScope().apply();
         screen.setContentView(rootView);
 

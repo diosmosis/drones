@@ -6,11 +6,11 @@ import com.flarestar.drones.mvw.annotations.directive.DirectiveName;
 import com.flarestar.drones.mvw.annotations.directive.DynamicDirective;
 import com.flarestar.drones.mvw.annotations.directive.ScopeProperties;
 import com.flarestar.drones.mvw.compilerutilities.exceptions.BaseExpressionException;
+import com.flarestar.drones.mvw.model.ViewFactory;
 import com.flarestar.drones.mvw.processing.parser.exceptions.InvalidLayoutAttributeValue;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.renderables.makeview.MakeViewBody;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.RangeViewFactory;
-import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.model.Directive;
 import com.flarestar.drones.mvw.model.ViewNode;
 import com.flarestar.drones.mvw.processing.parser.directive.matchers.AttributeMatcher;
@@ -31,35 +31,45 @@ import java.util.regex.Pattern;
 @ScopeProperties({"int $index = /_index"})
 public class Repeat extends Directive {
 
-    // TODO: use separate template + extends, make RangeViewFactory abstract.
-    public static class RepeatViewFactory extends RangeViewFactory {
+    public class RepeatViewFactory extends ViewFactory {
+        private ViewNode view;
+
+        public RepeatViewFactory(ViewNode view) {
+            super(RepeatViewFactoryRenderable.class);
+            this.view = view;
+        }
+
+        public Repeat getDirective() {
+            return Repeat.this;
+        }
+
+        public ViewNode getView() {
+            return view;
+        }
+    }
+
+    public static class RepeatViewFactoryRenderable extends RangeViewFactory {
         private String iterationScopeVariable;
         private String iterableExpression;
         private TypeMirror iterableType;
         private TypeMirror iterationScopeVariableType;
         private String scopeClassName;
 
-        @AssistedInject
-        public RepeatViewFactory(@Assisted MakeViewBody makeViewBody) {
-            super(makeViewBody);
+        public RepeatViewFactoryRenderable(MakeViewBody makeViewBody, RepeatViewFactory viewFactoryModel) {
+            super(makeViewBody, viewFactoryModel);
 
-            Repeat repeatDirective = null;
-            for (Directive directive : makeViewBody.getView().directives) {
-                if (directive instanceof Repeat) {
-                    repeatDirective = (Repeat)directive;
-                    break;
-                }
-            }
-
-            if (repeatDirective == null) {
-                throw new IllegalStateException("RepeatViewFactory cannot find the view's Repeat directive. This should not happen.");
-            }
+            Repeat repeatDirective = viewFactoryModel.getDirective();
 
             iterationScopeVariable = repeatDirective.iterationScopeVariable;
             iterableExpression = repeatDirective.iterableExpression;
             iterableType = repeatDirective.iterableType;
             iterationScopeVariableType = repeatDirective.iterationScopeVariableType;
-            scopeClassName = makeViewBody.getView().scopeDefinition.getScopeClassName();
+            scopeClassName = viewFactoryModel.getView().scopeDefinition.getScopeClassName();
+        }
+
+        @AssistedInject
+        public RepeatViewFactoryRenderable(@Assisted Object[] args) {
+            this((MakeViewBody)args[0], (RepeatViewFactory)args[1]);
         }
 
         public String getScopeClassName() {
@@ -134,7 +144,7 @@ public class Repeat extends Directive {
     }
 
     @Override
-    public Class<? extends ViewFactory> getViewFactoryToUse() {
-        return RepeatViewFactory.class;
+    public ViewFactory getViewFactoryToUse(ViewNode viewNode) {
+        return new RepeatViewFactory(viewNode);
     }
 }

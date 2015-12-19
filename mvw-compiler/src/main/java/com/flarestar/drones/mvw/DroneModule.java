@@ -36,6 +36,6 @@ public class DroneModule extends com.flarestar.drones.base.DroneModule {
         //       user defined modules? how would I get them here?
         bindInstanceFactory(ViewFactory.InstanceFactory.class, ViewFactory.class, SingleViewFactory.class);
         bindInstanceFactory(ViewFactory.InstanceFactory.class, ViewFactory.class, NullViewFactory.class);
-        bindInstanceFactory(ViewFactory.InstanceFactory.class, ViewFactory.class, Repeat.RepeatViewFactory.class);
+        bindInstanceFactory(ViewFactory.InstanceFactory.class, ViewFactory.class, Repeat.RepeatViewFactoryRenderable.class);
     }
 }

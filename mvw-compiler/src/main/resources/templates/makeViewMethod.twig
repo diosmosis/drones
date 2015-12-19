@@ -1,21 +1,19 @@
 {% if method.isRootDirectiveMethod() %}
-private <P extends Scope<?> & DirectiveScope_{{ method.getDirective().getDirectiveName() }}> {{ method.getResultType() }} makeDirectiveView_{{ method.getDirective().getDirectiveName() }}(final BaseScreen _screen, final DynamicViewGroup _parentView, final P _parentNodeScope
-{% for property in method.getDirective().boundProperties() %}, final {{ property.type }} _{{ property.name }}{% endfor %}) {
+private <P extends Scope<?> & DirectiveScope_{{ method.getDirectiveRoot().getDirectiveName() }}> {{ method.getResultType() }} makeDirectiveView_{{ method.getDirectiveRoot().getDirectiveName() }}(final BaseScreen _screen, final DynamicViewGroup _parentView, final P _parentNodeScope
+{% for property in method.getDirectiveRoot().boundProperties() %}, final {{ property.type }} _{{ property.name }}{% endfor %}) {
 {% else %}
-private {{ method.getResultType() }} makeView_{{ method.getView().id }}(final BaseScreen _screen{% if method.getView().parent != null %}, final DynamicViewGroup _parentView, final {{ method.getView().parent.scopeDefinition.getScopeClassName() }} _parentNodeScope{% endif %}) {
+private {{ method.getResultType() }} makeView_{{ method.getViewId() }}(final BaseScreen _screen{% if method.hasParent() %}, final DynamicViewGroup _parentView, final {{ method.getParentScopeClassName() }} _parentNodeScope{% endif %}) {
 {% endif %}
-    {% if method.getView().parent != null %}
-    final {{ method.getParentViewScope().getScopeClassName() }} scope = _parentNodeScope;
+    {% if method.hasParent() %}
+    final {{ method.getParentScopeClassName() }} scope = _parentNodeScope;
     {% render method.getParentScopeLocals() %}{% endrender %}
     {% endif %}
 
     {% if method.hasViewFactory() %}
     final ViewFactory _viewFactory = {% render method.getViewFactory() %}{% endrender %};
 
-    {% for viewDirective in method.getView().directives %}
-    {% for watcher in viewDirective.watchers %}
-    {% if watcher.isOnParentScope() %}{% render watcher %}{% endrender %}{% endif %}
-    {% endfor %}
+    {% for watcher in method.getParentScopeWatchers() %}
+    {% render watcher %}{% endrender %}
     {% endfor %}
 
     return _viewFactory;

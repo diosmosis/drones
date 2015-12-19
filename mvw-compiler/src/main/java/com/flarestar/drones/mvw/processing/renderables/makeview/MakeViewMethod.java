@@ -3,6 +3,7 @@ package com.flarestar.drones.mvw.processing.renderables.makeview;
 import com.flarestar.drones.base.generation.Renderable;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeLocals;
+import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.NullViewFactory;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.SingleViewFactory;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
@@ -15,6 +16,7 @@ import com.google.common.collect.Lists;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,28 +31,43 @@ import java.util.List;
  *
  * TODO:
  * - remove ViewNode dependency from Renderable object model
+ * - remove ScopeClassDefinition dependency from Renderable object model
  * - implement process above in LayoutAnnotationProcessor
- *
- * TODO: renderables should not be @Singletons and must be @Inject-ed. need to put this somewhere.
  */
 public class MakeViewMethod implements Renderable {
-    private ViewNode view;
-    private ScopeLocals parentScopeLocals = null;
-    private ViewFactory viewFactory;
+    private String viewId;
+    private String parentScopeClassName;
+    private String resultType;
     private Directive directive;
+    private boolean hasParent = false;
+    private boolean isRootDirectiveMethod;
+
+    private ViewFactory viewFactory;
+    private ScopeLocals parentScopeLocals = null;
     private List<MakeViewMethod> childRenderables;
+    private List<WatcherDefinition> parentScopeWatchers;
 
-    public MakeViewMethod(ViewNode view, @Nullable Directive directiveRoot, ViewFactory viewFactory,
-                          List<MakeViewMethod> childRenderables) {
-        this.view = view;
+    public MakeViewMethod(String viewId, Directive directiveRoot, ViewFactory viewFactory,
+                          List<MakeViewMethod> childRenderables, boolean isRootDirectiveMethod,
+                          boolean hasParent, ScopeDefinition parentScope, List<WatcherDefinition> parentScopeWatchers) {
+        this.viewId = viewId;
         this.directive = directiveRoot;
-
         this.viewFactory = viewFactory;
         this.childRenderables = childRenderables;
 
-        if (view.parent != null) {
-            this.parentScopeLocals = new ScopeLocals(view.parent.scopeDefinition);
+        this.isRootDirectiveMethod = isRootDirectiveMethod;
+
+        this.hasParent = hasParent;
+        if (hasParent) {
+            this.parentScopeClassName = parentScope.getScopeClassName();
+            this.resultType = "ViewFactory";
+            this.parentScopeLocals = new ScopeLocals(parentScope);
+        } else {
+            this.resultType = "View";
         }
+
+        // TODO: directives should add the watchers to ViewNode. actually, let's remove the list of directives from ViewNode?
+        this.parentScopeWatchers = parentScopeWatchers == null ? new ArrayList<WatcherDefinition>() : parentScopeWatchers;
     }
 
     @Override
@@ -63,10 +80,6 @@ public class MakeViewMethod implements Renderable {
         return "method";
     }
 
-    public ViewNode getView() {
-        return view;
-    }
-
     public ScopeLocals getParentScopeLocals() {
         return parentScopeLocals;
     }
@@ -75,7 +88,7 @@ public class MakeViewMethod implements Renderable {
         return viewFactory;
     }
 
-    public Directive getDirective() {
+    public Directive getDirectiveRoot() {
         return directive;
     }
 
@@ -84,18 +97,30 @@ public class MakeViewMethod implements Renderable {
     }
 
     public String getResultType() {
-        return view.parent == null ? "View" : "ViewFactory";
+        return resultType;
     }
 
     public boolean hasViewFactory() {
         return !(viewFactory instanceof NullViewFactory);
     }
 
-    public ScopeDefinition getParentViewScope() {
-        return getView().parent.scopeDefinition;
+    public boolean isRootDirectiveMethod() {
+        return isRootDirectiveMethod;
     }
 
-    public boolean isRootDirectiveMethod() {
-        return directive != null && view.parent == null;
+    public String getViewId() {
+        return viewId;
+    }
+
+    public boolean hasParent() {
+        return hasParent;
+    }
+
+    public List<WatcherDefinition> getParentScopeWatchers() {
+        return parentScopeWatchers;
+    }
+
+    public String getParentScopeClassName() {
+        return parentScopeClassName;
     }
 }

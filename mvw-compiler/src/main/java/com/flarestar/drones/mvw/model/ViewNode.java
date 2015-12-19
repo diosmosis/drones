@@ -5,12 +5,13 @@ import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException
 import com.flarestar.drones.mvw.processing.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.processing.parser.exceptions.NoViewClassForNode;
 import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
+import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.NullViewFactory;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.SingleViewFactory;
-import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class ViewNode {
     public final List<ViewProperty> viewProperties;
 
     private String viewClass;
-    private Class<? extends ViewFactory> viewFactoryRenderable;
+    private ViewFactory viewFactory;
     public final Directive isolateDirective;
 
     public ViewNode(Element element, ViewNode parent, Map<String, String> styles, List<Directive> directives,
@@ -58,7 +59,7 @@ public class ViewNode {
         scopeDefinition = createScopeDefinition();
         isolateDirective = findIsolateDirective();
         viewClass = findViewClass();
-        viewFactoryRenderable = findViewFactoryRenderableToUse();
+        viewFactory = findViewFactoryToUse();
     }
 
     private List<ViewProperty> findViewProperties() {
@@ -111,8 +112,8 @@ public class ViewNode {
         return viewClass;
     }
 
-    public Class<? extends ViewFactory> getViewFactoryRenderable() {
-        return viewFactoryRenderable;
+    public ViewFactory getViewFactory() {
+        return viewFactory;
     }
 
     public void visit(Visitor visitor) {
@@ -157,17 +158,17 @@ public class ViewNode {
         return viewClass;
     }
 
-    private Class<? extends ViewFactory> findViewFactoryRenderableToUse() throws LayoutFileException {
+    private ViewFactory findViewFactoryToUse() throws LayoutFileException {
         // if this is the root of a layout or directive tree, we use a NullViewFactory, since the method will return
         // a View instead of a ViewFactory
         if (parent == null) {
-            return NullViewFactory.class;
+            return new ViewFactory(NullViewFactory.class);
         }
 
-        Class<? extends ViewFactory> result = null;
+        ViewFactory result = null;
 
         for (Directive viewDirective : directives) {
-            Class<? extends ViewFactory> renderableFromDirective = viewDirective.getViewFactoryToUse();
+            ViewFactory renderableFromDirective = viewDirective.getViewFactoryToUse(this);
             if (renderableFromDirective != null) {
                 if (result != null) {
                     throw new LayoutFileException("Multiple view factory types defined by directives on <" + element.tagName()
@@ -179,9 +180,33 @@ public class ViewNode {
         }
 
         if (result == null) {
-            result = SingleViewFactory.class;
+            result = new ViewFactory(SingleViewFactory.class);
         }
 
+        return result;
+    }
+
+    public List<WatcherDefinition> getParentScopeDirectiveWatchers() {
+        List<WatcherDefinition> result = new ArrayList<>();
+        for (Directive directive : directives) {
+            for (WatcherDefinition watcher : directive.getWatchers()) {
+                if (watcher.isOnParentScope()) {
+                    result.add(watcher);
+                }
+            }
+        }
+        return result;
+    }
+
+    public List<WatcherDefinition> getThisScopeDirectiveWatchers() {
+        List<WatcherDefinition> result = new ArrayList<>();
+        for (Directive directive : directives) {
+            for (WatcherDefinition watcher : directive.getWatchers()) {
+                if (!watcher.isOnParentScope()) {
+                    result.add(watcher);
+                }
+            }
+        }
         return result;
     }
 }

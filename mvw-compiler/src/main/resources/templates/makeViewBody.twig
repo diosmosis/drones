@@ -7,17 +7,17 @@ return new ScopedViewFactory() { {# TODO: it is probably not required to create 
         {% render body.getScopeCreationCode() %}{% endrender %}
         {% endif %}
 
-        {% if body.isViewScopeView(typeInferer) %}
+        {% if body.isViewScopeView() %}
         ((BaseDroneViewGroup)result).setScope(scope);
         {% endif %}
 
-        {% if body.hasText() %}result.setText({{ interpolator.interpolate(body.getView().element.ownText()) }});{% endif %}
+        {% if body.hasText() %}result.setText({{ interpolator.interpolate(body.getText()) }});{% endif %}
 
-        {% for event in body.getView().scopeDefinition.events %}
+        {% for event in body.getEvents() %}
         {% render event %}{% endrender %}
         {% endfor %}
 
-        {% for child in body.getView().children %}result.addChildDefinition(makeView_{{ child.id }}(_screen, result, scope));
+        {% for childViewId in body.getChildViewIds() %}result.addChildDefinition(makeView_{{ childViewId }}(_screen, result, scope));
         {% endfor %}
 
         {% if body.hasTransclude() %}
@@ -29,15 +29,11 @@ return new ScopedViewFactory() { {# TODO: it is probably not required to create 
             _toTransclude = null;
         }
         {% endif %}
-        {% if typeInferer.isDynamicViewGroup(body.getView()) %}result.createChildren();{% endif %}
+        {% if body.isDynamicViewGroup() %}result.createChildren();{% endif %}
 
-        {% for viewDirective in body.getView().directives %}
-        {% for watcher in viewDirective.watchers %}
-        {% if not watcher.isOnParentScope() %}{% render watcher %}{% endrender %}{% endif %}
+        {% for watcher in body.getThisScopeWatchers() %}
+        {% render watcher %}{% endrender %}
         {% endfor %}
-        {% endfor %}
-
-        {{ macros.directive_hook(view, "beforeReturnResult") }}
 
         return result;
     }

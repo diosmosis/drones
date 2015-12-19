@@ -13,9 +13,9 @@ public class ViewCreationCode implements Renderable {
     private String viewClassName;
     private List<ViewProperty> viewProperties;
 
-    public ViewCreationCode(ViewNode node) {
-        this.viewClassName = node.getViewClassName();
-        this.viewProperties = node.viewProperties;
+    public ViewCreationCode(String viewClassName, List<ViewProperty> viewProperties) {
+        this.viewClassName = viewClassName;
+        this.viewProperties = viewProperties;
     }
 
     @Override

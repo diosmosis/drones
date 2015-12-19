@@ -1,17 +1,18 @@
 package com.flarestar.drones.mvw.processing.renderables.scope;
 
 import com.flarestar.drones.base.generation.Renderable;
+import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
 
 /**
  * TODO
  */
 public class ScopeCreationCode implements Renderable {
-    private com.flarestar.drones.mvw.model.scope.ScopeDefinition definition;
+    private ScopeDefinition definition;
     private ScopeLocals scopeLocals;
     private boolean isInMakeDirectiveViewMethod;
     private boolean isViewHasIsolateDirective;
 
-    public ScopeCreationCode(com.flarestar.drones.mvw.model.scope.ScopeDefinition definition, boolean isInMakeDirectiveViewMethod,
+    public ScopeCreationCode(ScopeDefinition definition, boolean isInMakeDirectiveViewMethod,
                              boolean isViewHasIsolateDirective) {
         this.definition = definition;
         this.isInMakeDirectiveViewMethod = isInMakeDirectiveViewMethod;
@@ -20,7 +21,6 @@ public class ScopeCreationCode implements Renderable {
     }
 
     public boolean shouldCreateNewScopeInstance() {
-        com.flarestar.drones.mvw.model.scope.ScopeDefinition definition = getScope();
         return isViewHasIsolateDirective() || !(definition.isPassthroughScope() || isInMakeDirectiveViewMethod());
     }
 
@@ -32,7 +32,7 @@ public class ScopeCreationCode implements Renderable {
         return scopeLocals;
     }
 
-    public com.flarestar.drones.mvw.model.scope.ScopeDefinition getScope() {
+    public ScopeDefinition getScope() {
         return definition;
     }
 
