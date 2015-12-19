@@ -4,12 +4,21 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+import com.flarestar.drones.views.ViewFactory;
 import com.flarestar.drones.views.scope.Scope;
 import com.flarestar.drones.views.scope.events.Click;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class BaseDroneViewGroup extends ViewGroup {
 
     protected Scope<?> scope = null;
+
+    /**
+     * TODO
+     */
+    protected List<ViewFactory> childDefinitions = new ArrayList<>();
 
     public BaseDroneViewGroup(Context context) {
         super(context);
@@ -129,6 +138,24 @@ public abstract class BaseDroneViewGroup extends ViewGroup {
         }
 
         super.removeAllViews();
+    }
+
+    // TODO: automated tests should detect if memory leaks exist
+
+    public void addChildDefinition(ViewFactory factory) {
+        childDefinitions.add(factory);
+    }
+
+    public void moveView(int from, int to) {
+        View view = getChildAt(from);
+        removeViewAt(from);
+        addView(view, to);
+    }
+
+    public void createChildren() {
+        for (ViewFactory factory : childDefinitions) {
+            factory.makeViews(this);
+        }
     }
 
     private void removeChildScope(View child) {

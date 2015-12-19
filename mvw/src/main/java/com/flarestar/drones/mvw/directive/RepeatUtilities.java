@@ -2,7 +2,7 @@ package com.flarestar.drones.mvw.directive;
 
 import android.view.View;
 import com.flarestar.drones.views.scope.Scope;
-import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
+import com.flarestar.drones.views.viewgroups.BaseDroneViewGroup;
 import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
 
 /**
@@ -10,7 +10,7 @@ import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
  */
 public class RepeatUtilities {
 
-    public static <V> void queueOnValuesChanged(final DynamicViewGroup parent, final RangeViewFactory<V> viewFactory) {
+    public static <V> void queueOnValuesChanged(final BaseDroneViewGroup parent, final RangeViewFactory<V> viewFactory) {
         parent.getScope().postDigest(new Scope.PostDigestRunnable() {
             @Override
             public void run() {
@@ -19,7 +19,7 @@ public class RepeatUtilities {
         });
     }
 
-    public static <V> void onValuesChanged(DynamicViewGroup parent, RangeViewFactory<V> viewFactory) {
+    public static <V> void onValuesChanged(BaseDroneViewGroup parent, RangeViewFactory<V> viewFactory) {
         final int startChildIndex = getViewIndexOf(parent, viewFactory.getStartView());
         final int endChildIndex = getViewIndexOf(parent, viewFactory.getEndView(), startChildIndex) + 1;
 
@@ -65,11 +65,11 @@ public class RepeatUtilities {
         viewFactory.setEndView(parent.getChildAt(newEndIndex));
     }
 
-    private static int getViewIndexOf(DynamicViewGroup parent, View view) {
+    private static int getViewIndexOf(BaseDroneViewGroup parent, View view) {
         return getViewIndexOf(parent, view, 0);
     }
 
-    private static int getViewIndexOf(DynamicViewGroup parent, View view, int index) {
+    private static int getViewIndexOf(BaseDroneViewGroup parent, View view, int index) {
         for (; index != parent.getChildCount(); ++index) {
             if (parent.getChildAt(index) == view) {
                 return index;
@@ -78,7 +78,7 @@ public class RepeatUtilities {
         return 0;
     }
 
-    private static <V> int findChildWithItem(RangeViewFactory<V> viewFactory, DynamicViewGroup parent, V item,
+    private static <V> int findChildWithItem(RangeViewFactory<V> viewFactory, BaseDroneViewGroup parent, V item,
                                              int index, int endChildIndex) {
         for (; index != endChildIndex; ++index) {
             Scope<?> childScope = parent.getScope().getChildScopeFor(parent.getChildAt(index));

@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * TODO
  */
-public abstract class BoxModelNode extends DynamicViewGroup {
+public abstract class BoxModelNode extends BaseDroneViewGroup {
     protected final static int UNSPECIFIED_MEASURE_SPEC = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
 
     // TODO: should use dagger DI.

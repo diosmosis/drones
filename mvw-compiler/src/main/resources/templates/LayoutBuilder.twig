@@ -8,7 +8,6 @@ import com.flarestar.drones.views.scope.Scope;
 import com.flarestar.drones.views.ViewFactory;
 import com.flarestar.drones.views.ScopedViewFactory;
 import com.flarestar.drones.views.viewgroups.BaseDroneViewGroup;
-import com.flarestar.drones.views.viewgroups.DynamicViewGroup;
 import com.flarestar.drones.views.viewgroups.dynamic.SingleViewFactory;
 import com.flarestar.drones.views.viewgroups.dynamic.RangeViewFactory;
 import com.flarestar.drones.views.scope.Listener;
@@ -57,7 +56,7 @@ public class {{ builder.getContext().getLayoutBuilderSimpleClassName() }} implem
             return;
         }
 
-        final DynamicViewGroup rootView = (DynamicViewGroup)makeView_{{ builder.getRootViewId() }}(screen);
+        final BaseDroneViewGroup rootView = (BaseDroneViewGroup)makeView_{{ builder.getRootViewId() }}(screen);
         rootView.getScope().apply();
         screen.setContentView(rootView);
 

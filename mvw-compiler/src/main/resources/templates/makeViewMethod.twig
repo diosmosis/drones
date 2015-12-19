@@ -1,8 +1,8 @@
 {% if method.isRootDirectiveMethod() %}
-private <P extends Scope<?> & DirectiveScope_{{ method.getDirectiveRoot().getDirectiveName() }}> {{ method.getResultType() }} makeDirectiveView_{{ method.getDirectiveRoot().getDirectiveName() }}(final BaseScreen _screen, final DynamicViewGroup _parentView, final P _parentNodeScope
+private <P extends Scope<?> & DirectiveScope_{{ method.getDirectiveRoot().getDirectiveName() }}> {{ method.getResultType() }} makeDirectiveView_{{ method.getDirectiveRoot().getDirectiveName() }}(final BaseScreen _screen, final BaseDroneViewGroup _parentView, final P _parentNodeScope
 {% for property in method.getDirectiveRoot().boundProperties() %}, final {{ property.type }} _{{ property.name }}{% endfor %}) {
 {% else %}
-private {{ method.getResultType() }} makeView_{{ method.getViewId() }}(final BaseScreen _screen{% if method.hasParent() %}, final DynamicViewGroup _parentView, final {{ method.getParentScopeClassName() }} _parentNodeScope{% endif %}) {
+private {{ method.getResultType() }} makeView_{{ method.getViewId() }}(final BaseScreen _screen{% if method.hasParent() %}, final BaseDroneViewGroup _parentView, final {{ method.getParentScopeClassName() }} _parentNodeScope{% endif %}) {
 {% endif %}
     {% if method.hasParent() %}
     final {{ method.getParentScopeClassName() }} scope = _parentNodeScope;
