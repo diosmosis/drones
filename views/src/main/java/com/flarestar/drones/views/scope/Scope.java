@@ -2,6 +2,7 @@ package com.flarestar.drones.views.scope;
 
 import android.os.Handler;
 import android.view.View;
+import com.flarestar.drones.views.scope.watcher.Watcher;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 

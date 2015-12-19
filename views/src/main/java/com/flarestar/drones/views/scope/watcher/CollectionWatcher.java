@@ -1,4 +1,4 @@
-package com.flarestar.drones.views.scope;
+package com.flarestar.drones.views.scope.watcher;
 
 import java.lang.reflect.Array;
 import java.util.Collection;

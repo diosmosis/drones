@@ -16,7 +16,7 @@ import com.flarestar.drones.mvw.model.ViewNode;
 import com.flarestar.drones.mvw.processing.parser.directive.matchers.AttributeMatcher;
 import com.flarestar.drones.mvw.model.scope.Property;
 import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
-import com.flarestar.drones.views.scope.CollectionWatcher;
+import com.flarestar.drones.views.scope.watcher.CollectionWatcher;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.assistedinject.AssistedInject;
 

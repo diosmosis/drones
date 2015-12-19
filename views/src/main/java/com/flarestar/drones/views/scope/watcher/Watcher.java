@@ -1,4 +1,6 @@
-package com.flarestar.drones.views.scope;
+package com.flarestar.drones.views.scope.watcher;
+
+import com.flarestar.drones.views.scope.Scope;
 
 import java.io.*;
 
