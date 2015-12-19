@@ -21,18 +21,6 @@ import java.util.List;
 
 /**
  * TODO
- *
- * LayoutBuilder builder = renderableFactory.makeLayoutBuilder(LayoutBuilder.class);
- *   - renderable factory
- *
- * xml/less => LayoutProcessor => ViewNode tree
- * ViewNode tree => RenderableFactory => renderable tree (LayoutBuilder)
- * renderable tree => generator => outputted files
- *
- * TODO:
- * - remove ViewNode dependency from Renderable object model
- * - remove ScopeClassDefinition dependency from Renderable object model
- * - implement process above in LayoutAnnotationProcessor
  */
 public class MakeViewMethod implements Renderable {
     private String viewId;

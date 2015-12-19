@@ -26,6 +26,9 @@ import java.util.List;
 
 /**
  * TODO
+ *
+ * TODO: instead of storing events/watchers/etc. in Directives, they should be added to ViewNodes directly.
+ *       ideally, Directives shouldn't be used during rendering, just when creating ViewNodes.
  */
 public abstract class Directive {
 

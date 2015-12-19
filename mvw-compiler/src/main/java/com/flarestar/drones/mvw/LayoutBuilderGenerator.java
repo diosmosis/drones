@@ -102,6 +102,22 @@ public class LayoutBuilderGenerator {
         typeInferer.setBasePackage(context.getActivityPackage()); // TODO: should not have this mutability, but not sure how to remove...
 
         ViewNode tree = processLayoutAndStyles(activityClassElement, context);
+        LayoutBuilder renderableTree = createRenderables(context, tree);
+        generateRenderableTree(context, renderableTree);
+    }
+
+    private ViewNode processLayoutAndStyles(TypeElement activityClassElement, final ActivityGenerationContext context) {
+        Layout annotation = activityClassElement.getAnnotation(Layout.class);
+        String layoutFilePath = annotation.value();
+        String stylesheetFilePath = annotation.stylesheet();
+
+        ViewNode tree;
+        try {
+            tree = xmlProcessor.processTemplateAndLess(context, layoutFilePath, stylesheetFilePath);
+        } catch (LayoutFileException e) {
+            throw new RuntimeException(e);
+        }
+
         tree.visit(new ViewNode.Visitor() {
             @Override
             public void visit(ViewNode node) {
@@ -114,27 +130,11 @@ public class LayoutBuilderGenerator {
                 }
             }
         });
-        generateLayoutBuilder(context, tree);
+
+        return tree;
     }
 
-    private ViewNode processLayoutAndStyles(TypeElement activityClassElement, GenerationContext context) {
-        Layout annotation = activityClassElement.getAnnotation(Layout.class);
-        String layoutFilePath = annotation.value();
-        String stylesheetFilePath = annotation.stylesheet();
-
-        try {
-            return xmlProcessor.processTemplateAndLess(context, layoutFilePath, stylesheetFilePath);
-        } catch (LayoutFileException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private void generateLayoutBuilder(final ActivityGenerationContext context, ViewNode tree) {
-        String layoutBuilderClassName = context.getLayoutBuilderClassName();
-        String screenClassName = context.getActivityClassName();
-
-        processingEnvironment.getMessager().printMessage(Diagnostic.Kind.NOTE, "Generating '" + layoutBuilderClassName + "'.");
-
+    private LayoutBuilder createRenderables(final ActivityGenerationContext context, ViewNode tree) {
         tree.visit(new ViewNode.Visitor() {
             @Override
             public void visit(ViewNode node) {
@@ -148,8 +148,16 @@ public class LayoutBuilderGenerator {
             }
         });
 
+        return renderableFactory.createLayoutBuilder(context, tree);
+    }
+
+    private void generateRenderableTree(ActivityGenerationContext context, LayoutBuilder builder) {
+        String layoutBuilderClassName = context.getLayoutBuilderClassName();
+        String screenClassName = context.getActivityClassName();
+
+        processingEnvironment.getMessager().printMessage(Diagnostic.Kind.NOTE, "Generating '" + layoutBuilderClassName + "'.");
+
         try {
-            LayoutBuilder builder = renderableFactory.createLayoutBuilder(context, tree);
             generator.renderClass(builder);
         } catch (IOException | JtwigException e) {
             throw new RuntimeException("Failed to generate LayoutBuilder for '" + screenClassName + "'.", e);
