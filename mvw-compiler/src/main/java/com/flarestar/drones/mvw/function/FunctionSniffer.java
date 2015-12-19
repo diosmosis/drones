@@ -18,13 +18,19 @@ import java.util.Set;
 @Singleton
 public class FunctionSniffer {
     private TypeInferer typeInferer;
+    private List<FunctionDefinition> userFunctions;
 
     @Inject
-    public FunctionSniffer(TypeInferer typeInferer) {
+    public FunctionSniffer(TypeInferer typeInferer) throws InvalidUserFunctionClass {
         this.typeInferer = typeInferer;
+        this.userFunctions = detectUserFunctions();
     }
 
-    public List<FunctionDefinition> detectUserFunctions() throws InvalidUserFunctionClass {
+    public List<FunctionDefinition> getUserFunctions() {
+        return userFunctions;
+    }
+
+    private List<FunctionDefinition> detectUserFunctions() throws InvalidUserFunctionClass {
         List<FunctionDefinition> result = new ArrayList<>();
 
         Set<? extends Element> elements = typeInferer.getAllTypesWithAnnotation(Function.class);

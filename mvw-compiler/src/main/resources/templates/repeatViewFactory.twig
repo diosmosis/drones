@@ -1,0 +1,13 @@
+{% extends "rangeViewFactory.twig" %}
+
+{% block getValueType %}{{ factory.getIterationScopeVariableType().toString() }}{% endblock %}
+
+{% block getCollectionCode %}return {{ factory.getIterableExpression() }};{% endblock %}
+
+{% block getItem %}return (({{ factory.getScopeClassName() }})scope).{{ factory.getIterationScopeVariable() }};{% endblock %}
+
+{% block getSetScopePropertiesCode %}
+{{ factory.getScopeClassName() }} _realScope = ({{ factory.getScopeClassName() }})scope;
+_realScope.$index = index;
+_realScope.{{ factory.getIterationScopeVariable() }} = item;
+{% endblock %}

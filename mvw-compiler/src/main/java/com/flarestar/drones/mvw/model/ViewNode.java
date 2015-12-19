@@ -5,6 +5,9 @@ import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException
 import com.flarestar.drones.mvw.processing.parser.exceptions.MultipleViewClassesException;
 import com.flarestar.drones.mvw.processing.parser.exceptions.NoViewClassForNode;
 import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
+import com.flarestar.drones.mvw.processing.renderables.viewfactory.NullViewFactory;
+import com.flarestar.drones.mvw.processing.renderables.viewfactory.SingleViewFactory;
+import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
 import org.jsoup.nodes.Element;
 
 import java.util.ArrayList;
@@ -31,6 +34,7 @@ public class ViewNode {
     public final List<ViewProperty> viewProperties;
 
     private String viewClass;
+    private Class<? extends ViewFactory> viewFactoryRenderable;
     public final Directive isolateDirective;
 
     public ViewNode(Element element, ViewNode parent, Map<String, String> styles, List<Directive> directives,
@@ -54,6 +58,7 @@ public class ViewNode {
         scopeDefinition = createScopeDefinition();
         isolateDirective = findIsolateDirective();
         viewClass = findViewClass();
+        viewFactoryRenderable = findViewFactoryRenderableToUse();
     }
 
     private List<ViewProperty> findViewProperties() {
@@ -106,6 +111,10 @@ public class ViewNode {
         return viewClass;
     }
 
+    public Class<? extends ViewFactory> getViewFactoryRenderable() {
+        return viewFactoryRenderable;
+    }
+
     public void visit(Visitor visitor) {
         visitor.visit(this);
         for (ViewNode child : children) {
@@ -115,6 +124,14 @@ public class ViewNode {
 
     public boolean hasTransclude() {
         return element.hasAttr("ng-transclude");
+    }
+
+    public boolean isUsingIsolateDirective() {
+        return hasIsolateDirective() && parent != null;
+    }
+
+    public boolean isIsolateDirectiveRoot() {
+        return hasIsolateDirective() && parent == null;
     }
 
     private String findViewClass() throws MultipleViewClassesException, NoViewClassForNode {
@@ -138,6 +155,34 @@ public class ViewNode {
         }
 
         return viewClass;
+    }
+
+    private Class<? extends ViewFactory> findViewFactoryRenderableToUse() throws LayoutFileException {
+        // if this is the root of a layout or directive tree, we use a NullViewFactory, since the method will return
+        // a View instead of a ViewFactory
+        if (parent == null) {
+            return NullViewFactory.class;
+        }
+
+        Class<? extends ViewFactory> result = null;
+
+        for (Directive viewDirective : directives) {
+            Class<? extends ViewFactory> renderableFromDirective = viewDirective.getViewFactoryToUse();
+            if (renderableFromDirective != null) {
+                if (result != null) {
+                    throw new LayoutFileException("Multiple view factory types defined by directives on <" + element.tagName()
+                        + " id='" + id + "'>.");
+                }
+
+                result = renderableFromDirective;
+            }
+        }
+
+        if (result == null) {
+            result = SingleViewFactory.class;
+        }
+
+        return result;
     }
 }
 

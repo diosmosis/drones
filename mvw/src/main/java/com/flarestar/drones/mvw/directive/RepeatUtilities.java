@@ -43,7 +43,7 @@ public class RepeatUtilities {
                 view = parent.getChildAt(existingViewIndex);
                 Scope<?> scope = parent.getScope().getChildScopeFor(view);
 
-                viewFactory.setScopeProperties(scope, index);
+                viewFactory.setScopeProperties(scope, item, index);
 
                 parent.moveView(existingViewIndex, index);
             }

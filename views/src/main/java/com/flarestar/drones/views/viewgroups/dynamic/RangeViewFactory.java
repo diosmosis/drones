@@ -20,7 +20,7 @@ public abstract class RangeViewFactory<V> implements ViewFactory {
 
     public abstract V getItem(Scope<?> scope);
 
-    public abstract void setScopeProperties(Scope<?> scope, int index);
+    public abstract void setScopeProperties(Scope<?> scope, V item, int index);
 
     public View getStartView() {
         return startView;

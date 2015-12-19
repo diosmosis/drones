@@ -27,22 +27,17 @@ public class LayoutBuilder implements ClassRenderable {
     private List<DirectiveTreeRoot> isolateDirectiveTrees;
     private Set<ScopeDefinition> scopeDefinitions;
     private ViewNode rootView;
-    private FunctionSniffer functionSniffer;
-    private IsolateDirectiveProcessor isolateDirectiveProcessor;
     private MakeViewMethod rootMakeViewMethod;
     private List<TemplateFunctionProxyCode> userFunctions;
 
-    public LayoutBuilder(ActivityGenerationContext context, ViewNode rootView, FunctionSniffer functionSniffer,
-                         IsolateDirectiveProcessor isolateDirectiveProcessor)
-            throws LayoutFileException, InvalidUserFunctionClass {
+    public LayoutBuilder(ActivityGenerationContext context, ViewNode rootView, MakeViewMethod rootMakeViewMethod,
+                         List<TemplateFunctionProxyCode> userFunctions, List<DirectiveTreeRoot> isolateDirectiveTrees) {
         this.context = context;
         this.rootView = rootView;
-        this.functionSniffer = functionSniffer;
-        this.isolateDirectiveProcessor = isolateDirectiveProcessor;
-        this.rootMakeViewMethod = new MakeViewMethod(rootView, null);
-        this.isolateDirectiveTrees = collectIsolateDirectiveTrees(context, rootView);
+        this.rootMakeViewMethod = rootMakeViewMethod;
+        this.isolateDirectiveTrees = isolateDirectiveTrees;
         this.scopeDefinitions = collectScopeDefinitions(rootView);
-        this.userFunctions = collectUserFunctionTemplates();
+        this.userFunctions = userFunctions;
     }
 
     @Override
@@ -88,33 +83,6 @@ public class LayoutBuilder implements ClassRenderable {
         return userFunctions;
     }
 
-    private List<DirectiveTreeRoot> collectIsolateDirectiveTrees(final ActivityGenerationContext context, ViewNode tree) {
-        final Set<Class<? extends Directive>> directiveClassesFound = new HashSet<>();
-        final List<DirectiveTreeRoot> result = new ArrayList<>();
-
-        tree.visit(new ViewNode.Visitor() {
-            @Override
-            public void visit(ViewNode node) {
-                for (Directive directive : node.directives) {
-                    if (!directive.isIsolateDirective() || directiveClassesFound.contains(directive.getClass())) {
-                        continue;
-                    }
-
-                    try {
-                        ViewNode directiveTree = isolateDirectiveProcessor.getDirectiveTree(context, directive.getClass());
-                        result.add(new DirectiveTreeRoot(directive, directiveTree));
-                    } catch (LayoutFileException e) {
-                        throw new RuntimeException(e); // TODO: shouldn't need to handle this here
-                    }
-
-                    directiveClassesFound.add(directive.getClass());
-                }
-            }
-        });
-
-        return result;
-    }
-
     private Set<ScopeDefinition> collectScopeDefinitions(ViewNode tree) {
         final Set<ScopeDefinition> definitions = new HashSet<>();
         final ViewNode.Visitor scopeDefinitionCollector = new ViewNode.Visitor() {
@@ -132,17 +100,5 @@ public class LayoutBuilder implements ClassRenderable {
         }
 
         return definitions;
-    }
-
-    private List<TemplateFunctionProxyCode> collectUserFunctionTemplates() throws InvalidUserFunctionClass {
-        return Lists.newArrayList(Iterables.transform(functionSniffer.detectUserFunctions(),
-            new Function<FunctionDefinition, TemplateFunctionProxyCode>() {
-                @Nullable
-                @Override
-                public TemplateFunctionProxyCode apply(@Nullable FunctionDefinition functionDefinition) {
-                    return new TemplateFunctionProxyCode(functionDefinition);
-                }
-            })
-        );
     }
 }

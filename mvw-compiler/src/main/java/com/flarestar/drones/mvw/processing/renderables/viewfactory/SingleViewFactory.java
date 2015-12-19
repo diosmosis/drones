@@ -1,12 +1,15 @@
 package com.flarestar.drones.mvw.processing.renderables.viewfactory;
 
 import com.flarestar.drones.mvw.processing.renderables.makeview.MakeViewBody;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 
 /**
  * TODO
  */
 public class SingleViewFactory extends ViewFactory {
-    public SingleViewFactory(MakeViewBody makeViewBody) {
+    @AssistedInject
+    public SingleViewFactory(@Assisted MakeViewBody makeViewBody) {
         super(makeViewBody);
     }
 

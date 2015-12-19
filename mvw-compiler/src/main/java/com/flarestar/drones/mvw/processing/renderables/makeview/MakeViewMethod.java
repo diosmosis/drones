@@ -19,18 +19,34 @@ import java.util.List;
 
 /**
  * TODO
+ *
+ * LayoutBuilder builder = renderableFactory.makeLayoutBuilder(LayoutBuilder.class);
+ *   - renderable factory
+ *
+ * xml/less => LayoutProcessor => ViewNode tree
+ * ViewNode tree => RenderableFactory => renderable tree (LayoutBuilder)
+ * renderable tree => generator => outputted files
+ *
+ * TODO:
+ * - remove ViewNode dependency from Renderable object model
+ * - implement process above in LayoutAnnotationProcessor
+ *
+ * TODO: renderables should not be @Singletons and must be @Inject-ed. need to put this somewhere.
  */
 public class MakeViewMethod implements Renderable {
     private ViewNode view;
     private ScopeLocals parentScopeLocals = null;
     private ViewFactory viewFactory;
     private Directive directive;
+    private List<MakeViewMethod> childRenderables;
 
-    public MakeViewMethod(ViewNode view, @Nullable Directive directiveRoot) throws LayoutFileException {
+    public MakeViewMethod(ViewNode view, @Nullable Directive directiveRoot, ViewFactory viewFactory,
+                          List<MakeViewMethod> childRenderables) {
         this.view = view;
         this.directive = directiveRoot;
 
-        this.viewFactory = createViewFactoryRenderable();
+        this.viewFactory = viewFactory;
+        this.childRenderables = childRenderables;
 
         if (view.parent != null) {
             this.parentScopeLocals = new ScopeLocals(view.parent.scopeDefinition);
@@ -63,18 +79,8 @@ public class MakeViewMethod implements Renderable {
         return directive;
     }
 
-    public List<MakeViewMethod> getChildrenMakeViewMethods() throws LayoutFileException {
-        return Lists.newArrayList(Iterables.transform(view.children, new Function<ViewNode, MakeViewMethod>() {
-            @Nonnull
-            @Override
-            public MakeViewMethod apply(@Nonnull ViewNode child) {
-                try {
-                    return new MakeViewMethod(child, directive);
-                } catch (LayoutFileException e) {
-                    throw new RuntimeException(e); // TODO: very annoying we have to do this...
-                }
-            }
-        }));
+    public List<MakeViewMethod> getChildrenMakeViewMethods() {
+        return childRenderables;
     }
 
     public String getResultType() {
@@ -91,44 +97,5 @@ public class MakeViewMethod implements Renderable {
 
     public boolean isRootDirectiveMethod() {
         return directive != null && view.parent == null;
-    }
-
-    // TODO: shouldn't throw layout file exception here, should be done during parsing.
-    private ViewFactory createViewFactoryRenderable() throws LayoutFileException {
-        MakeViewBody body = createMakeViewBodyRenderable();
-
-        // if this is the root of a layout or directive tree, we use a NullViewFactory, since the method will return
-        // a View instead of a ViewFactory
-        if (view.parent == null) {
-            return new NullViewFactory(body);
-        }
-
-        ViewFactory result = null;
-
-        for (Directive viewDirective : view.directives) {
-            ViewFactory renderableFromDirective = viewDirective.getViewFactoryToUse(view, directive, body);
-            if (renderableFromDirective != null) {
-                if (result != null) {
-                    throw new LayoutFileException("Multiple view factory types defined by directives on <" + view.element.tagName()
-                        + " id='" + view.id + "'>.");
-                }
-
-                result = renderableFromDirective;
-            }
-        }
-
-        if (result == null) {
-            result = new SingleViewFactory(body);
-        }
-
-        return result;
-    }
-
-    private MakeViewBody createMakeViewBodyRenderable() {
-        if (view.hasIsolateDirective() && view.parent != null) {
-            return new DirectiveMakeViewBody(view, directive);
-        } else {
-            return new MakeViewBody(view, directive);
-        }
     }
 }

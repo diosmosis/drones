@@ -1,22 +1,22 @@
-new RangeViewFactory<{{ factory.getValueType().toString() }}>() {
+new RangeViewFactory<{% block getValueType %}{% endblock %}>() {
     @Override
-    public Iterable<{{ factory.getValueType().toString() }}> getCollection() {
-        {{ factory.getGetCollectionCode() }}
+    public Iterable<{{ block('getValueType') }}> getCollection() {
+        {% block getCollectionCode %}{% endblock %}
     }
 
     @Override
-    public {{ factory.getValueType().toString() }} getItem(Scope<?> scope) {
-        {{ factory.getGetItemCode() }}
+    public {{ block('getValueType') }} getItem(Scope<?> scope) {
+        {% block getItem %}{% endblock %}
     }
 
     @Override
-    public void setScopeProperties(Scope<?> scope, int index) {
-        {{ factory.getSetScopePropertiesCode() }}
+    public void setScopeProperties(Scope<?> scope, {{ block('getValueType') }} item, int index) {
+        {% block getSetScopePropertiesCode %}{% endblock %}
     }
 
     @Override
-    public View makeView(final {{ factory.getValueType().toString() }} _item, final int _index) {
-        final RangeViewFactory<{{ factory.getValueType().toString() }}> _viewFactory = this;
+    public View makeView(final {{ block('getValueType') }} _item, final int _index) {
+        final RangeViewFactory<{{ block('getValueType') }}> _viewFactory = this;
 
         {% render factory.getMakeViewBody() %}{% endrender %}
     }

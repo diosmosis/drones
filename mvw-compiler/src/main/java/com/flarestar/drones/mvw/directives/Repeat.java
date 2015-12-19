@@ -17,6 +17,8 @@ import com.flarestar.drones.mvw.processing.parser.directive.matchers.AttributeMa
 import com.flarestar.drones.mvw.model.scope.Property;
 import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
 import com.flarestar.drones.views.scope.CollectionWatcher;
+import com.google.inject.assistedinject.Assisted;
+import com.google.inject.assistedinject.AssistedInject;
 
 import javax.lang.model.type.TypeMirror;
 import java.util.regex.Matcher;
@@ -28,6 +30,64 @@ import java.util.regex.Pattern;
 @DynamicDirective
 @ScopeProperties({"int $index = /_index"})
 public class Repeat extends Directive {
+
+    // TODO: use separate template + extends, make RangeViewFactory abstract.
+    public static class RepeatViewFactory extends RangeViewFactory {
+        private String iterationScopeVariable;
+        private String iterableExpression;
+        private TypeMirror iterableType;
+        private TypeMirror iterationScopeVariableType;
+        private String scopeClassName;
+
+        @AssistedInject
+        public RepeatViewFactory(@Assisted MakeViewBody makeViewBody) {
+            super(makeViewBody);
+
+            Repeat repeatDirective = null;
+            for (Directive directive : makeViewBody.getView().directives) {
+                if (directive instanceof Repeat) {
+                    repeatDirective = (Repeat)directive;
+                    break;
+                }
+            }
+
+            if (repeatDirective == null) {
+                throw new IllegalStateException("RepeatViewFactory cannot find the view's Repeat directive. This should not happen.");
+            }
+
+            iterationScopeVariable = repeatDirective.iterationScopeVariable;
+            iterableExpression = repeatDirective.iterableExpression;
+            iterableType = repeatDirective.iterableType;
+            iterationScopeVariableType = repeatDirective.iterationScopeVariableType;
+            scopeClassName = makeViewBody.getView().scopeDefinition.getScopeClassName();
+        }
+
+        public String getScopeClassName() {
+            return scopeClassName;
+        }
+
+        public String getIterationScopeVariable() {
+            return iterationScopeVariable;
+        }
+
+        public String getIterableExpression() {
+            return iterableExpression;
+        }
+
+        public TypeMirror getIterableType() {
+            return iterableType;
+        }
+
+        public TypeMirror getIterationScopeVariableType() {
+            return iterationScopeVariableType;
+        }
+
+        @Override
+        public String getTemplate() {
+            return "templates/repeatViewFactory.twig";
+        }
+    }
+
     private static final Pattern REPEAT_ATTRIBUTE_REGEX = Pattern.compile("(\\w+)\\s+in\\s+(.+)");
 
     private String iterationScopeVariable;
@@ -74,14 +134,7 @@ public class Repeat extends Directive {
     }
 
     @Override
-    public ViewFactory getViewFactoryToUse(ViewNode view, Directive directiveRoot, MakeViewBody makeViewBody) {
-        String scopeClassName = view.scopeDefinition.getScopeClassName();
-        return new RangeViewFactory(
-            makeViewBody,
-            iterationScopeVariableType,
-            "return " + iterableExpression + ";",
-            "return ((" + scopeClassName + ")scope)." + iterationScopeVariable + ";",
-            scopeClassName + " _realScope = (" + scopeClassName + ")scope;\n_realScope.$index = index;"
-        );
+    public Class<? extends ViewFactory> getViewFactoryToUse() {
+        return RepeatViewFactory.class;
     }
 }

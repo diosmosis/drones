@@ -13,10 +13,10 @@ public class DirectiveTreeRoot {
     private MakeViewMethod directiveMakeView;
     private ViewNode viewNode;
 
-    public DirectiveTreeRoot(Directive directive, ViewNode tree) throws LayoutFileException {
+    public DirectiveTreeRoot(Directive directive, ViewNode tree, MakeViewMethod directiveMakeView) {
         this.viewNode = tree;
         this.scopeInterface = new DirectiveScopeInterface(directive);
-        this.directiveMakeView = new MakeViewMethod(tree, directive);
+        this.directiveMakeView = directiveMakeView;
     }
 
     public DirectiveScopeInterface getScopeInterface() {

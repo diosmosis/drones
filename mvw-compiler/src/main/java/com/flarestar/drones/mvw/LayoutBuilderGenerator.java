@@ -7,13 +7,14 @@ import com.flarestar.drones.mvw.compilerutilities.ProjectSniffer;
 import com.flarestar.drones.mvw.compilerutilities.TypeInferer;
 import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.context.GenerationContext;
-import com.flarestar.drones.mvw.function.exceptions.InvalidUserFunctionClass;
+import com.flarestar.drones.mvw.processing.RenderableFactory;
 import com.flarestar.drones.mvw.processing.parser.IsolateDirectiveProcessor;
 import com.flarestar.drones.mvw.processing.parser.LayoutProcessor;
 import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
 import com.flarestar.drones.mvw.model.Directive;
 import com.flarestar.drones.mvw.model.ViewNode;
-import com.flarestar.drones.mvw.processing.writer.LayoutBuilderWriter;
+import com.flarestar.drones.mvw.processing.renderables.LayoutBuilder;
+import com.flarestar.drones.mvw.processing.writer.Generator;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.jtwig.exception.JtwigException;
@@ -35,7 +36,8 @@ import java.io.*;
 public class LayoutBuilderGenerator {
 
     private LayoutProcessor xmlProcessor;
-    private LayoutBuilderWriter layoutBuilderWriter;
+    private Generator generator;
+    private RenderableFactory renderableFactory;
     private ProcessingEnvironment processingEnvironment;
     private TypeMirror screenType;
     private ProjectSniffer projectSniffer;
@@ -43,11 +45,13 @@ public class LayoutBuilderGenerator {
     private IsolateDirectiveProcessor isolateDirectiveProcessor;
 
     @Inject
-    public LayoutBuilderGenerator(LayoutProcessor xmlProcessor, LayoutBuilderWriter layoutBuilderWriter,
-                                  ProcessingEnvironment processingEnvironment, ProjectSniffer projectSniffer,
-                                  TypeInferer typeInferer, IsolateDirectiveProcessor isolateDirectiveProcessor) {
+    public LayoutBuilderGenerator(LayoutProcessor xmlProcessor, ProcessingEnvironment processingEnvironment,
+                                  ProjectSniffer projectSniffer, TypeInferer typeInferer, Generator generator,
+                                  RenderableFactory renderableFactory,
+                                  IsolateDirectiveProcessor isolateDirectiveProcessor) {
         this.xmlProcessor = xmlProcessor;
-        this.layoutBuilderWriter = layoutBuilderWriter;
+        this.generator = generator;
+        this.renderableFactory = renderableFactory;
         this.processingEnvironment = processingEnvironment;
         this.projectSniffer = projectSniffer;
         this.typeInferer = typeInferer;
@@ -145,8 +149,9 @@ public class LayoutBuilderGenerator {
         });
 
         try {
-            layoutBuilderWriter.writeLayoutBuilder(context, tree);
-        } catch (LayoutFileException | InvalidUserFunctionClass | IOException | JtwigException e) {
+            LayoutBuilder builder = renderableFactory.createLayoutBuilder(context, tree);
+            generator.renderClass(builder);
+        } catch (IOException | JtwigException e) {
             throw new RuntimeException("Failed to generate LayoutBuilder for '" + screenClassName + "'.", e);
         }
     }

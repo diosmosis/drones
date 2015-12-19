@@ -171,7 +171,7 @@ public abstract class Directive {
         }
     }
 
-    public ViewFactory getViewFactoryToUse(ViewNode view, Directive directiveRoot, MakeViewBody makeViewBody) {
+    public Class<? extends ViewFactory> getViewFactoryToUse() {
         return null;
     }
 
