@@ -56,11 +56,6 @@ public class Property {
         this.source = source;
     }
 
-    // TODO: removed this a while back, perhaps it should be put in.
-    public String accessCode() {
-        return "scope." + name;
-    }
-
     public boolean hasBinding() {
         return bindType != BindType.NONE;
     }

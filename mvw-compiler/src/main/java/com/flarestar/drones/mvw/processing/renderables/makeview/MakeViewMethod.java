@@ -37,7 +37,8 @@ public class MakeViewMethod implements Renderable {
 
     public MakeViewMethod(String viewId, Directive directiveRoot, ViewFactory viewFactory,
                           List<MakeViewMethod> childRenderables, boolean isRootDirectiveMethod,
-                          boolean hasParent, ScopeDefinition parentScope, List<WatcherDefinition> parentScopeWatchers) {
+                          boolean hasParent, ScopeLocals parentScopeLocals, String parentScopeClassName,
+                          List<WatcherDefinition> parentScopeWatchers) {
         this.viewId = viewId;
         this.directive = directiveRoot;
         this.viewFactory = viewFactory;
@@ -47,14 +48,13 @@ public class MakeViewMethod implements Renderable {
 
         this.hasParent = hasParent;
         if (hasParent) {
-            this.parentScopeClassName = parentScope.getScopeClassName();
+            this.parentScopeLocals = parentScopeLocals;
+            this.parentScopeClassName = parentScopeClassName;
             this.resultType = "ViewFactory";
-            this.parentScopeLocals = new ScopeLocals(parentScope);
         } else {
             this.resultType = "View";
         }
 
-        // TODO: directives should add the watchers to ViewNode. actually, let's remove the list of directives from ViewNode?
         this.parentScopeWatchers = parentScopeWatchers == null ? new ArrayList<WatcherDefinition>() : parentScopeWatchers;
     }
 

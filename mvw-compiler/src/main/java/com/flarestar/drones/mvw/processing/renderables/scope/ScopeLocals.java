@@ -1,17 +1,20 @@
 package com.flarestar.drones.mvw.processing.renderables.scope;
 
 import com.flarestar.drones.base.generation.Renderable;
-import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
+
+import java.util.Collection;
 
 /**
  * TODO
  */
 public class ScopeLocals implements Renderable {
 
-    private ScopeDefinition scope;
+    private String parentScopeClassName;
+    private Collection<ScopePropertyRenderable> allScopeProperties;
 
-    public ScopeLocals(ScopeDefinition scope) {
-        this.scope = scope;
+    public ScopeLocals(String parentScopeClassName, Collection<ScopePropertyRenderable> allScopeProperties) {
+        this.parentScopeClassName = parentScopeClassName;
+        this.allScopeProperties = allScopeProperties;
     }
 
     @Override
@@ -24,7 +27,15 @@ public class ScopeLocals implements Renderable {
         return "locals";
     }
 
-    public ScopeDefinition getScope() {
-        return scope;
+    public boolean hasParent() {
+        return parentScopeClassName != null;
+    }
+
+    public String getParentScopeClassName() {
+        return parentScopeClassName;
+    }
+
+    public Collection<ScopePropertyRenderable> getAllScopeProperties() {
+        return allScopeProperties;
     }
 }

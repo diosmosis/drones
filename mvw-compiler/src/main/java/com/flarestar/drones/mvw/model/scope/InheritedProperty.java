@@ -10,20 +10,4 @@ public class InheritedProperty extends Property {
         this.origin = scopeDefinition;
         this.property = property;
     }
-
-    @Override
-    public String accessCode() {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("scope.");
-
-        Property current = this;
-        while (current instanceof InheritedProperty) {
-            builder.append("_parent.");
-            current = ((InheritedProperty)current).property;
-        }
-
-        builder.append(name);
-        return builder.toString();
-    }
 }

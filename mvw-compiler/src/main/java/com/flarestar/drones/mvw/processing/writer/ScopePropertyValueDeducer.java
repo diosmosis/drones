@@ -33,13 +33,13 @@ public class ScopePropertyValueDeducer {
         switch (property.bindType) {
             case NONE:
             case PARENT_CHILD:
+            case LOCAL_VAR:
                 return new RawString(property.initialValue);
             case RAW_ATTR_VALUE:
                 String value = node.element.attr(property.initialValue);
                 value = interpolator.interpolate(value);
                 return new RawString(JSONObject.quote(value));
             case EXPRESSION_VALUE:
-            case LOCAL_VAR:
                 return new RawString(node.element.attr(property.initialValue));
             case EXPRESSION_EVAL:
                 String code = node.element.attr(property.initialValue);

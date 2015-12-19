@@ -1,11 +1,10 @@
-final {{ definition.getScope().getScopeClassName() }} scope = {% if definition.shouldCreateNewScopeInstance() %}new {{ definition.getScope().getScopeClassName() }}(_handler, {% if definition.isViewHasIsolateDirective() %}_parentView{% else %}result{% endif %}{% if definition.hasParentScope() %}, _parentNodeScope{% endif %}){% else %}({{ definition.getScope().getScopeClassName() }})_parentNodeScope{% endif %};
-{% for property in definition.getScope().ownProperties() %}{% if property.initializeToLocalValue() %}scope.{{ property.name }} = {{ property.initialValue }};
+final {{ definition.getScopeClassName() }} scope = {% if definition.shouldCreateNewScopeInstance() %}new {{ definition.getScopeClassName() }}(_handler, {% if definition.isViewHasIsolateDirective() %}_parentView{% else %}result{% endif %}{% if definition.hasParentScopeArgument() %}, _parentNodeScope{% endif %}){% else %}({{ definition.getScopeClassName() }})_parentNodeScope{% endif %};
+{% for property in definition.getOwnProperties() %}{% if property.initializeToLocalValue() %}scope.{{ property.name }} = {% render property.getInitialValue() %}{% endrender %};
 {% endif %}{% endfor %}
 
 {% if definition.isInMakeDirectiveViewMethod() %}
 scope._parent = _parentNodeScope;
-{% for property in definition.getScope().ownProperties() %}
-scope.{{ property.name }} = _{{ property.name }};
+{% for property in definition.getOwnProperties() %}scope.{{ property.name }} = _{{ property.name }};
 {% endfor %}
 {% endif %}
 

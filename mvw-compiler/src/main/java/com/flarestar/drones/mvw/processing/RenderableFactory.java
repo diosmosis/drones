@@ -8,6 +8,7 @@ import com.flarestar.drones.mvw.function.FunctionDefinition;
 import com.flarestar.drones.mvw.function.FunctionSniffer;
 import com.flarestar.drones.mvw.model.Directive;
 import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.model.scope.InheritedProperty;
 import com.flarestar.drones.mvw.model.scope.Property;
 import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
 import com.flarestar.drones.mvw.processing.parser.IsolateDirectiveProcessor;
@@ -78,17 +79,28 @@ public class RenderableFactory {
 
         String viewId = view.id;
 
-        com.flarestar.drones.mvw.model.scope.ScopeDefinition parentScope = null;
         List<WatcherDefinition> parentScopeWatchers = null;
+        ScopeLocals parentScopeLocals = null;
+        String parentScopeClassName = null;
 
         boolean hasParent = view.parent != null;
         if (hasParent) {
-            parentScope = view.parent.scopeDefinition;
+            ScopeDefinition parentScope = view.parent.scopeDefinition;
             parentScopeWatchers = view.getParentScopeDirectiveWatchers();
+            parentScopeLocals = makeScopeLocals(parentScope);
+            parentScopeClassName = parentScope.getScopeClassName();
         }
 
         return new MakeViewMethod(viewId, rootDirective, viewFactory, childRenderables, view.isIsolateDirectiveRoot(),
-            hasParent, parentScope, parentScopeWatchers);
+            hasParent, parentScopeLocals, parentScopeClassName, parentScopeWatchers);
+    }
+
+    // TODO: this is called multiple times, which means we're creating copies of ScopePropertyRenderables. shouldn't ideally.
+    private ScopeLocals makeScopeLocals(ScopeDefinition scope) {
+        ScopeDefinition parentScope = scope.getParentScope();
+        Collection<ScopePropertyRenderable> scopeProperties = makeScopePropertyRenderables(scope, scope.allProperties().values());
+
+        return new ScopeLocals(parentScope == null ? null : parentScope.getScopeClassName(), scopeProperties);
     }
 
     private ViewFactory createViewFactoryRenderable(ViewNode view, Directive rootDirective) {
@@ -137,9 +149,17 @@ public class RenderableFactory {
         }
     }
 
-    protected static ScopeCreationCode makeScopeCreationCode(ViewNode view, Directive directiveRoot) {
+    protected ScopeCreationCode makeScopeCreationCode(ViewNode view, Directive directiveRoot) {
         boolean isInMakeDirectiveMethod = view.parent == null && directiveRoot != null;
-        return new ScopeCreationCode(view.scopeDefinition, isInMakeDirectiveMethod, view.hasIsolateDirective());
+        boolean scopeHasParent = view.scopeDefinition.getParentScope() != null;
+
+        ScopeLocals scopeLocals = makeScopeLocals(view.scopeDefinition);
+        Collection<ScopePropertyRenderable> ownProperties = makeScopePropertyRenderables(
+            view.scopeDefinition, view.scopeDefinition.ownProperties().values());
+
+        return new ScopeCreationCode(
+            view.scopeDefinition.getScopeClassName(), view.scopeDefinition.isPassthroughScope(), scopeHasParent,
+            isInMakeDirectiveMethod, view.hasIsolateDirective(), ownProperties, scopeLocals);
     }
 
     private List<TemplateFunctionProxyCode> collectUserFunctionTemplates() {
@@ -246,7 +266,24 @@ public class RenderableFactory {
             property.name,
             property.hasBidirectionalBinding(),
             property.canInitializeInScopeConstructor(definition.getOwner().isDirectiveRoot),
+            property.initializeToLocalValue(),
+            getPropertyAccessCode(property),
             initialValue
         );
+    }
+
+    private String getPropertyAccessCode(Property property) {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("scope.");
+
+        Property current = property;
+        while (current instanceof InheritedProperty) {
+            builder.append("_parent.");
+            current = ((InheritedProperty)current).property;
+        }
+
+        builder.append(property.name);
+        return builder.toString();
     }
 }
