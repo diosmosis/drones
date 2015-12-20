@@ -1,5 +1,6 @@
 package com.flarestar.drones.mvw.compilerutilities;
 
+import com.flarestar.drones.mvw.DroneModule;
 import com.flarestar.drones.mvw.compilerutilities.exceptions.*;
 import com.flarestar.drones.mvw.model.ViewNode;
 import com.flarestar.drones.mvw.model.scope.Property;
@@ -32,12 +33,14 @@ public class TypeInferer {
 
     private ProcessingEnvironment processingEnvironment;
     private RoundEnvironment roundEnvironment;
-    private String basePackage = "";
+    private DroneModule.Properties globalProperties;
 
     @Inject
-    public TypeInferer(ProcessingEnvironment processingEnvironment, RoundEnvironment roundEnvironment) {
+    public TypeInferer(ProcessingEnvironment processingEnvironment, RoundEnvironment roundEnvironment,
+                       DroneModule.Properties globalProperties) {
         this.processingEnvironment = processingEnvironment;
         this.roundEnvironment = roundEnvironment;
+        this.globalProperties = globalProperties;
     }
 
     public TypeMirror getTypeMirrorFor(String type) {
@@ -149,10 +152,6 @@ public class TypeInferer {
         return true;
     }
 
-    public void setBasePackage(String basePackage) {
-        this.basePackage = basePackage;
-    }
-
     public TypeMirror getTypeOfExpression(ScopeDefinition context, String expression)
         throws InvalidTypeExpression, InvalidExpression, InvalidTypeException, CannotFindProperty, CannotFindMethod {
 
@@ -200,7 +199,7 @@ public class TypeInferer {
 
     public TypeElement getTypeElementFor(String type) {
         if (type.indexOf('.') == -1) {
-            type = basePackage + '.' + type;
+            type = globalProperties.getBasePackage() + '.' + type;
         }
 
         TypeElement result = processingEnvironment.getElementUtils().getTypeElement(type);

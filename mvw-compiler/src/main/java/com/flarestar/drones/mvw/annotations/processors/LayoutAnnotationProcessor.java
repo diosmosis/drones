@@ -21,7 +21,8 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        DroneModule module = new DroneModule(processingEnv, roundEnvironment);
+        DroneModule.MutableProperties globalProperties = new DroneModule.MutableProperties();
+        DroneModule module = new DroneModule(globalProperties, processingEnv, roundEnvironment);
 
         Injector injector = Guice.createInjector(module);
         LayoutBuilderGenerator layoutBuilderGenerator = injector.getInstance(LayoutBuilderGenerator.class);
@@ -37,11 +38,20 @@ public class LayoutAnnotationProcessor extends AbstractProcessor {
                 continue;
             }
 
-            layoutBuilderGenerator.generateLayoutBuilderFor((TypeElement) element);
+            TypeElement typeElement = (TypeElement) element;
+            globalProperties.setBasePackage(getElementPackage(typeElement));
+
+            layoutBuilderGenerator.generateLayoutBuilderFor(typeElement);
         }
 
         processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, "Finish processing of @Layout");
 
         return true;
+    }
+
+    // TODO: more redundancy
+    private String getElementPackage(TypeElement element) {
+        String fqn = element.getQualifiedName().toString();
+        return fqn.substring(0, fqn.lastIndexOf('.'));
     }
 }

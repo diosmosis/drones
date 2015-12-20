@@ -20,10 +20,6 @@ import java.util.Map;
 
 /**
  * TODO
- *
- * TODO: instead of making LayoutBuilderDrones injectable, make scopes w/ injectable properties injectable.
- *       then we can be sure they get new instances when it is required scopes do not share instances (eg,
- *       directive controllers)
  */
 public class ViewNode {
 

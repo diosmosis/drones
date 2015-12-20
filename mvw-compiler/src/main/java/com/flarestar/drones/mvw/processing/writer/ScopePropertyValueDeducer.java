@@ -20,7 +20,6 @@ public class ScopePropertyValueDeducer {
         this.interpolator = interpolator;
     }
 
-
     public Renderable getInitialValueRenderable(Property property, ViewNode node) {
         if (node == null
             && property.bindType != Property.BindType.NONE

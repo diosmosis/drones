@@ -99,8 +99,6 @@ public class LayoutBuilderGenerator {
             throw new RuntimeException(e);
         }
 
-        typeInferer.setBasePackage(context.getActivityPackage()); // TODO: should not have this mutability, but not sure how to remove...
-
         ViewNode tree = processLayoutAndStyles(activityClassElement, context);
         LayoutBuilder renderableTree = createRenderables(context, tree);
         generateRenderableTree(context, renderableTree);

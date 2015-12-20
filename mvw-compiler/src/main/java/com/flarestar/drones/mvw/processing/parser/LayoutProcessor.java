@@ -47,7 +47,6 @@ public class LayoutProcessor {
     private LessEngine lessEngine;
     private ProcessingEnvironment processingEnvironment;
     private StyleProcessor styleProcessor;
-    private int lastGeneratedId = 0;
 
     @Inject
     public LayoutProcessor(DirectiveFactory directiveFactory, CSSWriterSettings cssWriterSettings, LessEngine lessEngine,
@@ -130,11 +129,6 @@ public class LayoutProcessor {
 
         processNodeChildren(node, viewNode, context, stylesByElement);
         return viewNode;
-    }
-
-    private String generateViewId() {
-        int nextId = ++lastGeneratedId;
-        return "view" + nextId;
     }
 
     private void processNodeChildren(Element node, ViewNode viewNode, GenerationContext context,
