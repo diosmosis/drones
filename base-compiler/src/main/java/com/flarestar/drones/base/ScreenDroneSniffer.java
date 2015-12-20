@@ -40,8 +40,31 @@ public class ScreenDroneSniffer {
         for (AnnotationMirror mirror : activityClassElement.getAnnotationMirrors()) {
             TypeElement annotationType = (TypeElement)mirror.getAnnotationType().asElement();
             DroneMarker marker = annotationType.getAnnotation(DroneMarker.class);
-            if (marker != null) {
-                result.add(new DroneInformation(marker.generatedClass(), activityClassElement));
+            if (marker == null) {
+                continue;
+            }
+
+            result.add(new DroneInformation(marker.generatedClass(), activityClassElement));
+        }
+
+        return result;
+    }
+
+    public List<String> getExtraComponentModules(TypeElement activityClassElement) {
+        final String fullName = activityClassElement.getQualifiedName().toString();
+
+        List<String> result = new ArrayList<>();
+
+        for (AnnotationMirror mirror : activityClassElement.getAnnotationMirrors()) {
+            TypeElement annotationType = (TypeElement)mirror.getAnnotationType().asElement();
+            DroneMarker marker = annotationType.getAnnotation(DroneMarker.class);
+            if (marker == null) {
+                continue;
+            }
+
+            for (String extraMethod : marker.extraComponentMethods()) {
+                extraMethod = extraMethod.replace("{fullName}", fullName);
+                result.add(extraMethod);
             }
         }
 

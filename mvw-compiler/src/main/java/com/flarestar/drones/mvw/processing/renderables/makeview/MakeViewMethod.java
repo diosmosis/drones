@@ -1,22 +1,15 @@
 package com.flarestar.drones.mvw.processing.renderables.makeview;
 
 import com.flarestar.drones.base.generation.Renderable;
-import com.flarestar.drones.mvw.processing.parser.exceptions.LayoutFileException;
+import com.flarestar.drones.mvw.model.scope.Property;
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeLocals;
 import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.NullViewFactory;
-import com.flarestar.drones.mvw.processing.renderables.viewfactory.SingleViewFactory;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.model.Directive;
-import com.flarestar.drones.mvw.model.ViewNode;
-import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
-import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -33,12 +26,13 @@ public class MakeViewMethod implements Renderable {
     private ViewFactory viewFactory;
     private ScopeLocals parentScopeLocals = null;
     private List<MakeViewMethod> childRenderables;
-    private List<WatcherDefinition> parentScopeWatchers;
+    private Collection<WatcherDefinition> parentScopeWatchers;
+    private Collection<Property> boundProperties;
 
     public MakeViewMethod(String viewId, Directive directiveRoot, ViewFactory viewFactory,
                           List<MakeViewMethod> childRenderables, boolean isRootDirectiveMethod,
                           boolean hasParent, ScopeLocals parentScopeLocals, String parentScopeClassName,
-                          List<WatcherDefinition> parentScopeWatchers) {
+                          Collection<WatcherDefinition> parentScopeWatchers, Collection<Property> boundProperties) {
         this.viewId = viewId;
         this.directive = directiveRoot;
         this.viewFactory = viewFactory;
@@ -47,6 +41,7 @@ public class MakeViewMethod implements Renderable {
         this.isRootDirectiveMethod = isRootDirectiveMethod;
 
         this.hasParent = hasParent;
+        this.boundProperties = boundProperties;
         if (hasParent) {
             this.parentScopeLocals = parentScopeLocals;
             this.parentScopeClassName = parentScopeClassName;
@@ -104,11 +99,15 @@ public class MakeViewMethod implements Renderable {
         return hasParent;
     }
 
-    public List<WatcherDefinition> getParentScopeWatchers() {
+    public Collection<WatcherDefinition> getParentScopeWatchers() {
         return parentScopeWatchers;
     }
 
     public String getParentScopeClassName() {
         return parentScopeClassName;
+    }
+
+    public Collection<Property> getBoundProperties() {
+        return boundProperties;
     }
 }

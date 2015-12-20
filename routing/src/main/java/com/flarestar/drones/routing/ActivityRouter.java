@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import com.flarestar.drones.base.annotations.di.ActivityScope;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -17,7 +18,7 @@ import java.util.*;
  * TODO
  * TODO: support sending all sorts of intents, not just intents to other activities
  */
-@Singleton
+@ActivityScope
 public class ActivityRouter {
 
     public static class ActivityNotFoundException extends RuntimeException {

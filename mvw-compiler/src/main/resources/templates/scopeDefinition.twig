@@ -1,10 +1,20 @@
+{% if scope.isForDirectiveRoot() %}
+// used to get Dagger DI members injection to work
+public static abstract class {{ scope.getScopeClassName() }}_dummy extends Scope<Scope> implements DirectiveScope_{{ scope.getOwnerIsolateDirectiveName() }} {
+    public {{ scope.getScopeClassName() }}_dummy(Handler handler, View owner) {
+        super(handler, owner);
+    }
+}
+{% endif %}
+
 {% if not scope.isForDirectiveRoot() %}
-public class {{ scope.getScopeClassName() }} extends Scope<{% if scope.hasParentScope() %}{{ scope.getParentScopeClassName() }}{% else %}Scope{% endif %}>{% if scope.ownerHasIsolateDirective() %} implements DirectiveScope_{{ scope.getOwnerIsolateDirectiveName() }}{% endif %} {
+public static class {{ scope.getScopeClassName() }} extends Scope<{% if scope.hasParentScope() %}{{ scope.getParentScopeClassName() }}{% else %}Scope{% endif %}>{% if scope.ownerHasIsolateDirective() %} implements DirectiveScope_{{ scope.getOwnerIsolateDirectiveName() }}{% endif %} {
 {% else %}
-public class {{ scope.getScopeClassName() }}<P extends Scope & DirectiveScope_{{ scope.getOwnerIsolateDirectiveName() }}> extends Scope<P> {
+public static class {{ scope.getScopeClassName() }}<P extends Scope & DirectiveScope_{{ scope.getOwnerIsolateDirectiveName() }}> extends Scope<P> {
 {% endif %}
     {% for property in scope.getOwnScopeProperties() %}
-    public {{ property.type }} {{ property.name }};
+    {% if property.isInjected() %}@Inject
+    {% endif %}public {{ property.type }} {{ property.name }};
     {% endfor %}
 
     {% if not scope.hasParentScope() and not scope.isForDirectiveRoot() %}

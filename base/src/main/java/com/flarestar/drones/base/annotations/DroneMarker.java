@@ -6,4 +6,5 @@ import java.lang.annotation.RetentionPolicy;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DroneMarker {
     String generatedClass();
+    String[] extraComponentMethods() default {};
 }

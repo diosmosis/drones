@@ -111,6 +111,8 @@ public class Repeat extends Directive {
 
     @Override
     public void manipulateViewNode(ViewNode node) throws LayoutFileException {
+        super.manipulateViewNode(node);
+
         Matcher m = REPEAT_ATTRIBUTE_REGEX.matcher(node.element.attr("ng-repeat"));
         if (!m.matches()) {
             throw new InvalidLayoutAttributeValue(
@@ -119,10 +121,19 @@ public class Repeat extends Directive {
 
         iterationScopeVariable = m.group(1);
         iterableExpression = m.group(2);
+
+        node.scopeDefinition.watchers.add(new WatcherDefinition(
+            CollectionWatcher.class,
+            "return " + iterableExpression + ";",
+            "if (oldValue == newValue) return;\n" +
+                "com.flarestar.drones.mvw.directive.RepeatUtilities.queueOnValuesChanged(_parentView, (RangeViewFactory<?>)_viewFactory);\n",
+            true
+        ));
     }
 
     @Override
     public void beforeGeneration(ViewNode node) throws LayoutFileException {
+        // TODO: shouldn't do this here, should do it in manipulateViewNode
         try {
             iterableType = typeInferer.getTypeOfExpression(node.scopeDefinition, iterableExpression);
             iterationScopeVariableType = typeInferer.getValueTypeOf(iterableType);
@@ -130,17 +141,8 @@ public class Repeat extends Directive {
             throw new LayoutFileException("Invalid ng-repeat expression", ex);
         }
 
-        watchers.add(new WatcherDefinition(
-            CollectionWatcher.class,
-            "return " + iterableExpression + ";",
-            "if (oldValue == newValue) return;\n" +
-            "com.flarestar.drones.mvw.directive.RepeatUtilities.queueOnValuesChanged(_parentView, (RangeViewFactory<"
-                + iterationScopeVariableType.toString() + ">)_viewFactory);\n",
-            true
-        ));
-
         node.scopeDefinition.addProperty(new Property(iterationScopeVariable, iterationScopeVariableType.toString(),
-            Property.BindType.LOCAL_VAR, "_item", this));
+            Property.BindType.LOCAL_VAR, "_item", false, this));
     }
 
     @Override

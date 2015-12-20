@@ -12,12 +12,15 @@ import java.util.List;
 public class ActivityComponent extends GeneratedClassModel implements ClassRenderable {
     private ActivityModule module;
     private List<ScreenDroneSniffer.DroneInformation> drones;
+    private List<String> extraComponentMethods;
 
-    public ActivityComponent(TypeElement element, ActivityModule module, List<ScreenDroneSniffer.DroneInformation> drones) {
+    public ActivityComponent(TypeElement element, ActivityModule module, List<ScreenDroneSniffer.DroneInformation> drones,
+                             List<String> extraComponentMethods) {
         super(element);
 
         this.module = module;
         this.drones = drones;
+        this.extraComponentMethods = extraComponentMethods;
     }
 
     @Override
@@ -41,5 +44,9 @@ public class ActivityComponent extends GeneratedClassModel implements ClassRende
 
     public List<ScreenDroneSniffer.DroneInformation> getDrones() {
         return drones;
+    }
+
+    public List<String> getExtraComponentMethods() {
+        return extraComponentMethods;
     }
 }

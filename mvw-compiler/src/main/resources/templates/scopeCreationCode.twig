@@ -1,11 +1,12 @@
 final {{ definition.getScopeClassName() }} scope = {% if definition.shouldCreateNewScopeInstance() %}new {{ definition.getScopeClassName() }}(_handler, {% if definition.isViewHasIsolateDirective() %}_parentView{% else %}result{% endif %}{% if definition.hasParentScopeArgument() %}, _parentNodeScope{% endif %}){% else %}({{ definition.getScopeClassName() }})_parentNodeScope{% endif %};
+_scopesInjector.inject_{{ definition.getScopeClassName() }}({% if definition.isInMakeDirectiveViewMethod() %}({{ definition.getScopeClassName() }}<{{ definition.getScopeClassName() }}_dummy>){% endif %}scope);
 {% for property in definition.getOwnProperties() %}{% if property.initializeToLocalValue() %}scope.{{ property.name }} = {% render property.getInitialValue() %}{% endrender %};
 {% endif %}{% endfor %}
 
 {% if definition.isInMakeDirectiveViewMethod() %}
 scope._parent = _parentNodeScope;
-{% for property in definition.getOwnProperties() %}scope.{{ property.name }} = _{{ property.name }};
-{% endfor %}
+{% for property in definition.getOwnProperties() %}{% if not property.isInjected() %}scope.{{ property.name }} = _{{ property.name }};
+{% endif %}{% endfor %}
 {% endif %}
 
 {% render definition.getScopeLocals() %}{% endrender %}

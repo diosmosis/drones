@@ -13,6 +13,7 @@ public class ActivityGenerationContext extends GenerationContext {
     private final String layoutBuilderClassName;
     private final String layoutBuilderSimpleClassName;
     private final String activityPackage;
+    private final String activityClassSimpleName;
 
     public ActivityGenerationContext(TypeElement activityClassElement, ProjectSniffer projectSniffer)
         throws InvalidManifestException {
@@ -22,6 +23,7 @@ public class ActivityGenerationContext extends GenerationContext {
         layoutBuilderClassName = activityClassName + "LayoutBuilderDrone";
         activityPackage = activityClassName.substring(0, activityClassName.lastIndexOf('.'));
         layoutBuilderSimpleClassName = getSimpleClassName(layoutBuilderClassName);
+        activityClassSimpleName = getSimpleClassName(activityClassName);
     }
 
     public String getActivityClassName() {
@@ -44,5 +46,13 @@ public class ActivityGenerationContext extends GenerationContext {
     private String getSimpleClassName(String screenClassName) {
         int lastDot = screenClassName.lastIndexOf('.');
         return screenClassName.substring((lastDot == -1 ? 0 : lastDot) + 1);
+    }
+
+    public String getActivityClassSimpleName() {
+        return activityClassSimpleName;
+    }
+
+    public String getLcActivityClassSimpleName() {
+        return activityClassSimpleName.substring(0, 1).toLowerCase() + activityClassSimpleName.substring(1);
     }
 }

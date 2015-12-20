@@ -15,26 +15,21 @@ import com.flarestar.drones.views.scope.watcher.Watcher;
 import com.flarestar.drones.views.LayoutBuilder;
 import com.flarestar.drones.views.aspect.ScrollingAspect;
 import com.flarestar.drones.routing.ActivityRouter;
+import com.flarestar.drones.base.annotations.di.ActivityScope;
 import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import dagger.Component;
 import java.util.concurrent.Callable;
 import {{ builder.getContext().getApplicationPackage() }}.R;
+import dagger.Subcomponent;
 
-@Singleton
+@ActivityScope
 public class {{ builder.getContext().getLayoutBuilderSimpleClassName() }} implements Drone, LayoutBuilder {
 
     private ViewFactory[] _toTransclude;
-
-    @Inject
-    ActivityRouter $location;
-
-    {% for property in builder.getInjectedProperties() %}
-    @Inject
-    {{ property.type }} {{ property.name }};
-    {% endfor %}
 
     {% for directiveTree in builder.getIsolateDirectiveTrees() %}
     {% render directiveTree.getScopeInterface() %}{% endrender %}
@@ -44,11 +39,15 @@ public class {{ builder.getContext().getLayoutBuilderSimpleClassName() }} implem
     {% render definition %}{% endrender %}
     {% endfor %}
 
+    {% render builder.getScopeComponent() %}{% endrender %}
+
     private Handler _handler;
+    private ScopesComponent _scopesInjector;
 
     @Inject
-    public {{ builder.getContext().getLayoutBuilderSimpleClassName() }}() {
+    public {{ builder.getContext().getLayoutBuilderSimpleClassName() }}({{ builder.getContext().getActivityClassSimpleName() }}ActivityComponent parentComponent) {
         _handler = new Handler();
+        _scopesInjector = parentComponent.makeScopesComponent();
     }
 
     public void setUpDrone(final BaseScreen screen) {

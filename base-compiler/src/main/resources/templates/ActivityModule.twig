@@ -3,6 +3,7 @@ package {{ module.getGeneratedPackage() }};
 import dagger.Module;
 import dagger.Provides;
 import android.app.Activity;
+import com.flarestar.drones.base.annotations.di.ActivityScope;
 
 @Module
 class {{ module.getGeneratedClassName() }} {
@@ -13,7 +14,7 @@ class {{ module.getGeneratedClassName() }} {
         this.activity = activity;
     }
 
-    @Provides Activity provideActivity() {
+    @Provides @ActivityScope Activity provideActivity() {
         return this.activity;
     }
 }

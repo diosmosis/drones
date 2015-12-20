@@ -40,6 +40,10 @@ public class FunctionSniffer {
             }
 
             TypeElement userFunctionElement = (TypeElement)element;
+            if (element.getAnnotation(Function.class) == null) { // this can happen sometimes...
+                continue;
+            }
+
             result.add(new FunctionDefinition(userFunctionElement));
         }
         return result;

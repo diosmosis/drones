@@ -38,7 +38,7 @@ public class Img extends Directive {
             throw new InvalidLayoutAttributeValue("Invalid resource URI: " + attributeValue);
         }
 
-        viewProperties.add(new ViewProperty("setImageResource", resourceCode));
+        node.viewProperties.add(new ViewProperty("setImageResource", resourceCode));
     }
 
     public static String getResourceCode(String resourceUrl) {

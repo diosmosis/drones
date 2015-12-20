@@ -26,17 +26,12 @@ import java.util.List;
 
 /**
  * TODO
- *
- * TODO: instead of storing events/watchers/etc. in Directives, they should be added to ViewNodes directly.
- *       ideally, Directives shouldn't be used during rendering, just when creating ViewNodes.
  */
 public abstract class Directive {
 
     protected final GenerationContext context;
-    protected final List<Property> properties = new ArrayList<>();
-    protected final List<ScopeEventListener> events = new ArrayList<>();
-    protected final List<WatcherDefinition> watchers = new ArrayList<>();
-    protected final List<ViewProperty> viewProperties = new ArrayList<>();
+
+    private final List<Property> properties = new ArrayList<>();
 
     @Inject
     protected TypeInferer typeInferer;
@@ -53,20 +48,12 @@ public abstract class Directive {
         }
     }
 
-    public void postConstruct() throws LayoutFileException {
-        // empty
-    }
-
-    public List<Property> getScopeProperties() {
+    public final List<Property> getScopeProperties() {
         return properties;
     }
 
-    public List<WatcherDefinition> getWatchers() {
-        return watchers;
-    }
-
-    public List<ScopeEventListener> getEvents() {
-        return events;
+    public void postConstruct() throws LayoutFileException {
+        // empty
     }
 
     public String getViewClassName() {
@@ -90,7 +77,20 @@ public abstract class Directive {
     }
 
     public void manipulateViewNode(ViewNode viewNode) throws LayoutFileException {
+        addPropertiesFromAnnotation(viewNode);
         addPropertyIfDirectiveControllerUsed(viewNode);
+    }
+
+    private void addPropertiesFromAnnotation(ViewNode viewNode) throws LayoutFileException {
+        // only add isolate directive properties to the directive's root nodes. child nodes that use
+        // isolate directives have their own scopes.
+        if (!viewNode.isDirectiveRoot && isIsolateDirective()) {
+            return;
+        }
+
+        for (Property property : properties) {
+            viewNode.scopeDefinition.addProperty(property);
+        }
     }
 
     private void addPropertyIfDirectiveControllerUsed(ViewNode viewNode) throws LayoutFileException {
@@ -143,24 +143,9 @@ public abstract class Directive {
         return Directive.hasTransclude(getClass());
     }
 
-    // TODO: bound properties should only be allowed on an IsolateDirective
-    public List<Property> boundProperties() {
-        // TODO: jtwig has a bug where it can't loop over iterables, should fix.
-        return Lists.newArrayList(Iterables.filter(properties, new Predicate<Property>() {
-            @Override
-            public boolean apply(@Nonnull Property property) {
-                return property.hasBinding();
-            }
-        }));
-    }
-
     public static boolean hasTransclude(Class<?> klass) {
         IsolateDirective annotation = klass.getAnnotation(IsolateDirective.class);
         return annotation != null && annotation.transclude();
-    }
-
-    public void addProperty(Property property) {
-        properties.add(property);
     }
 
     public void removePropertiesIf(Predicate<Property> predicate) {
@@ -175,9 +160,5 @@ public abstract class Directive {
 
     public ViewFactory getViewFactoryToUse(ViewNode viewNode) {
         return null;
-    }
-
-    public List<ViewProperty> getViewProperties() {
-        return viewProperties;
     }
 }

@@ -1,0 +1,9 @@
+@ActivityScope
+@Subcomponent
+public interface ScopesComponent {
+    {% for scopeClass in component.getScopeClassNames() %}void inject_{{ scopeClass }}({{ scopeClass }} scope);
+    {% endfor %}
+
+    {% for scopeClass in component.getGenericScopeClassNames() %}void inject_{{ scopeClass }}({{ scopeClass }}<{{ scopeClass }}_dummy> scope);
+    {% endfor %}
+}

@@ -7,4 +7,4 @@ _toTransclude = new ViewFactory[]{
     {% endfor %}};
 {% endif %}
 
-return makeDirectiveView_{{ body.getIsolateDirectiveName() }}(_screen, _parentView, scope{% for property in body.getIsolateDirectiveScopeProperties() %}, {% render property.getInitialValue() %}{% endrender %}{% endfor %});
+return makeDirectiveView_{{ body.getIsolateDirectiveName() }}(_screen, _parentView, scope{% for property in body.getIsolateDirectiveScopeProperties() %}, {{ property.name }}{% endfor %});

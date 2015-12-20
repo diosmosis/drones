@@ -5,7 +5,10 @@ import com.flarestar.drones.mvw.processing.parser.exceptions.ScopePropertyAlread
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeEventListener;
 import com.flarestar.drones.mvw.model.Directive;
 import com.flarestar.drones.mvw.model.ViewNode;
+import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
+import com.flarestar.drones.routing.ActivityRouter;
 import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Maps;
 
 import javax.annotation.Nullable;
@@ -26,6 +29,7 @@ public class ScopeDefinition {
 
     // TODO: when calling apply() after an event, need to make sure only one apply ends up being scheduled
     public final List<ScopeEventListener> events = new ArrayList<>();
+    public final List<WatcherDefinition> watchers = new ArrayList<>();
 
     public ScopeDefinition(ViewNode node, boolean isIsolateScope) throws LayoutFileException {
         this.properties = new HashMap<>();
@@ -34,12 +38,12 @@ public class ScopeDefinition {
 
         if (node.parent == null) {
             parentScope = null;
+
+            addRootProperties();
         } else {
             parentScope = node.parent.scopeDefinition;
         }
 
-        setScopeProperties(node);
-        setScopeEvents(node);
         setInheritedScopeProperties(node.parent);
         setScopeClassName(node);
 
@@ -58,26 +62,17 @@ public class ScopeDefinition {
         });
     }
 
+    private void addRootProperties() {
+        properties.put("$location",
+            new Property("$location", ActivityRouter.class.getName(), Property.BindType.NONE, "", true, null));
+    }
+
     public String getScopeClassName() {
         return scopeClassName;
     }
 
     private void setScopeClassName(ViewNode node) {
         this.scopeClassName = node.id + "_Scope";
-    }
-
-    private void setScopeProperties(ViewNode node) throws LayoutFileException {
-        for (Directive directive : node.directives) {
-            processDirectiveProperties(directive);
-        }
-    }
-
-    private void setScopeEvents(ViewNode node) {
-        for (Directive directive : node.directives) {
-            for (ScopeEventListener event : directive.getEvents()) {
-                events.add(event);
-            }
-        }
     }
 
     public ViewNode getParentScopeOwner() {
@@ -92,27 +87,12 @@ public class ScopeDefinition {
         return parentScope;
     }
 
-    private void processDirectiveProperties(Directive directive) throws LayoutFileException {
-        List<Property> directiveProperties = directive.getScopeProperties();
-        for (Property property : directiveProperties) {
-            if (properties.containsKey(property.name)) {
-                Property originalProperty = properties.get(property.name);
-                if (!(originalProperty instanceof InheritedProperty)) {
-                    throw new ScopePropertyAlreadyDefined(property.name, originalProperty.source.getDirectiveName(),
-                        directive.getDirectiveName());
-                }
-            }
-
-            properties.put(property.name, property);
-        }
-    }
-
     public boolean isPassthroughScope() {
         if (isPassthroughScope == null) {
             if (isIsolateScope) {
                 isPassthroughScope = false;
             } else {
-                isPassthroughScope = ownProperties().size() == 0 && events.size() == 0;
+                isPassthroughScope = ownProperties().isEmpty() && events.isEmpty() && watchers.isEmpty();
             }
         }
 
@@ -148,6 +128,48 @@ public class ScopeDefinition {
     }
 
     public void addProperty(Property property) {
+        if (properties.containsKey(property.name)) {
+            Property originalProperty = properties.get(property.name);
+            if (!(originalProperty instanceof InheritedProperty)) {
+                throw new ScopePropertyAlreadyDefined(property.name, originalProperty.source.getDirectiveName());
+            }
+        }
+
         properties.put(property.name, property);
+    }
+
+    public Property getProperty(String name) {
+        Property result = properties.get(name);
+        if (result == null) {
+            throw new IllegalArgumentException("Invalid property name '" + name + "'. (This should not happen).");
+        }
+        return result;
+    }
+
+    public Collection<Property> boundProperties() {
+        return Collections2.filter(properties.values(), new Predicate<Property>() {
+            @Override
+            public boolean apply(@Nullable Property property) {
+                return property.hasBinding();
+            }
+        });
+    }
+
+    public Collection<WatcherDefinition> getParentScopeDirectiveWatchers() {
+        return Collections2.filter(watchers, new Predicate<WatcherDefinition>() {
+            @Override
+            public boolean apply(@Nullable WatcherDefinition watcherDefinition) {
+                return watcherDefinition.isOnParentScope();
+            }
+        });
+    }
+
+    public Collection<WatcherDefinition> getThisScopeDirectiveWatchers() {
+        return Collections2.filter(watchers, new Predicate<WatcherDefinition>() {
+            @Override
+            public boolean apply(@Nullable WatcherDefinition watcherDefinition) {
+                return !watcherDefinition.isOnParentScope();
+            }
+        });
     }
 }

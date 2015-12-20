@@ -68,9 +68,10 @@ public class DaggerFilesGenerator {
 
     public void generateDaggerFilesFor(TypeElement activityClassElement) {
         List<ScreenDroneSniffer.DroneInformation> drones = screenDroneSniffer.getDroneInformationList(activityClassElement);
+        List<String> extraMethods = screenDroneSniffer.getExtraComponentModules(activityClassElement);
 
         ActivityModule module = new ActivityModule(activityClassElement);
-        ActivityComponent component = new ActivityComponent(activityClassElement, module, drones);
+        ActivityComponent component = new ActivityComponent(activityClassElement, module, drones, extraMethods);
 
         try {
             generator.renderClass(module);

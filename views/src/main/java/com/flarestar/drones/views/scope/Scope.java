@@ -89,7 +89,7 @@ public class Scope<P extends Scope> {
     }
 
     public Scope(Handler handler, View owner, P parent) {
-        this(handler, owner, parent, ((Scope<?>)parent)._asyncQueue, ((Scope)parent)._postDigestQueue);
+        this(handler, owner, parent, ((Scope<?>)parent)._asyncQueue, ((Scope<?>)parent)._postDigestQueue);
 
         if (_parent != null) {
             _parent.addChild(this);

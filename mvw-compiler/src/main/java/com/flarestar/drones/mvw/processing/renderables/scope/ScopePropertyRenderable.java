@@ -16,10 +16,11 @@ public class ScopePropertyRenderable {
     private Renderable initialValue;
     private boolean hasBidirectionalBinding;
     private boolean canInitializeInScopeConstructor;
+    private boolean isInjected;
 
     public ScopePropertyRenderable(String type, String name, boolean hasBidirectionalBinding,
                                    boolean canInitializeInScopeConstructor, boolean initializeToLocalValue,
-                                   String codeToAccess, Renderable initialValue) {
+                                   String codeToAccess, Renderable initialValue, boolean isInjected) {
         this.type = type;
         this.name = name;
         this.hasBidirectionalBinding = hasBidirectionalBinding;
@@ -27,6 +28,7 @@ public class ScopePropertyRenderable {
         this.initializeToLocalValue = initializeToLocalValue;
         this.codeToAccess = codeToAccess;
         this.initialValue = initialValue;
+        this.isInjected = isInjected;
     }
 
     public Renderable getInitialValue() {
@@ -47,5 +49,9 @@ public class ScopePropertyRenderable {
 
     public String getCodeToAccess() {
         return codeToAccess;
+    }
+
+    public boolean isInjected() {
+        return isInjected;
     }
 }

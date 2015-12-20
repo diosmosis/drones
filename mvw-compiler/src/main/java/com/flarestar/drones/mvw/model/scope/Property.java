@@ -40,20 +40,23 @@ public class Property {
     // TODO: support required/optional attribute binding
     // TODO: handle collection watches when binding attributes?
     private static final Pattern PROPERTY_DESCRIPTOR_REGEX =
-        Pattern.compile("([.\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*([=@&/]?)(.+))?");
+        Pattern.compile("(#)?([.\\w\\$]+)\\s+([\\w\\$]+)\\s*(?:=\\s*([=@&/]?)(.+))?");
 
-    public String name;
-    public String type;
-    public BindType bindType;
-    public String initialValue;
+    public final String name;
+    public final String type;
+    public final BindType bindType;
+    public final String initialValue;
     public final Directive source;
+    public final boolean isInjected;
 
-    public Property(String name, String type, BindType bindType, String initialValue, Directive source) {
+    public Property(String name, String type, BindType bindType, String initialValue, boolean isInjected,
+                    Directive source) {
         this.name = name;
         this.type = type;
         this.bindType = bindType == null ? BindType.NONE : bindType;
         this.initialValue = initialValue;
         this.source = source;
+        this.isInjected = isInjected;
     }
 
     public boolean hasBinding() {
@@ -61,6 +64,10 @@ public class Property {
     }
 
     public boolean canInitializeInScopeConstructor(boolean isDirectiveRoot) {
+        if (isInjected) {
+            return false;
+        }
+
         return bindType == BindType.NONE || (bindType == BindType.PARENT_CHILD && !isDirectiveRoot);
     }
 
@@ -79,12 +86,14 @@ public class Property {
             throw new InvalidPropertyDescriptor(propertyDescriptor, directive.getDirectiveName());
         }
 
-        BindType bindType = BindType.fromStr(m.group(3));
-        if (bindType != BindType.NONE && m.group(4) == null) {
+        BindType bindType = BindType.fromStr(m.group(4));
+        if (bindType != BindType.NONE && m.group(5) == null) {
             throw new InvalidPropertyDescriptor(propertyDescriptor, directive.getDirectiveName(),
                 "Property binding specified without initial value");
         }
 
-        return new Property(m.group(2), m.group(1), bindType, m.group(4), directive);
+        boolean isInjected = m.group(1) != null;
+
+        return new Property(m.group(3), m.group(2), bindType, m.group(5), isInjected, directive);
     }
 }

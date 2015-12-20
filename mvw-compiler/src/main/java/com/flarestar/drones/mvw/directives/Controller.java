@@ -52,8 +52,8 @@ public class Controller extends Directive {
         }
 
         public static class ControllerProperty extends Property {
-            public ControllerProperty(ParseResult parsed, String initialValue, Directive source) {
-                super(parsed.controllerScopeProperty, parsed.controllerClass, BindType.PARENT_CHILD, initialValue, source);
+            public ControllerProperty(ParseResult parsed, String initialValue, boolean isInjected, Directive source) {
+                super(parsed.controllerScopeProperty, parsed.controllerClass, BindType.PARENT_CHILD, initialValue, isInjected, source);
             }
         }
 
@@ -66,17 +66,12 @@ public class Controller extends Directive {
         }
 
         public void process(ParseResult parsed, ViewNode node) {
-            String initialValue;
+            String initialValue = null;
             if (parsed.isInjected) {
-                String injectedPropertyName = "_" + node.id + "_" + parsed.controllerScopeProperty;
-                context.addInjectedProperty(parsed.controllerClass, injectedPropertyName);
-
-                initialValue = context.getLayoutBuilderSimpleClassName() + ".this." + injectedPropertyName;
-            } else {
                 initialValue = "new " + parsed.controllerClass + "(owner.getContext())";
             }
 
-            source.addProperty(new ControllerProperty(parsed, initialValue, source));
+            node.scopeDefinition.addProperty(new ControllerProperty(parsed, initialValue, parsed.isInjected, source));
         }
 
         private final static Pattern controllerAttributeRegex = Pattern.compile("(#)?([\\w.$]+)\\s+as\\s+(\\w+)");

@@ -8,8 +8,11 @@ import com.flarestar.drones.mvw.model.scope.ScopeDefinition;
 import com.flarestar.drones.mvw.processing.renderables.scope.WatcherDefinition;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.NullViewFactory;
 import com.flarestar.drones.mvw.processing.renderables.viewfactory.SingleViewFactory;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Collections2;
 import org.jsoup.nodes.Element;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,6 +20,10 @@ import java.util.Map;
 
 /**
  * TODO
+ *
+ * TODO: instead of making LayoutBuilderDrones injectable, make scopes w/ injectable properties injectable.
+ *       then we can be sure they get new instances when it is required scopes do not share instances (eg,
+ *       directive controllers)
  */
 public class ViewNode {
 
@@ -30,9 +37,9 @@ public class ViewNode {
     public final List<Directive> directives;
     public final ViewNode parent;
     public final List<ViewNode> children = new ArrayList<>();
-    public final ScopeDefinition scopeDefinition;
+    public ScopeDefinition scopeDefinition; // TODO: make accessible via getter only
     public final boolean isDirectiveRoot;
-    public final List<ViewProperty> viewProperties;
+    public final List<ViewProperty> viewProperties = new ArrayList<>();
 
     private String viewClass;
     private ViewFactory viewFactory;
@@ -51,32 +58,19 @@ public class ViewNode {
         this.directives = directives;
         this.isDirectiveRoot = isDirectiveRoot;
 
+        this.isolateDirective = findIsolateDirective();
+        this.scopeDefinition = new ScopeDefinition(this, hasIsolateDirective());
+
         for (Directive directive : directives) {
             directive.manipulateViewNode(this);
         }
 
-        viewProperties = findViewProperties();
-        scopeDefinition = createScopeDefinition();
-        isolateDirective = findIsolateDirective();
+        if (parent != null && scopeDefinition.isPassthroughScope()) {
+            scopeDefinition = parent.scopeDefinition;
+        }
+
         viewClass = findViewClass();
         viewFactory = findViewFactoryToUse();
-    }
-
-    private List<ViewProperty> findViewProperties() {
-        List<ViewProperty> result = new ArrayList<>();
-        for (Directive directive : directives) {
-            result.addAll(directive.getViewProperties());
-        };
-        return result;
-    }
-
-    private ScopeDefinition createScopeDefinition() throws LayoutFileException {
-        ScopeDefinition computed = new ScopeDefinition(this, hasIsolateDirective());
-        if (parent == null || !computed.isPassthroughScope()) {
-            return computed;
-        } else {
-            return parent.scopeDefinition;
-        }
     }
 
     private Directive findIsolateDirective() throws LayoutFileException {
@@ -183,30 +177,6 @@ public class ViewNode {
             result = new ViewFactory(SingleViewFactory.class);
         }
 
-        return result;
-    }
-
-    public List<WatcherDefinition> getParentScopeDirectiveWatchers() {
-        List<WatcherDefinition> result = new ArrayList<>();
-        for (Directive directive : directives) {
-            for (WatcherDefinition watcher : directive.getWatchers()) {
-                if (watcher.isOnParentScope()) {
-                    result.add(watcher);
-                }
-            }
-        }
-        return result;
-    }
-
-    public List<WatcherDefinition> getThisScopeDirectiveWatchers() {
-        List<WatcherDefinition> result = new ArrayList<>();
-        for (Directive directive : directives) {
-            for (WatcherDefinition watcher : directive.getWatchers()) {
-                if (!watcher.isOnParentScope()) {
-                    result.add(watcher);
-                }
-            }
-        }
         return result;
     }
 }

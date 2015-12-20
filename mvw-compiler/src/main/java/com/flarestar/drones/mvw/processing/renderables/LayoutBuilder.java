@@ -5,11 +5,15 @@ import com.flarestar.drones.mvw.context.ActivityGenerationContext;
 import com.flarestar.drones.mvw.context.GenerationContext;
 import com.flarestar.drones.mvw.processing.renderables.makeview.MakeViewMethod;
 import com.flarestar.drones.mvw.processing.renderables.scope.ScopeClassDefinition;
+import com.flarestar.drones.mvw.processing.renderables.scope.ScopeComponent;
 
 import java.util.*;
 
 /**
  * TODO
+ *
+ * - create scope component renderable (provides all scope types)
+ * - change injected properties to be injected in scope definitions
  */
 public class LayoutBuilder implements ClassRenderable {
     private ActivityGenerationContext context;
@@ -17,17 +21,19 @@ public class LayoutBuilder implements ClassRenderable {
     private Collection<ScopeClassDefinition> scopeDefinitions;
     private MakeViewMethod rootMakeViewMethod;
     private List<TemplateFunctionProxyCode> userFunctions;
+    private ScopeComponent scopeComponent;
     private String rootViewId;
 
     public LayoutBuilder(ActivityGenerationContext context, String rootViewId, MakeViewMethod rootMakeViewMethod,
                          Collection<ScopeClassDefinition> scopeDefinitions, List<TemplateFunctionProxyCode> userFunctions,
-                         List<DirectiveTreeRoot> isolateDirectiveTrees) {
+                         List<DirectiveTreeRoot> isolateDirectiveTrees, ScopeComponent scopeComponent) {
         this.context = context;
         this.rootViewId = rootViewId;
         this.rootMakeViewMethod = rootMakeViewMethod;
         this.isolateDirectiveTrees = isolateDirectiveTrees;
         this.scopeDefinitions = scopeDefinitions;
         this.userFunctions = userFunctions;
+        this.scopeComponent = scopeComponent;
     }
 
     @Override
@@ -49,10 +55,6 @@ public class LayoutBuilder implements ClassRenderable {
         return context;
     }
 
-    public List<GenerationContext.InjectedProperty> getInjectedProperties() {
-        return context.getInjectedProperties();
-    }
-
     public List<DirectiveTreeRoot> getIsolateDirectiveTrees() {
         return isolateDirectiveTrees;
     }
@@ -71,5 +73,9 @@ public class LayoutBuilder implements ClassRenderable {
 
     public String getRootViewId() {
         return rootViewId;
+    }
+
+    public ScopeComponent getScopeComponent() {
+        return scopeComponent;
     }
 }

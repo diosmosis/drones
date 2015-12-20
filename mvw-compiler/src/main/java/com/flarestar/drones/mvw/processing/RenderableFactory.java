@@ -24,6 +24,7 @@ import com.flarestar.drones.mvw.processing.renderables.viewfactory.ViewFactory;
 import com.flarestar.drones.mvw.processing.writer.ScopePropertyValueDeducer;
 import com.flarestar.drones.views.viewgroups.BaseDroneViewGroup;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -60,8 +61,46 @@ public class RenderableFactory {
         List<DirectiveTreeRoot> directiveTreeRoots = getUsedDirectiveTrees(layoutRoot);
         Set<ScopeClassDefinition> scopeDefinitions = collectScopeDefinitions(layoutRoot, directiveTreeRoots);
         MakeViewMethod makeViewMethod = createMakeViewMethod(layoutRoot, null);
+        ScopeComponent scopeComponent = createScopeComponent(context, scopeDefinitions);
 
-        return new LayoutBuilder(context, layoutRoot.id, makeViewMethod, scopeDefinitions, functions, directiveTreeRoots);
+        return new LayoutBuilder(context, layoutRoot.id, makeViewMethod, scopeDefinitions, functions, directiveTreeRoots,
+            scopeComponent);
+    }
+
+    private ScopeComponent createScopeComponent(ActivityGenerationContext context, Set<ScopeClassDefinition> scopeDefinitions) {
+        String componentName = context.getActivityClassName() + "ActivityComponent";
+
+        Collection<ScopeClassDefinition> normalScopeDefinitions = Collections2.filter(scopeDefinitions, new Predicate<ScopeClassDefinition>() {
+            @Override
+            public boolean apply(@Nullable ScopeClassDefinition scopeClassDefinition) {
+                return !scopeClassDefinition.isForDirectiveRoot();
+            }
+        });
+
+        Collection<ScopeClassDefinition> genericScopeDefinitions = Collections2.filter(scopeDefinitions, new Predicate<ScopeClassDefinition>() {
+            @Override
+            public boolean apply(@Nullable ScopeClassDefinition scopeClassDefinition) {
+                return scopeClassDefinition.isForDirectiveRoot();
+            }
+        });
+
+        Collection<String> scopeClassNames = Collections2.transform(normalScopeDefinitions, new Function<ScopeClassDefinition, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable ScopeClassDefinition scopeClassDefinition) {
+                return scopeClassDefinition.getScopeClassName();
+            }
+        });
+
+        Collection<String> genericScopeClassNames = Collections2.transform(genericScopeDefinitions, new Function<ScopeClassDefinition, String>() {
+            @Nullable
+            @Override
+            public String apply(@Nullable ScopeClassDefinition scopeClassDefinition) {
+                return scopeClassDefinition.getScopeClassName();
+            }
+        });
+
+        return new ScopeComponent(componentName, scopeClassNames, genericScopeClassNames);
     }
 
     private MakeViewMethod createMakeViewMethod(ViewNode view, final Directive rootDirective) {
@@ -79,20 +118,25 @@ public class RenderableFactory {
 
         String viewId = view.id;
 
-        List<WatcherDefinition> parentScopeWatchers = null;
+        Collection<WatcherDefinition> parentScopeWatchers = null;
         ScopeLocals parentScopeLocals = null;
         String parentScopeClassName = null;
 
         boolean hasParent = view.parent != null;
         if (hasParent) {
             ScopeDefinition parentScope = view.parent.scopeDefinition;
-            parentScopeWatchers = view.getParentScopeDirectiveWatchers();
+            parentScopeWatchers = view.scopeDefinition.getParentScopeDirectiveWatchers();
             parentScopeLocals = makeScopeLocals(parentScope);
             parentScopeClassName = parentScope.getScopeClassName();
         }
 
+        Collection<Property> boundProperties = null;
+        if (rootDirective != null) {
+            boundProperties = view.scopeDefinition.boundProperties();
+        }
+
         return new MakeViewMethod(viewId, rootDirective, viewFactory, childRenderables, view.isIsolateDirectiveRoot(),
-            hasParent, parentScopeLocals, parentScopeClassName, parentScopeWatchers);
+            hasParent, parentScopeLocals, parentScopeClassName, parentScopeWatchers, boundProperties);
     }
 
     // TODO: this is called multiple times, which means we're creating copies of ScopePropertyRenderables. shouldn't ideally.
@@ -133,20 +177,40 @@ public class RenderableFactory {
         ViewCreationCode viewCreationCode = new ViewCreationCode(view.getViewClassName(), view.viewProperties);
 
         if (view.isUsingIsolateDirective()) {
-            Collection<ScopePropertyRenderable> scopePropertyRenderables = makeScopePropertyRenderables(
-                view.scopeDefinition, view.isolateDirective.getScopeProperties());
+            Collection<ScopePropertyRenderable> scopePropertyRenderables = getBoundIsolateScopePropertyRenderables(view, false);
             String isolateDirectiveName = view.isolateDirective.getDirectiveName();
 
             return new DirectiveMakeViewBody(
                 viewCreationCode, elementText, scopeEventListeners, childViewIds, isDynamicViewGroup, isScopeViewGroup,
-                hasTransclude, hasOwnScope, scopeCreationCode, view.getThisScopeDirectiveWatchers(),
+                hasTransclude, hasOwnScope, scopeCreationCode, view.scopeDefinition.getThisScopeDirectiveWatchers(),
                 view.hasTranscludeDirective(), isolateDirectiveName, scopePropertyRenderables
             );
         } else {
             return new MakeViewBody(viewCreationCode, elementText, scopeEventListeners, childViewIds,
                 isDynamicViewGroup, isScopeViewGroup, hasTransclude, hasOwnScope, scopeCreationCode,
-                view.getThisScopeDirectiveWatchers());
+                view.scopeDefinition.getThisScopeDirectiveWatchers());
         }
+    }
+
+    private Collection<ScopePropertyRenderable> getBoundIsolateScopePropertyRenderables(final ViewNode view,
+                                                                                        boolean useDirectiveRootScope) {
+        ViewNode isolateDirectiveRoot = isolateDirectiveProcessor.getDirectiveTree(view.isolateDirective.getClass());
+
+        Collection<Property> isolateScopeProperties = isolateDirectiveRoot.scopeDefinition.boundProperties();
+        if (!useDirectiveRootScope) {
+            isolateScopeProperties = Collections2.transform(
+                isolateScopeProperties,
+                new Function<Property, Property>() {
+                    @Nullable
+                    @Override
+                    public Property apply(@Nullable Property property) {
+                        return view.scopeDefinition.getProperty(property.name);
+                    }
+                }
+            );
+        }
+
+        return makeScopePropertyRenderables(view.scopeDefinition, isolateScopeProperties);
     }
 
     protected ScopeCreationCode makeScopeCreationCode(ViewNode view, Directive directiveRoot) {
@@ -229,8 +293,7 @@ public class RenderableFactory {
 
         Collection<ScopePropertyRenderable> isolateScopeProperties = null;
         if (isolateDirectiveName != null) {
-            isolateScopeProperties = makeScopePropertyRenderables(
-                definition, definition.getOwner().isolateDirective.getScopeProperties());
+            isolateScopeProperties = getBoundIsolateScopePropertyRenderables(definition.getOwner(), true);
         }
 
         return new ScopeClassDefinition(
@@ -268,7 +331,8 @@ public class RenderableFactory {
             property.canInitializeInScopeConstructor(definition.getOwner().isDirectiveRoot),
             property.initializeToLocalValue(),
             getPropertyAccessCode(property),
-            initialValue
+            initialValue,
+            property.isInjected
         );
     }
 

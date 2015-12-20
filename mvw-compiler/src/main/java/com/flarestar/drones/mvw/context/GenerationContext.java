@@ -7,21 +7,10 @@ import com.flarestar.drones.mvw.compilerutilities.ProjectSniffer;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: merge w/ ActivityGenerationContext
 public abstract class GenerationContext {
 
-    public static class InjectedProperty {
-        public final String type;
-        public final String name;
-
-        public InjectedProperty(String type, String name) {
-            this.type = type;
-            this.name = name;
-        }
-    }
-
     private final String applicationPackage;
-
-    private List<InjectedProperty> injectedProperties = new ArrayList<>();
 
     public GenerationContext(ProjectSniffer projectSniffer)
             throws InvalidManifestException {
@@ -34,12 +23,4 @@ public abstract class GenerationContext {
     }
 
     public abstract String getLayoutBuilderSimpleClassName();
-
-    public List<InjectedProperty> getInjectedProperties() {
-        return injectedProperties;
-    }
-
-    public void addInjectedProperty(String type, String name) {
-        injectedProperties.add(new InjectedProperty(type, name));
-    }
 }

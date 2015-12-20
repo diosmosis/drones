@@ -5,15 +5,22 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import com.flarestar.drones.base.Drone;
 import com.flarestar.drones.base.DroneCollection;
+import com.flarestar.drones.base.annotations.di.ActivityScope;
 import android.app.Activity;
 
-@Singleton
+@ActivityScope
 @Component(modules = { {{ component.getModule().getGeneratedClassName() }}.class })
 abstract class {{ component.getGeneratedClassName() }} implements DroneCollection {
 
     {% for drone in component.getDrones() %}
     public abstract {{ drone.getClassName() }} make{{ drone.getSimpleClassName() }}();
     {% endfor %}
+
+    {% for extraMethod in component.getExtraComponentMethods() %}
+    public abstract {{ extraMethod }};
+    {% endfor %}
+
+    public abstract Activity getActivity();
 
     public Drone[] getDrones() {
         return new Drone[] {
