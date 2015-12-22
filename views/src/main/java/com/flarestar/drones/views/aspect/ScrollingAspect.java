@@ -51,12 +51,16 @@ public class ScrollingAspect extends ViewAspect {
             final int activePointerIndex = motion.findPointerIndex(activePointerId);
             x1 = (int) motion.getX(activePointerIndex);
             y1 = (int) motion.getY(activePointerIndex);
+
+            dx = dy = 0;
         }
 
         public void setStart(MotionEvent motion, int pointerIndex) {
             x1 = (int) motion.getX();
             y1 = (int) motion.getY();
             activePointerId = motion.getPointerId(pointerIndex);
+
+            dx = dy = 0;
         }
 
         public void setEnd(MotionEvent motion) {
@@ -260,10 +264,7 @@ public class ScrollingAspect extends ViewAspect {
                 }
                 break;
             case MotionEvent.ACTION_POINTER_UP:
-                onSecondaryPointerUp(event);
-                if (!isForChildView) {
-                    dragVector.setStart(event);
-                }
+                handleSecondaryPointerUp(event);
                 break;
         }
     }
@@ -315,10 +316,6 @@ public class ScrollingAspect extends ViewAspect {
         }
 
         abortDrag();
-
-        if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, scrollRangeX, 0, scrollRangeY)) {
-            view.postInvalidateOnAnimation();
-        }
     }
 
     private void handleTouchUp(MotionEvent event) {
@@ -331,16 +328,12 @@ public class ScrollingAspect extends ViewAspect {
         int initialVelocityY = (int) velocityTracker.getYVelocity(dragVector.pointer());
         int initialVelocityX = (int) velocityTracker.getXVelocity(dragVector.pointer());
 
+        abortDrag();
+
         if (Math.abs(initialVelocityY) > minimumVelocityForFling) {
             startVerticalFling(initialVelocityY);
         } else if (Math.abs(initialVelocityX) > minimumVelocityForFling) {
             startHorizontalFling(initialVelocityX);
-        } else {
-            if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, scrollRangeX, 0, scrollRangeY)) {
-                view.postInvalidateOnAnimation();
-            }
-
-            abortDrag();
         }
     }
 
@@ -384,13 +377,17 @@ public class ScrollingAspect extends ViewAspect {
     }
 
     private void abortDrag() {
+        if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, scrollRangeX, 0, scrollRangeY)) {
+            view.postInvalidateOnAnimation();
+        }
+
         isDragging = false;
         dragVector.clear();
         recycleVelocityTracker();
         edgeEffects.release();
     }
 
-    private void onSecondaryPointerUp(MotionEvent ev) {
+    private void handleSecondaryPointerUp(MotionEvent ev) {
         final int pointerIndex = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >>
             MotionEvent.ACTION_POINTER_INDEX_SHIFT;
         final int pointerId = ev.getPointerId(pointerIndex);
@@ -401,6 +398,8 @@ public class ScrollingAspect extends ViewAspect {
             final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
             dragVector.setStart(ev, newPointerIndex);
             resetVelocityTracker();
+        } else {
+            dragVector.setStart(ev);
         }
     }
 
