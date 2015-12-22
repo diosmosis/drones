@@ -5,8 +5,8 @@ import android.graphics.Canvas;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.view.*;
-import android.widget.EdgeEffect;
 import android.widget.OverScroller;
+import com.flarestar.drones.views.aspect.scrolling.EdgeEffects;
 import com.flarestar.drones.views.viewgroups.BoxModelNode;
 
 /**
@@ -18,12 +18,18 @@ import com.flarestar.drones.views.viewgroups.BoxModelNode;
  * - programattic flinging
  * - "smooth" scrolling (can probably made more generic than what is in ScrollView)
  *
+ * TODO: note somewhere that part of the philosophy of the views drone is that some properties are assumed to be
+ *       immutable after construction (ie, are set while building a view, then ignored afterwards), like vertical/horizontal
+ *       scrolling enabled/disabled.
+ *     - another assumption: no viewgroup will ever have 0 children (let's add a sanity check for this)
+ *
  * TODO: profiling. important since i'm removing all the micro-optimizations in favor of clean code
  */
 public class ScrollingAspect extends ViewAspect {
 
     public static final int INVALID_POINTER = -1;
 
+    // TODO: let's move these inner classes out of here eventually.
     public class DragVector {
         private int activePointerId = INVALID_POINTER;
 
@@ -83,9 +89,9 @@ public class ScrollingAspect extends ViewAspect {
 
         /**
          * Dragging doesn't start until the user has moved a certain distance (the distance is
-         * called the 'touch slop'). When dragging starts, we don't want to *start* scrolling, as
-         * if the user has not moved their finger at all. So once the drag has started, we remove
-         * the slop from the deltas before scrolling.
+         * called the 'touch slop'). When dragging starts, we want to *start* scrolling, as
+         * if the user has not moved their finger at all until now. So once the drag has started, we remove
+         * the slop from the deltas then move the viewport.
          *
          * This only happens when starting a drag via a finger movement.
          */
@@ -105,6 +111,7 @@ public class ScrollingAspect extends ViewAspect {
     }
 
     private DragVector dragVector;
+    private EdgeEffects edgeEffects;
 
     public int minimumVelocityForFling;
     public int maximumVelocityForFling;
@@ -125,11 +132,6 @@ public class ScrollingAspect extends ViewAspect {
     private int scrollRangeX;
     private int scrollRangeY;
 
-    private EdgeEffect edgeGlowTop;
-    private EdgeEffect edgeGlowBottom;
-    private EdgeEffect edgeGlowLeft;
-    private EdgeEffect edgeGlowRight;
-
     public ScrollingAspect(BoxModelNode view) {
         this.view = view;
 
@@ -145,27 +147,12 @@ public class ScrollingAspect extends ViewAspect {
         overflingDistance = configuration.getScaledOverflingDistance();
 
         dragVector = new DragVector(touchSlop);
-
-        final int mode = view.getOverScrollMode();
-        if (mode != View.OVER_SCROLL_NEVER) {
-            if (view.isHorizontalScrollBarEnabled()) {
-                edgeGlowLeft = new EdgeEffect(context);
-                edgeGlowRight = new EdgeEffect(context);
-            }
-
-            if (view.isVerticalScrollBarEnabled()) {
-                edgeGlowTop = new EdgeEffect(context);
-                edgeGlowBottom = new EdgeEffect(context);
-            }
-        }
+        edgeEffects = new EdgeEffects(view, view.getOverScrollMode(), view.isHorizontalScrollBarEnabled(),
+            view.isVerticalScrollBarEnabled());
 
         view.setFocusable(true);
         view.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
         view.setWillNotDraw(false);
-    }
-
-    public boolean isDragging() {
-        return isDragging;
     }
 
     /**
@@ -183,6 +170,16 @@ public class ScrollingAspect extends ViewAspect {
             scrollRangeX = Math.max(0, view.getAggregateChildWidth() - (view.getWidth() - view.getPaddingLeft() - view.getPaddingRight()));
         } else {
             scrollRangeX = 0;
+        }
+
+        int overscrollMode = view.getOverScrollMode();
+
+        boolean canOverscroll = overscrollMode == View.OVER_SCROLL_ALWAYS
+            || (overscrollMode == View.OVER_SCROLL_IF_CONTENT_SCROLLS && (scrollRangeY > 0 || scrollRangeX > 0));
+        if (canOverscroll) {
+            edgeEffects.enable();
+        } else {
+            edgeEffects.disable();
         }
     }
 
@@ -205,7 +202,7 @@ public class ScrollingAspect extends ViewAspect {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
         handleInterceptedTouchEvent(event);
-        return isDragging();
+        return isDragging;
     }
 
     @Override
@@ -237,8 +234,11 @@ public class ScrollingAspect extends ViewAspect {
                 break;
             case MotionEvent.ACTION_MOVE:
                 // not sure why, but if we're currently dragging & intercepting, we just intercept the move w/o handling it
-                // TODO: see what happens if we don't include this logic.
-                if (isForChildView && isDragging()) {
+                // after some light experimentation, this does not appear to ever occur. i think it is here just in case
+                // android sends events in a strange order?
+                // TODO: review event handling logic, make sure if events are sent to different methods in a strange way
+                //       things still work as expected. we can use unit tests for this i think?
+                if (isForChildView && isDragging) {
                     break;
                 }
 
@@ -279,14 +279,14 @@ public class ScrollingAspect extends ViewAspect {
         int scrollDeltaY = dragVector.dy;
         int scrollDeltaX = dragVector.dx;
 
-        if (!isDragging() && dragVector.hasDragStarted()) {
+        if (!isDragging && dragVector.hasDragStarted()) {
             startDrag();
 
             scrollDeltaX = dragVector.withoutSlop(scrollDeltaX);
             scrollDeltaY = dragVector.withoutSlop(scrollDeltaY);
         }
 
-        if (!isDragging()) {
+        if (!isDragging) {
             return;
         }
 
@@ -306,49 +306,11 @@ public class ScrollingAspect extends ViewAspect {
 
         view.onScrollChanged(view.getScrollX(), view.getScrollY(), oldX, oldY);
 
-        updateEdgeEffectsOnOverscroll(oldX, oldY, scrollDeltaX, scrollDeltaY);
-    }
-
-    private void updateEdgeEffectsOnOverscroll(int oldX, int oldY, int deltaX, int deltaY) {
-        if (!canOverscroll()) {
-            return;
-        }
-
-        boolean shouldInvalidate = updateEdgeEffectsOnOverscroll(oldY, deltaY, scrollRangeY, view.getHeight(),
-            edgeGlowTop, edgeGlowBottom);
-
-        shouldInvalidate |= updateEdgeEffectsOnOverscroll(oldX, deltaX, scrollRangeX, view.getWidth(), edgeGlowLeft,
-            edgeGlowRight);
-
-        if (!shouldInvalidate) {
-            view.postInvalidateOnAnimation();
-        }
-    }
-
-    private boolean updateEdgeEffectsOnOverscroll(int old, int delta, int max, int viewDimension,
-                                                  EdgeEffect zeroBoundary, EdgeEffect maxBoundary) {
-        if (zeroBoundary == null) {
-            return false;
-        }
-
-        final int newScroll = old + delta;
-        if (newScroll < 0) {
-            zeroBoundary.onPull((float) delta / viewDimension);
-            if (!maxBoundary.isFinished()) {
-                maxBoundary.onRelease();
-            }
-        } else if (newScroll > max) {
-            maxBoundary.onPull((float) delta / viewDimension);
-            if (!zeroBoundary.isFinished()) {
-                zeroBoundary.onRelease();
-            }
-        }
-
-        return !zeroBoundary.isFinished() || !maxBoundary.isFinished();
+        edgeEffects.onDrag(oldX, oldY, scrollDeltaX, scrollDeltaY, scrollRangeX, scrollRangeY);
     }
 
     private void handleTouchCancel(MotionEvent event) {
-        if (!isDragging()) {
+        if (!isDragging) {
             return;
         }
 
@@ -360,7 +322,7 @@ public class ScrollingAspect extends ViewAspect {
     }
 
     private void handleTouchUp(MotionEvent event) {
-        if (!isDragging()) {
+        if (!isDragging) {
             return;
         }
 
@@ -370,9 +332,9 @@ public class ScrollingAspect extends ViewAspect {
         int initialVelocityX = (int) velocityTracker.getXVelocity(dragVector.pointer());
 
         if (Math.abs(initialVelocityY) > minimumVelocityForFling) {
-            startVerticalFling(-initialVelocityY);
+            startVerticalFling(initialVelocityY);
         } else if (Math.abs(initialVelocityX) > minimumVelocityForFling) {
-            startHorizontalFling(-initialVelocityX);
+            startHorizontalFling(initialVelocityX);
         } else {
             if (scroller.springBack(view.getScrollX(), view.getScrollY(), 0, scrollRangeX, 0, scrollRangeY)) {
                 view.postInvalidateOnAnimation();
@@ -423,20 +385,9 @@ public class ScrollingAspect extends ViewAspect {
 
     private void abortDrag() {
         isDragging = false;
-
         dragVector.clear();
-
         recycleVelocityTracker();
-
-        if (edgeGlowTop != null) {
-            edgeGlowTop.onRelease();
-            edgeGlowBottom.onRelease();
-        }
-
-        if (edgeGlowLeft != null) {
-            edgeGlowLeft.onRelease();
-            edgeGlowRight.onRelease();
-        }
+        edgeEffects.release();
     }
 
     private void onSecondaryPointerUp(MotionEvent ev) {
@@ -501,7 +452,7 @@ public class ScrollingAspect extends ViewAspect {
             // TODO: (this is more of a note) removing this since in drones we don't care about View subclasses. there should be none. instead, we'll post a scope event when the scroll changes
             // onScrollChanged(getScrollX(), getScrollY(), oldX, oldY
 
-            updateEdgeEffectsIfReachScrollBoundary(oldX, oldY, x, y);
+            edgeEffects.onScroll(oldX, oldY, x, y, scrollRangeX, scrollRangeY, scroller);
         }
 
         if (!view.awakenScrollBars()) {
@@ -510,116 +461,9 @@ public class ScrollingAspect extends ViewAspect {
         }
     }
 
-    private void updateEdgeEffectsIfReachScrollBoundary(int oldX, int oldY, int x, int y) {
-        if (!canOverscroll()) {
-            return;
-        }
-
-        updateEdgeEffectsIfReachScrollBoundary(oldY, y, scrollRangeY, edgeGlowTop, edgeGlowBottom);
-        updateEdgeEffectsIfReachScrollBoundary(oldX, x, scrollRangeX, edgeGlowLeft, edgeGlowRight);
-    }
-
-    private void updateEdgeEffectsIfReachScrollBoundary(int old, int current, int max, EdgeEffect zeroBoundary,
-                                                        EdgeEffect maxBoundary) {
-        if (zeroBoundary == null) {
-            return;
-        }
-
-        if (current < 0 && old >= 0) {
-            zeroBoundary.onAbsorb((int) scroller.getCurrVelocity());
-        } else if (current > max && old <= max) {
-            maxBoundary.onAbsorb((int) scroller.getCurrVelocity());
-        }
-    }
-
-    public boolean canOverscroll() {
-        final int overscrollMode = view.getOverScrollMode();
-
-        return overscrollMode == View.OVER_SCROLL_ALWAYS
-            || (overscrollMode == View.OVER_SCROLL_IF_CONTENT_SCROLLS && (scrollRangeY > 0 || scrollRangeX > 0));
-    }
-
     @Override
     public void onDraw(Canvas canvas) {
-        drawVerticalEdgesIfAnimationOngoing(canvas);
-        drawHorizontalEdgesIfAnimationOngoing(canvas);
-    }
-
-    private void drawVerticalEdgesIfAnimationOngoing(Canvas canvas) {
-        if (edgeGlowTop == null) {
-            return;
-        }
-
-        final int width = view.getWidth() - view.getPaddingLeft() - view.getPaddingRight();
-        final int height = view.getHeight();
-
-        final int scrollY = view.getScrollY();
-        if (!edgeGlowTop.isFinished()) {
-            final int restoreCount = canvas.save();
-
-            canvas.translate(view.getPaddingLeft(), Math.min(0, scrollY));
-
-            edgeGlowTop.setSize(width, height);
-            if (edgeGlowTop.draw(canvas)) {
-                view.postInvalidateOnAnimation();
-            }
-
-            canvas.restoreToCount(restoreCount);
-        }
-
-        if (!edgeGlowBottom.isFinished()) {
-            final int restoreCount = canvas.save();
-
-            canvas.translate(-width + view.getPaddingLeft(), Math.max(scrollRangeY, scrollY) + height);
-            canvas.rotate(180, width, 0);
-
-            edgeGlowBottom.setSize(width, height);
-            if (edgeGlowBottom.draw(canvas)) {
-                view.postInvalidateOnAnimation();
-            }
-
-            canvas.restoreToCount(restoreCount);
-        }
-    }
-
-    // TODO: drawing left/right edges doesn't seem to work... it gets to the canvas bit, but nothing shows up
-    //       at least in the emulator.
-    private void drawHorizontalEdgesIfAnimationOngoing(Canvas canvas) {
-        if (edgeGlowLeft == null) {
-            return;
-        }
-
-        final int width = view.getWidth();
-        final int height = view.getHeight() - view.getPaddingBottom() - view.getPaddingTop();
-
-        final int scrollX = view.getScrollX();
-        if (!edgeGlowLeft.isFinished()){
-            final int restoreCount = canvas.save();
-
-            canvas.rotate(270);
-            canvas.translate(Math.min(0, scrollX), view.getPaddingTop());
-
-            edgeGlowLeft.setSize(width, height);
-            if (edgeGlowLeft.draw(canvas)) {
-                view.postInvalidateOnAnimation(); // TODO: this can be called 4 times, i don't think that's necessary.
-            }
-
-            canvas.restoreToCount(restoreCount);
-        }
-
-        if (!edgeGlowRight.isFinished()) {
-            final int restoreCount = canvas.save();
-
-            canvas.translate(Math.max(scrollRangeX, scrollX) + width, -height + view.getPaddingTop());
-            canvas.rotate(90, 0, height);
-
-            edgeGlowRight.setSize(width, height);
-            if (edgeGlowRight.draw(canvas)) {
-                view.postInvalidateOnAnimation();
-            }
-
-            canvas.restoreToCount(restoreCount);
-        }
+        edgeEffects.draw(canvas, scrollRangeX, scrollRangeY);
     }
 
     public void onOverScrolled(int scrollX, int scrollY, boolean clampedX, boolean clampedY) {
@@ -646,7 +490,7 @@ public class ScrollingAspect extends ViewAspect {
             return false;
         }
 
-        if (isDragging()) {
+        if (isDragging) {
             return false;
         }
 
