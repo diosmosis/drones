@@ -39,6 +39,9 @@ public class ScrollingAspect extends ViewAspect {
         public int dx;
         public int dy;
 
+        public int scrollDx;
+        public int scrollDy;
+
         private int touchSlop;
 
         public DragVector(int touchSlop) {
@@ -67,8 +70,8 @@ public class ScrollingAspect extends ViewAspect {
             assert activePointerId != INVALID_POINTER; // TODO: use BuildConfig?
 
             final int activePointerIndex = motion.findPointerIndex(activePointerId);
-            dx = view.isHorizontalScrollBarEnabled() ? ((int) motion.getX(activePointerIndex) - x1) : 0;
-            dy = view.isVerticalScrollBarEnabled() ? ((int) motion.getY(activePointerIndex) - y1) : 0;
+            scrollDx = dx = view.isHorizontalScrollBarEnabled() ? ((int) motion.getX(activePointerIndex) - x1) : 0;
+            scrollDy = dy = view.isVerticalScrollBarEnabled() ? ((int) motion.getY(activePointerIndex) - y1) : 0;
         }
 
         public int magnitude() {
@@ -111,6 +114,11 @@ public class ScrollingAspect extends ViewAspect {
 
         public boolean hasDragStarted() {
             return magnitude() > touchSlop;
+        }
+
+        public void onTouchDragStart() {
+            scrollDx = withoutSlop(scrollDx);
+            scrollDy = withoutSlop(scrollDy);
         }
     }
 
@@ -277,29 +285,26 @@ public class ScrollingAspect extends ViewAspect {
 
         dragVector.setEnd(event);
 
-        int scrollDeltaY = dragVector.dy;
-        int scrollDeltaX = dragVector.dx;
-
         if (!isDragging && dragVector.hasDragStarted()) {
             startDrag();
-
-            scrollDeltaX = dragVector.withoutSlop(scrollDeltaX);
-            scrollDeltaY = dragVector.withoutSlop(scrollDeltaY);
+            dragVector.onTouchDragStart();
         }
 
-        if (!isDragging) {
+        handleDragStateChange(event);
+    }
+
+    private void handleDragStateChange(MotionEvent event) {
+        if (!isDragging || (dragVector.scrollDx == 0 && dragVector.scrollDy == 0)) {
             return;
         }
 
         dragVector.advance();
 
-        getVelocityTracker().addMovement(event);
-
         final int oldX = view.getScrollX();
         final int oldY = view.getScrollY();
 
-        boolean overScrolled = scrollBy(scrollDeltaX, scrollDeltaY, view.getScrollX(), view.getScrollY(), scrollRangeX,
-            scrollRangeY, overscrollDistance, overscrollDistance, true);
+        boolean overScrolled = scrollBy(dragVector.scrollDx, dragVector.scrollDy, view.getScrollX(), view.getScrollY(),
+            scrollRangeX, scrollRangeY, overscrollDistance, overscrollDistance, true);
         if (overScrolled) {
             // Break our velocity if we hit a scroll barrier.
             resetVelocityTracker();
@@ -307,7 +312,7 @@ public class ScrollingAspect extends ViewAspect {
 
         view.onScrollChanged(view.getScrollX(), view.getScrollY(), oldX, oldY);
 
-        edgeEffects.onDrag(oldX, oldY, scrollDeltaX, scrollDeltaY, scrollRangeX, scrollRangeY);
+        edgeEffects.onDrag(oldX, oldY, dragVector.scrollDx, dragVector.scrollDy, scrollRangeX, scrollRangeY);
     }
 
     private void handleTouchCancel(MotionEvent event) {
