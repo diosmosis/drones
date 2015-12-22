@@ -10,11 +10,10 @@ import android.widget.OverScroller;
  * TODO
  */
 public class EdgeEffects {
-    // TODO: make private eventually
-    public EdgeEffect edgeGlowTop;
-    public EdgeEffect edgeGlowBottom;
-    public EdgeEffect edgeGlowLeft;
-    public EdgeEffect edgeGlowRight;
+    private EdgeEffect edgeGlowTop;
+    private EdgeEffect edgeGlowBottom;
+    private EdgeEffect edgeGlowLeft;
+    private EdgeEffect edgeGlowRight;
 
     private View view;
     private boolean disabled = true;
