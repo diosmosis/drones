@@ -24,6 +24,7 @@ import com.flarestar.drones.views.viewgroups.BoxModelNode;
  * - accessibility operations
  * - programattic flinging
  * - "smooth" scrolling (can probably made more generic than what is in ScrollView)
+ * - onSizeChanged behavior in original ScrollView
  *
  * TODO: note somewhere that part of the philosophy of the views drone is that some properties are assumed to be
  *       immutable after construction (ie, are set while building a view, then ignored afterwards), like vertical/horizontal
@@ -291,129 +292,10 @@ public class ScrollingAspect extends ViewAspect {
         }
     }
 
-    public int computeVerticalScrollOffset(int baseScrollOffset) {
-        return Math.max(0, baseScrollOffset);
-    }
-
-    public int computeHorizontalScrollOffset(int baseScrollOffset) {
-        return Math.max(0, baseScrollOffset);
-    }
-
-    private Rect tempRect = new Rect(); // TODO: move above
-
-    @Override
-    public void onSizeChanged(int w, int h, int oldw, int oldh) {
-        View currentFocused = view.findFocus();
-        if (null == currentFocused || view == currentFocused)
-            return;
-
-        // If the currently-focused view was visible on the screen when the
-        // screen was at the old height, then scroll the screen to make that
-        // view visible with the new screen height.
-        if (isWithinDeltaOfScreen(currentFocused, 0, oldh)) {
-            currentFocused.getDrawingRect(tempRect);
-            view.offsetDescendantRectToMyCoords(currentFocused, tempRect);
-            int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(tempRect);
-            doScrollY(scrollDelta);
-        }
-
-        // TODO: w/ horizontal scrolling, need to handle width. need to think about how. applies also to following methods:
-        //       computeScrollDeltaToGetChildRectOnScreen(), isWithinDeltaOfScreen(), doScrollY()
-    }
-
-    /**
-     * Compute the amount to scroll in the Y direction in order to get
-     * a rectangle completely on the screen (or, if taller than the screen,
-     * at least the first screen size chunk of it).
-     *
-     * NOTE: only used by onSizeChanged
-     *
-     * @param rect The rect.
-     * @return The scroll delta.
-     */
-    protected int computeScrollDeltaToGetChildRectOnScreen(Rect rect) {
-        int height = view.getHeight();
-        int screenTop = view.getScrollY();
-        int screenBottom = screenTop + height;
-
-        int fadingEdge = view.getVerticalFadingEdgeLength();
-
-        // leave room for top fading edge as long as rect isn't at very top
-        if (rect.top > 0) {
-            screenTop += fadingEdge;
-        }
-
-        // leave room for bottom fading edge as long as rect isn't at very bottom
-        if (rect.bottom < view.getAggregateChildHeight()) {
-            screenBottom -= fadingEdge;
-        }
-
-        int scrollYDelta = 0;
-
-        if (rect.bottom > screenBottom && rect.top > screenTop) {
-            // need to move down to get it in view: move down just enough so
-            // that the entire rectangle is in view (or at least the first
-            // screen size chunk).
-
-            if (rect.height() > height) {
-                // just enough to get screen size chunk on
-                scrollYDelta += (rect.top - screenTop);
-            } else {
-                // get entire rect at bottom of screen
-                scrollYDelta += (rect.bottom - screenBottom);
-            }
-
-            // make sure we aren't scrolling beyond the end of our content
-            int bottom = view.getAggregateChildHeight();
-            int distanceToBottom = bottom - screenBottom;
-            scrollYDelta = Math.min(scrollYDelta, distanceToBottom);
-
-        } else if (rect.top < screenTop && rect.bottom < screenBottom) {
-            // need to move up to get it in view: move up just enough so that
-            // entire rectangle is in view (or at least the first screen
-            // size chunk of it).
-
-            if (rect.height() > height) {
-                // screen size chunk
-                scrollYDelta -= (screenBottom - rect.bottom);
-            } else {
-                // entire rect at top
-                scrollYDelta -= (screenTop - rect.top);
-            }
-
-            // make sure we aren't scrolling any further than the top our content
-            scrollYDelta = Math.max(scrollYDelta, -view.getScrollY());
-        }
-        return scrollYDelta;
-    }
-
-    /**
-     * @return whether the descendant of this scroll view is within delta
-     *  pixels of being on the screen.
-     */
-    private boolean isWithinDeltaOfScreen(View descendant, int delta, int height) {
-        descendant.getDrawingRect(tempRect);
-        view.offsetDescendantRectToMyCoords(descendant, tempRect);
-
-        return (tempRect.bottom + delta) >= view.getScrollY()
-            && (tempRect.top - delta) <= (view.getScrollY() + height);
-    }
-
-    /**
-     * Smooth scroll by a Y delta
-     *
-     * @param delta the number of pixels to scroll by on the Y axis
-     */
-    private void doScrollY(int delta) {
-        if (delta != 0) {
-            view.scrollTo(view.getScrollX(), view.getScrollY() + delta);
-        }
-    }
-
     @Override
     public void manipulateScrollToCoords(Point point) {
-        point.x = clamp(point.x, view.getWidth() - view.getPaddingRight() - view.getPaddingLeft(), view.getAggregateChildWidth());
-        point.y = clamp(point.y, view.getHeight() - view.getPaddingBottom() - view.getPaddingTop(), view.getAggregateChildHeight());
+        point.x = clampScrollCoord(point.x, view.getWidth() - view.getPaddingRight() - view.getPaddingLeft(), view.getAggregateChildWidth());
+        point.y = clampScrollCoord(point.y, view.getHeight() - view.getPaddingBottom() - view.getPaddingTop(), view.getAggregateChildHeight());
     }
 
     public float getTopFadingEdgeStrength() {
@@ -425,34 +307,20 @@ public class ScrollingAspect extends ViewAspect {
         return 1.0f;
     }
 
-    private static int clamp(int n, int my, int child) {
-        if (my >= child || n < 0) {
-            /* my >= child is this case:
-             *                    |--------------- me ---------------|
-             *     |------ child ------|
-             * or
-             *     |--------------- me ---------------|
-             *            |------ child ------|
-             * or
-             *     |--------------- me ---------------|
-             *                                  |------ child ------|
-             *
-             * n < 0 is this case:
-             *     |------ me ------|
-             *                    |-------- child --------|
-             *     |-- getScrollX() --|
-             */
+    private static int clampScrollCoord(int pointValue, int viewportSize, int scrollableContentsSize) {
+        // disable scrolling if the viewport is larger than the scrollable contents (in which case there's no need to scroll)
+        // and disable overscrolling past the 0 boundary.
+        if (viewportSize >= scrollableContentsSize || pointValue < 0) {
             return 0;
         }
-        if ((my+n) > child) {
-            /* this case:
-             *                    |------ me ------|
-             *     |------ child ------|
-             *     |-- getScrollX() --|
-             */
-            return child-my;
+
+        // disable overscrolling past the non-zero boundary by making sure the bottom of the viewport never goes past
+        // the scrollable contents' bottom
+        if ((viewportSize + pointValue) > scrollableContentsSize) {
+            return scrollableContentsSize - viewportSize;
         }
-        return n;
+
+        return pointValue;
     }
 
     public float getBottomFadingEdgeStrength() {
@@ -480,5 +348,13 @@ public class ScrollingAspect extends ViewAspect {
         }
 
         return view.getAggregateChildWidth();
+    }
+
+    public int computeVerticalScrollOffset(int baseScrollOffset) {
+        return Math.max(0, baseScrollOffset);
+    }
+
+    public int computeHorizontalScrollOffset(int baseScrollOffset) {
+        return Math.max(0, baseScrollOffset);
     }
 }
