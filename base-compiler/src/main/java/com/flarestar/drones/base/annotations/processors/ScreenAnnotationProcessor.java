@@ -31,21 +31,6 @@ public class ScreenAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> set, RoundEnvironment roundEnvironment) {
-        /* TODO:
-           - basic dagger integration, all drones stored in dagger component
-             we need to generate the component, module (which provides the activity instance)
-           - enhanced dagger integration, any object a user want should be in DI and available
-             to drones (ie, controllers)
-
-           (ADVANCED INTEGRATION)
-           1. sooo for this, let's make users define their own modules. they put whatever they want in, ie, controllers.
-           2. the module is specified to the Screen annotation. the annotation processor passes it on to the generated
-              component class.
-           3. nowwww, how do drones use these classes? we can't simply add them to a constructor property. **we'll
-              use field injection.** we have to mark a property as a injected drone field in Controller.java. should
-              work out i think. then we set the scope to the private var.
-           4. then we're all done. :)
-         */
         processingEnv.getMessager().printMessage(Diagnostic.Kind.OTHER, "Start processing of @Screen");
 
         Set<? extends Element> elements = roundEnvironment.getElementsAnnotatedWith(Screen.class);

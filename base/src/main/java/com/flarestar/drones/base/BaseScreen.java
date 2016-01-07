@@ -19,25 +19,12 @@ public abstract class BaseScreen extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: lots of reflection here. if dagger DI's generated classes implemented some interfaces,
-        //       I think I could replace most of it. could try and add this upstream.
         String activityComponentClassName = getClass().getName() + "ActivityComponent";
-        Class<?> componentClass = null;
-        try {
-            componentClass = Class.forName(activityComponentClassName);
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
 
-        Method buildMethod = null;
+        DroneCollection collection;
         try {
-            buildMethod = componentClass.getMethod("build", Activity.class);
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-
-        DroneCollection collection = null;
-        try {
+            Class<?> componentClass = Class.forName(activityComponentClassName);
+            Method buildMethod = componentClass.getMethod("build", Activity.class);
             collection = (DroneCollection)buildMethod.invoke(null, this);
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(e);
