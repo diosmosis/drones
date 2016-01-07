@@ -2,6 +2,7 @@ package com.flarestar.drones.base;
 
 import android.os.Bundle;
 import android.app.Activity;
+import com.flarestar.drones.base.discovery.DroneSniffer;
 
 import java.lang.reflect.Method;
 
@@ -19,16 +20,8 @@ public abstract class BaseScreen extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String activityComponentClassName = getClass().getName() + "ActivityComponent";
-
-        DroneCollection collection;
-        try {
-            Class<?> componentClass = Class.forName(activityComponentClassName);
-            Method buildMethod = componentClass.getMethod("build", Activity.class);
-            collection = (DroneCollection)buildMethod.invoke(null, this);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(e);
-        }
+        DroneSniffer droneSniffer = new DroneSniffer();
+        DroneCollection collection = droneSniffer.findDroneCollectionFor(this);
 
         drones = collection.getDrones();
         for (Drone drone : drones) {
