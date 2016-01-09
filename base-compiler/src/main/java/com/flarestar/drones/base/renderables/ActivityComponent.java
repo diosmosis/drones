@@ -4,6 +4,7 @@ import com.flarestar.drones.base.ScreenDroneSniffer;
 import com.flarestar.drones.base.generation.ClassRenderable;
 
 import javax.lang.model.element.TypeElement;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -12,10 +13,10 @@ import java.util.List;
 public class ActivityComponent extends GeneratedClassModel implements ClassRenderable {
     private ActivityModule module;
     private List<ScreenDroneSniffer.DroneInformation> drones;
-    private List<String> extraComponentMethods;
+    private Collection<String> extraComponentMethods;
 
     public ActivityComponent(TypeElement element, ActivityModule module, List<ScreenDroneSniffer.DroneInformation> drones,
-                             List<String> extraComponentMethods) {
+                             Collection<String> extraComponentMethods) {
         super(element);
 
         this.module = module;
@@ -46,7 +47,7 @@ public class ActivityComponent extends GeneratedClassModel implements ClassRende
         return drones;
     }
 
-    public List<String> getExtraComponentMethods() {
+    public Collection<String> getExtraComponentMethods() {
         return extraComponentMethods;
     }
 }

@@ -16,6 +16,7 @@ import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Set;
 
 @Singleton
 public class DaggerFilesGenerator {
@@ -68,7 +69,7 @@ public class DaggerFilesGenerator {
 
     public void generateDaggerFilesFor(TypeElement activityClassElement) {
         List<ScreenDroneSniffer.DroneInformation> drones = screenDroneSniffer.getDroneInformationList(activityClassElement);
-        List<String> extraMethods = screenDroneSniffer.getExtraComponentModules(activityClassElement);
+        Set<String> extraMethods = screenDroneSniffer.getExtraComponentModules(activityClassElement);
 
         ActivityModule module = new ActivityModule(activityClassElement);
         ActivityComponent component = new ActivityComponent(activityClassElement, module, drones, extraMethods);

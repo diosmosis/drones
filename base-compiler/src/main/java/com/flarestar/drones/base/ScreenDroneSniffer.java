@@ -6,7 +6,9 @@ import com.google.inject.Singleton;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Singleton
 public class ScreenDroneSniffer {
@@ -21,7 +23,7 @@ public class ScreenDroneSniffer {
             className = generatedClassTemplate.replace("{fullName}", fullName);
 
             // TODO: this is repeated in many places. should deal w/ that.
-            int lastDot = className.lastIndexOf('.');
+            int lastDot = Math.max(className.lastIndexOf('.'), className.lastIndexOf('$'));
             simpleClassName = className.substring(lastDot + 1);
         }
 
@@ -50,10 +52,10 @@ public class ScreenDroneSniffer {
         return result;
     }
 
-    public List<String> getExtraComponentModules(TypeElement activityClassElement) {
+    public Set<String> getExtraComponentModules(TypeElement activityClassElement) {
         final String fullName = activityClassElement.getQualifiedName().toString();
 
-        List<String> result = new ArrayList<>();
+        Set<String> result = new HashSet<>();
 
         for (AnnotationMirror mirror : activityClassElement.getAnnotationMirrors()) {
             TypeElement annotationType = (TypeElement)mirror.getAnnotationType().asElement();
