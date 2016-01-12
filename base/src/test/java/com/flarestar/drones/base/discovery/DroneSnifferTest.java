@@ -12,9 +12,6 @@ import static org.mockito.Mockito.*;
 
 import static flarestar.bdd.Assert.expect;
 
-/**
- * TODO
- */
 @RunWith(Runner.class)
 @Describe(DroneSniffer.class)
 public class DroneSnifferTest {

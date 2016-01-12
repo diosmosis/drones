@@ -12,9 +12,9 @@ public class IndentAwareOutputStream extends ByteArrayOutputStream {
     private static final int TAB_SIZE = 4;
 
     private Stack<Integer> indentStack = new Stack<>();
-    public int totalIndent = 0;
+    private int totalIndent = 0;
     private byte[] spaceBuffer;
-    public int currentIndentSpaceCount = 0;
+    private int currentIndentSpaceCount = 0;
     private boolean isAtLineStart = false;
 
     public IndentAwareOutputStream() {
@@ -54,11 +54,6 @@ public class IndentAwareOutputStream extends ByteArrayOutputStream {
                 }
             }
         }
-    }
-
-    @Override
-    public synchronized void write(int b) {
-        super.write(b);
     }
 
     public void pushIndent() {
@@ -115,5 +110,21 @@ public class IndentAwareOutputStream extends ByteArrayOutputStream {
 
             indent -= amount;
         }
+    }
+
+    public boolean isAtLineStart() {
+        return isAtLineStart;
+    }
+
+    public int getCurrentIndentSpaceCount() {
+        return currentIndentSpaceCount;
+    }
+
+    public int getTotalIndent() {
+        return totalIndent;
+    }
+
+    public Integer getIndentStackTop() {
+        return indentStack.isEmpty() ? null : indentStack.peek();
     }
 }
