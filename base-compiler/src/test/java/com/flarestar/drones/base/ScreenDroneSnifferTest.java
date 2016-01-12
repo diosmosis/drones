@@ -18,9 +18,6 @@ import java.util.Set;
 
 import static flarestar.bdd.Assert.expect;
 
-/**
- * TODO
- */
 @RunWith(Runner.class)
 @Describe(ScreenDroneSniffer.class)
 public class ScreenDroneSnifferTest {

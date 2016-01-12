@@ -12,9 +12,6 @@ import org.junit.runner.RunWith;
 
 import static flarestar.bdd.Assert.expect;
 
-/**
- * TODO
- */
 @RunWith(Runner.class)
 @Describe(GuiceFactoryDelegate.class)
 public class GuiceFactoryDelegateTest {

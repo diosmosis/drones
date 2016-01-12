@@ -14,9 +14,6 @@ import javax.lang.model.element.Element;
 import static flarestar.bdd.Assert.expect;
 import static org.mockito.Mockito.mock;
 
-/**
- * TODO
- */
 @RunWith(Runner.class)
 @Describe(DaggerFilesGenerator.class)
 public class DaggerFilesGeneratorTest {
@@ -39,7 +36,7 @@ public class DaggerFilesGeneratorTest {
     private DaggerFilesGenerator instance;
 
     public void beforeEach() {
-        this.processingEnvironment = new MockProcessingEnvironment(""); // TODO: will this work?
+        this.processingEnvironment = new MockProcessingEnvironment("");
         this.instance = new DaggerFilesGenerator(processingEnvironment, mock(Generator.class), mock(ScreenDroneSniffer.class));
     }
 
