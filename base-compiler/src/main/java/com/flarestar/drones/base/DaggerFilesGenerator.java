@@ -27,8 +27,8 @@ public class DaggerFilesGenerator {
     private ScreenDroneSniffer screenDroneSniffer;
 
     @Inject
-    DaggerFilesGenerator(ProcessingEnvironment processingEnvironment,
-                         Generator generator, ScreenDroneSniffer screenDroneSniffer) {
+    DaggerFilesGenerator(ProcessingEnvironment processingEnvironment, Generator generator,
+                         ScreenDroneSniffer screenDroneSniffer) {
         this.processingEnvironment = processingEnvironment;
         this.generator = generator;
         this.screenDroneSniffer = screenDroneSniffer;

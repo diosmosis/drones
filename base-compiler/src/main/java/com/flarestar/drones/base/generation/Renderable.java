@@ -7,10 +7,3 @@ public interface Renderable {
     String getTemplate();
     String getModelAttribute();
 }
-
-/*
-render(Thing thing) {
-    thing.renderTemplate(TEMPLATE, this);
-
-}
- */
