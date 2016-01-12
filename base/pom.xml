@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>com.flarestarsoftware</groupId>
 			<artifactId>bdd</artifactId>
-			<version>0.1.1-SNAPSHOT</version>
+			<version>0.1.1</version>
 			<scope>test</scope>
 		</dependency>
         <dependency>
