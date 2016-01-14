@@ -148,8 +148,10 @@ public abstract class BaseDroneViewGroup extends ViewGroup {
 
     public void moveView(int from, int to) {
         View view = getChildAt(from);
-        removeViewAt(from);
-        addView(view, to);
+
+        // use super methods so we don't remove/create any scopes
+        super.removeViewAt(from);
+        super.addView(view, to);
     }
 
     public void createChildren() {

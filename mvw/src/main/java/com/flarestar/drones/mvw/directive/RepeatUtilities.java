@@ -20,8 +20,8 @@ public class RepeatUtilities {
     }
 
     public static <V> void onValuesChanged(BaseDroneViewGroup parent, RangeViewFactory<V> viewFactory) {
-        final int startChildIndex = getViewIndexOf(parent, viewFactory.getStartView());
-        final int endChildIndex = getViewIndexOf(parent, viewFactory.getEndView(), startChildIndex) + 1;
+        final int startChildIndex = Math.max(getViewIndexOf(parent, viewFactory.getStartView()), 0);
+        int endChildIndex = getViewIndexOf(parent, viewFactory.getEndView(), startChildIndex) + 1;
 
         Iterable<V> currentValueCollection = viewFactory.getCollection();
 
@@ -30,7 +30,7 @@ public class RepeatUtilities {
             int existingViewIndex = findChildWithItem(viewFactory, parent, item, index, endChildIndex);
             if (existingViewIndex == index) {
                 ++index;
-               continue;
+                continue;
             }
 
             View view;
@@ -38,6 +38,8 @@ public class RepeatUtilities {
                 // couldn't find existing view, so create new one
                 view = viewFactory.makeView(item, index);
                 parent.addView(view, index);
+
+                ++endChildIndex; // update the end index since we're adding a child to the view
             } else {
                 // there's already a view w/ this item, so just move it
                 view = parent.getChildAt(existingViewIndex);
@@ -55,11 +57,15 @@ public class RepeatUtilities {
             ++index;
         }
 
-        int newEndIndex = index;
+        int newEndIndex = index - 1;
 
         // remove other views since they are not in the collection anymore
-        for (; index < endChildIndex; ++index) {
+        for (int i = index; i < endChildIndex; ++i) {
             parent.removeViewAt(index);
+        }
+
+        if (index == 0) { // all the views were removed
+            viewFactory.setStartView(null);
         }
 
         viewFactory.setEndView(parent.getChildAt(newEndIndex));
@@ -75,18 +81,18 @@ public class RepeatUtilities {
                 return index;
             }
         }
-        return 0;
+        return -1;
     }
 
     private static <V> int findChildWithItem(RangeViewFactory<V> viewFactory, BaseDroneViewGroup parent, V item,
                                              int index, int endChildIndex) {
-        for (; index != endChildIndex; ++index) {
+        for (; index < endChildIndex; ++index) {
             Scope<?> childScope = parent.getScope().getChildScopeFor(parent.getChildAt(index));
             if (childScope == null) {
                 continue;
             }
 
-            if (item == viewFactory.getItem(childScope)) {
+            if (item.equals(viewFactory.getItem(childScope))) {
                 return index;
             }
         }
